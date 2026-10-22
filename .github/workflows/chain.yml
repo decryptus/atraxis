@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/atropos
-          ref: cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+          ref: 58fe1241267eca99f78229b44f3f2599229594a5
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/atropos
-          ref: cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+          ref: 58fe1241267eca99f78229b44f3f2599229594a5
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v4

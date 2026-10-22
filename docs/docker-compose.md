@@ -18,11 +18,11 @@ credentials or site data. Put all site files outside both checkouts. Record both
 commit IDs before building; no branch is fetched or merged by Compose.
 
 The public Atropos source revision qualified with this export is
-`cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696`:
+`58fe1241267eca99f78229b44f3f2599229594a5`:
 
 ```sh
 git clone https://github.com/decryptus/atropos.git ../atropos
-git -C ../atropos checkout cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+git -C ../atropos checkout 58fe1241267eca99f78229b44f3f2599229594a5
 ```
 
 Copy `deploy/compose/site.env.example` to a private operator-owned file outside

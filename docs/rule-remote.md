@@ -12,7 +12,7 @@ Install its directory or wheel, then install Atraxis with its `rules` extra:
 
 ```sh
 git clone https://github.com/decryptus/atropos.git ../atropos
-git -C ../atropos checkout cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+git -C ../atropos checkout 58fe1241267eca99f78229b44f3f2599229594a5
 python -m pip install '../atropos/client[observations]'
 python -m pip install '.[rules]'
 ```
