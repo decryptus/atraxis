@@ -30,7 +30,11 @@ jobs:
           path: .auton-source
           persist-credentials: false
       - name: Verify public inputs and prepare the bounded Auton fixture
-        run: python scripts/chain/prepare-public-inputs.py
+        run: |
+          # The job container and host checkout use different UIDs.
+          # Trust only this job's explicit checkout for provenance inspection.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python scripts/chain/prepare-public-inputs.py
       - name: Install independent service environments
         run: |
           python -m venv "$RUNNER_TEMP/browser-web"
