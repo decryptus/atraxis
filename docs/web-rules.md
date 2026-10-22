@@ -10,8 +10,9 @@ can activate a tested revision; it submits no intervention or notification.
 
 ## Connect accounts to Atropos
 
-Install Atraxis with its `rules` extra and the matching independent private
-Atropos client. Use an [Atropos connection profile](rule-remote.md) for each engine
+Install the matching independent Atropos client from its public source checkout,
+then Atraxis with its `rules` extra, as described in the
+[installation instructions](rule-remote.md#install-the-optional-client). Use an [Atropos connection profile](rule-remote.md) for each engine
 identity. That profile contains the engine address and a private token-file
 reference; it is never sent to the browser. Atropos must associate the token
 with the exact subject and organization declared below.
