@@ -1,0 +1,6 @@
+# Separate API-reader configuration; no daemon/source credentials here.
+origin: https://atraxis.example.org
+credentials_file: reader.json
+# ca_file: internal-ca.pem
+# timeout: 10
+# max_response_bytes: 4194304

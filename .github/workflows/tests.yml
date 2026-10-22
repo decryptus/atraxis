@@ -1,0 +1,42 @@
+name: Core tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install .
+      - run: python scripts/check-test-collection.py --runner unittest tests
+      - run: python -m unittest discover -s tests -v
+  docker-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build private test image (no push)
+        run: docker build --tag atraxis-acceptance:ci .
+      - name: Validate isolated Docker runtime
+        run: python3 scripts/docker-acceptance.py --image atraxis-acceptance:ci
+  docker-network-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==50.0.2
+      - name: Build private application and test-only nginx images (no push)
+        run: |
+          docker build --tag atraxis-acceptance:ci .
+          docker build --tag atraxis-ingress:ci --file scripts/network/Dockerfile .
+      - name: Validate verified TLS across isolated networks and inject failures
+        run: python scripts/docker-network-acceptance.py --image atraxis-acceptance:ci --ingress-image atraxis-ingress:ci

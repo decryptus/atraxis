@@ -1,0 +1,12 @@
+{
+  "atropos": {
+    "repository": "decryptus/atropos",
+    "commit": "cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696"
+  },
+  "auton": {
+    "repository": "decryptus/auton",
+    "commit": "7f57348b144fa62400bad31160d4b4ad5c00f53c",
+    "patch_git_blob": "03e5f4a81cb811743b4128de2267dc06512e27f5"
+  },
+  "sonicprobe": "0.3.62"
+}

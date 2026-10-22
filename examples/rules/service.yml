@@ -1,0 +1,20 @@
+# Atraxis gateway ONLY. Copy to a private file (chmod 600).
+version: 2
+identities:
+  - token_sha256: REPLACE_WITH_ATRAXIS_TOKEN_SHA256
+    subject: remote-operator
+    organization: example
+    atropos_client: atropos-client.yml
+# Optional current-observation source and identity mapping, never rule storage.
+# inventory_client: ../client.yml
+bindings:
+  - organization: example
+    target: [container, web-example]
+    source_id: monit-example
+    native_id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    filesystem: [data, /var/lib/data]
+
+# Optional gateway-only signing key for verified observation dispatch.
+# observation_signing:
+#   key_id: gateway-1
+#   private_key_file: observation-private.pem

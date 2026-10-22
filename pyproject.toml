@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atraxis"
+version = "0.0.1.dev0"
+description = "Experimental supervision and operator interfaces for authorized infrastructure workflows"
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: GNU General Public License v3 (GPLv3)"]
+requires-python = ">=3.11,<3.13"
+dependencies = ["dwho==0.3.66", "httpdis==0.6.34", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
+
+[project.optional-dependencies]
+textual = ["dwho[textual]==0.3.66"]
+rules = ["atropos-client[observations]==0.1.0a10"]
+
+[project.scripts]
+atraxis = "atraxis.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["atraxis*"]

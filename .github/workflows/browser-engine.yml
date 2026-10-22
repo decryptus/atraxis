@@ -1,0 +1,52 @@
+name: native browser engine acceptance
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  browser-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.55.0-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native daemon dependency
+        timeout-minutes: 3
+        run: |
+          sed -i 's|http://archive.ubuntu.com|https://archive.ubuntu.com|g; s|http://security.ubuntu.com|https://security.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources
+          apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=1 update
+          apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=1 install --yes --no-install-recommends libmagic1t64 python3.12-venv libnss3-tools
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atropos
+          ref: cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+          path: .acceptance/engine
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/auton
+          ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
+          path: .auton-source
+          persist-credentials: false
+      - name: Verify public inputs and prepare the bounded Auton fixture
+        run: python scripts/chain/prepare-public-inputs.py
+      - name: Install independent service environments
+        run: |
+          python -m venv "$RUNNER_TEMP/browser-web"
+          python -m venv "$RUNNER_TEMP/browser-engine"
+          python -m venv "$RUNNER_TEMP/browser-auton"
+          AUTON_PACKAGE=autond "$RUNNER_TEMP/browser-auton/bin/python" -m pip install .auton-source
+          "$RUNNER_TEMP/browser-engine/bin/python" -m pip install '.acceptance/engine[service,redis,auton]' .acceptance/engine/client redislite==6.2.912183
+          "$RUNNER_TEMP/browser-web/bin/python" -m pip install . '.acceptance/engine/client[observations]' playwright==1.55.0
+          "$RUNNER_TEMP/browser-engine/bin/python" -m pip check
+          "$RUNNER_TEMP/browser-web/bin/python" -m pip check
+          "$RUNNER_TEMP/browser-auton/bin/python" -m pip check
+      - name: Collect every browser acceptance case
+        run: '"$RUNNER_TEMP/browser-web/bin/python" scripts/check-test-collection.py --runner unittest browser_engine_tests'
+      - name: Execute native forms against actual SQLite engine and Redis delivery
+        run: |
+          ATROPOS_TEST_PYTHON="$RUNNER_TEMP/browser-engine/bin/python" \
+            AUTON_TEST_SOURCE="$GITHUB_WORKSPACE/.auton-source" \
+            AUTON_TEST_DAEMON="$RUNNER_TEMP/browser-auton/bin/autond" \
+            "$RUNNER_TEMP/browser-web/bin/python" -m unittest discover -s browser_engine_tests -v

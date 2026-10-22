@@ -1,0 +1,5 @@
+*
+!.auton-source/
+!.auton-source/**
+**/__pycache__
+**/*.pyc

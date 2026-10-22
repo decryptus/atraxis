@@ -1,0 +1,6 @@
+version: 1
+identities:
+  - username: REPLACE_USERNAME
+    subject: REPLACE_SUBJECT
+    organization: REPLACE_ORGANIZATION
+    atropos_client: engine-client.yml

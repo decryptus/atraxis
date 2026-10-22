@@ -1,0 +1,108 @@
+name: atraxis
+x-runtime: &runtime
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  mem_limit: 512m
+  cpus: 2
+  tmpfs: ["/tmp:rw,nosuid,nodev,size=128m,uid=10001,gid=10001,mode=0700"]
+  restart: "no"
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: "3"}
+x-build: &build
+  context: ../..
+  dockerfile: deploy/compose/Dockerfile
+  additional_contexts:
+    engine_source: ${ATROPOS_SOURCE:?Set ATROPOS_SOURCE to a clean Atropos source directory}
+services:
+  web-tls:
+    <<: *runtime
+    image: atraxis-install-proxy:local
+    build: {<<: *build, target: proxy}
+    networks: [control]
+    ports:
+      - "${ATRAXIS_BIND_ADDRESS:-127.0.0.1}:${ATRAXIS_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - type: bind
+        source: ./web.nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${ATRAXIS_SITE_DIR:?Set ATRAXIS_SITE_DIR to a prepared private site directory}/web-tls
+        target: /tls
+        read_only: true
+        bind: {create_host_path: false}
+  web:
+    <<: *runtime
+    image: atraxis-install-web:local
+    build: {<<: *build, target: web}
+    network_mode: service:web-tls
+    depends_on: [web-tls, engine]
+    volumes:
+      - type: bind
+        source: ${ATRAXIS_SITE_DIR:?}/web
+        target: /etc/atraxis
+        read_only: true
+        bind: {create_host_path: false}
+      - web-data:/var/lib/atraxis
+  engine-tls:
+    <<: *runtime
+    image: atraxis-install-proxy:local
+    build: {<<: *build, target: proxy}
+    networks: [control]
+    volumes:
+      - type: bind
+        source: ./engine.nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${ATRAXIS_SITE_DIR:?}/engine-tls
+        target: /tls
+        read_only: true
+        bind: {create_host_path: false}
+  engine:
+    <<: *runtime
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+    network_mode: service:engine-tls
+    depends_on: [engine-tls]
+    volumes:
+      - type: bind
+        source: ${ATRAXIS_SITE_DIR:?}/engine
+        target: /etc/atropos
+        read_only: true
+        bind: {create_host_path: false}
+      - engine-data:/var/lib/atropos
+  worker:
+    <<: *runtime
+    profiles: [execution]
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+    command: [rules-worker, --config, /etc/atropos/engine.yml]
+    networks: [control]
+    volumes: &worker-volumes
+      - type: bind
+        source: ${ATRAXIS_SITE_DIR:?}/engine
+        target: /etc/atropos
+        read_only: true
+        bind: {create_host_path: false}
+      - engine-data:/var/lib/atropos
+  test-worker:
+    <<: *runtime
+    profiles: [simulation]
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+    command: [rules-worker, --config, /etc/atropos/engine.yml, --test]
+    networks: [control]
+    volumes: *worker-volumes
+networks:
+  control: {}
+volumes:
+  web-data: {}
+  engine-data: {}

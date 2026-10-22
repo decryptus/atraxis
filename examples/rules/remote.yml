@@ -1,0 +1,6 @@
+# Terminal-to-Atraxis connection. Copy to a private file (chmod 600).
+server:
+  url: https://atraxis.example.invalid
+token_file: atraxis-access.token
+timeout: 15
+# ca_file: organization-ca.pem

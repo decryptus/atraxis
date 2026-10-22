@@ -1,0 +1,5 @@
+[
+  {"name":"Below threshold","input":{"cpu_percent":40},"expected":{"decision":"ignore","matched_rule":"__default__"}},
+  {"name":"At threshold","input":{"cpu_percent":90},"expected":{"decision":"review","matched_rule":"combined"}},
+  {"name":"Multicore usage","input":{"cpu_percent":250},"expected":{"decision":"review","matched_rule":"combined"}}
+]

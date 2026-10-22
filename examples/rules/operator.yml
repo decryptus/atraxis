@@ -1,0 +1,14 @@
+# Trusted local POSIX operator, forwarding requests to Atropos. chmod 600.
+version: 2
+identities:
+  - uid: 1000
+    subject: local-operator
+    organization: example
+    atropos_client: atropos-client.yml
+# inventory_client: ../client.yml
+bindings:
+  - organization: example
+    target: [container, web-example]
+    source_id: monit-example
+    native_id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    filesystem: [data, /var/lib/data]

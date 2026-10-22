@@ -1,0 +1,8 @@
+general:
+  listen_addr: 127.0.0.1
+  listen_port: 9810
+  max_workers: 4
+  auth_basic_file: /etc/atraxis/users.htpasswd
+  rules_web_file: /etc/atraxis/web-rules.yml
+# Empty sources are not ready. Configure real read-only HTTPS sources explicitly.
+sources: []

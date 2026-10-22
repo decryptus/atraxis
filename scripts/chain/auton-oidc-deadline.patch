@@ -1,0 +1,190 @@
+diff --git a/auton/classes/oidc_transport.py b/auton/classes/oidc_transport.py
+index c070a16..5617a99 100644
+--- a/auton/classes/oidc_transport.py
++++ b/auton/classes/oidc_transport.py
+@@ -1,5 +1,7 @@
+ """Bounded OIDC token HTTP exchange; no flow/session/authorization policy."""
+ import json
++import subprocess
++import sys
+ import time
+ from urllib.parse import quote
+ import requests
+@@ -7,6 +9,8 @@ from httpdis.authentication import AuthenticationDenied, AuthenticationUnavailab
+ 
+ MAX_DOCUMENT_BYTES = 65536
+ OIDC_TIMEOUT = 5
++WORKER_MODULE = 'auton.classes.oidc_transport'
++MAX_REQUEST_BYTES = 262144
+ 
+ 
+ class OIDCTokenExchange:
+@@ -15,6 +19,40 @@ class OIDCTokenExchange:
+         self.redirect_uri = redirect_uri
+ 
+     def __call__(self, code, verifier):
++        started = time.monotonic()
++        process = None
++        try:
++            document = json.dumps(dict(endpoint=self.endpoint, client_id=self.client_id,
++                                       secret=self.secret, redirect_uri=self.redirect_uri,
++                                       code=code, verifier=verifier)).encode('utf-8')
++            if len(document) > MAX_REQUEST_BYTES:
++                raise AuthenticationUnavailable()
++            # Private stdin carries credentials; never place them in argv or logs.
++            # The parent deadline also bounds DNS, headers and slow buffered reads.
++            process = subprocess.Popen([sys.executable, '-m', WORKER_MODULE],
++                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE,
++                                       stderr=subprocess.DEVNULL, close_fds=True)
++            remaining = OIDC_TIMEOUT - (time.monotonic() - started)
++            if remaining <= 0:
++                raise AuthenticationUnavailable()
++            output, _ = process.communicate(document, timeout=remaining)
++            if process.returncode or time.monotonic() - started > OIDC_TIMEOUT:
++                raise AuthenticationUnavailable()
++            result = json.loads(output)
++            if result['status'] == 'denied':
++                raise AuthenticationDenied()
++            if result['status'] != 'success':
++                raise AuthenticationUnavailable()
++            return result['token']
++        except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired):
++            raise AuthenticationUnavailable() from None
++        finally:
++            if process is not None:
++                if process.poll() is None:
++                    process.kill()
++                process.communicate()
++
++    def _exchange(self, code, verifier):
+         payload = dict(grant_type='authorization_code', code=code, redirect_uri=self.redirect_uri,
+                        client_id=self.client_id, code_verifier=verifier)
+         auth = (quote(self.client_id, safe=''), quote(self.secret, safe='')) if self.secret is not None else None
+@@ -34,3 +72,24 @@ class OIDCTokenExchange:
+                 return body['id_token']
+         except (requests.RequestException, ValueError, KeyError, TypeError):
+             raise AuthenticationUnavailable() from None
++
++
++def main():
++    try:
++        raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
++        if len(raw) > MAX_REQUEST_BYTES:
++            raise AuthenticationUnavailable()
++        document = json.loads(raw)
++        exchange = OIDCTokenExchange(document['endpoint'], document['client_id'],
++                                     document['secret'], document['redirect_uri'])
++        token = exchange._exchange(document['code'], document['verifier'])
++        result = dict(status='success', token=token)
++    except AuthenticationDenied:
++        result = dict(status='denied')
++    except Exception:
++        result = dict(status='unavailable')
++    sys.stdout.write(json.dumps(result))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/tests/test_oidc_transport.py b/tests/test_oidc_transport.py
+new file mode 100644
+index 0000000..0d421af
+--- /dev/null
++++ b/tests/test_oidc_transport.py
+@@ -0,0 +1,97 @@
++"""Real local transport regressions; no external identities or credentials."""
++from contextlib import contextmanager
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++import json
++import threading
++import time
++import unittest
++from unittest.mock import patch
++
++from auton.classes import oidc_transport as transport
++from httpdis.authentication import AuthenticationDenied, AuthenticationUnavailable
++
++
++@contextmanager
++def endpoint(mode):
++    attempts = []
++
++    class Handler(BaseHTTPRequestHandler):
++        def log_message(self, *args):
++            pass
++
++        def do_POST(self):
++            attempts.append(self.path)
++            self.rfile.read(int(self.headers['Content-Length']))
++            try:
++                if mode == 'headers':
++                    time.sleep(2)
++                self.send_response(302 if mode == 'redirect' else 401 if mode == 'denied' else 200)
++                if mode == 'redirect':
++                    self.send_header('Location', '/must-not-follow')
++                body = json.dumps({'id_token': 'synthetic-token'}).encode()
++                if mode == 'oversize':
++                    body = b'x' * (transport.MAX_DOCUMENT_BYTES + 1)
++                elif mode == 'malformed':
++                    body = b'not-json'
++                self.send_header('Content-Length', str(len(body)))
++                self.end_headers()
++                if mode == 'body':
++                    for value in body:
++                        self.wfile.write(bytes([value]))
++                        self.wfile.flush()
++                        time.sleep(.08)
++                else:
++                    self.wfile.write(body)
++            except (BrokenPipeError, ConnectionResetError):
++                pass
++
++    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
++    thread = threading.Thread(target=server.serve_forever)
++    thread.start()
++    try:
++        yield 'http://127.0.0.1:%s/token' % server.server_port, attempts
++    finally:
++        server.shutdown()
++        server.server_close()
++        thread.join(3)
++
++
++class OIDCTransportTests(unittest.TestCase):
++    def exchange(self, uri):
++        return transport.OIDCTokenExchange(uri, 'synthetic-client', 'synthetic-secret',
++                                           'https://synthetic.example/callback')('code', 'verifier')
++
++    def test_real_success(self):
++        with endpoint('success') as (uri, attempts):
++            self.assertEqual(self.exchange(uri), 'synthetic-token')
++            self.assertEqual(attempts, ['/token'])
++
++    def test_slow_body_is_bounded_without_retry(self):
++        with endpoint('body') as (uri, attempts), patch.object(transport, 'OIDC_TIMEOUT', 1):
++            started = time.monotonic()
++            with self.assertRaises(AuthenticationUnavailable):
++                self.exchange(uri)
++            self.assertLess(time.monotonic() - started, 1.8)
++            self.assertEqual(attempts, ['/token'])
++
++    def test_slow_headers_are_bounded_without_retry(self):
++        with endpoint('headers') as (uri, attempts), patch.object(transport, 'OIDC_TIMEOUT', 1):
++            started = time.monotonic()
++            with self.assertRaises(AuthenticationUnavailable):
++                self.exchange(uri)
++            self.assertLess(time.monotonic() - started, 1.8)
++            self.assertEqual(attempts, ['/token'])
++
++    def test_redirect_and_refusal_are_not_retried(self):
++        for mode in ('redirect', 'denied'):
++            with self.subTest(mode=mode), endpoint(mode) as (uri, attempts):
++                with self.assertRaises(AuthenticationDenied):
++                    self.exchange(uri)
++                self.assertEqual(attempts, ['/token'])
++
++    def test_oversize_and_invalid_json_are_unavailable(self):
++        for mode in ('oversize', 'malformed'):
++            with self.subTest(mode=mode), endpoint(mode) as (uri, attempts):
++                with self.assertRaises(AuthenticationUnavailable):
++                    self.exchange(uri)
++                self.assertEqual(attempts, ['/token'])

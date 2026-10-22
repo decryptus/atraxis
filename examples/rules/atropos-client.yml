@@ -1,0 +1,7 @@
+# Server-side credential for one delegated identity in Atropos. chmod 600.
+# The subject/organization behind this token MUST match the gateway entry.
+server:
+  url: https://atropos.example.invalid
+token_file: atropos-access.token
+timeout: 15
+# ca_file: organization-ca.pem

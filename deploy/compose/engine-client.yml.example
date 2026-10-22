@@ -1,0 +1,5 @@
+server:
+  url: https://engine-tls:8443
+token_file: engine.token
+ca_file: engine-ca.pem
+timeout: 15

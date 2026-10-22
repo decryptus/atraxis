@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" role="img" aria-labelledby="title"><title id="title">Atraxis</title><g transform="translate(4 4)" color="#000000"><path fill="currentColor" fill-rule="evenodd" d="M3 34L31 13L59 34L31 56ZM10 34Q31 15 52 34Q31 53 10 34Z"/>
+<circle cx="31" cy="34" r="7" fill="currentColor"/>
+<path d="M22 10C44-3 68 15 63 42C62 49 53 57 43 58" fill="none" stroke="currentColor" stroke-width="3"/>
+<g fill="currentColor"><circle cx="43" cy="7" r="4"/><circle cx="59" cy="20" r="4"/><circle cx="60" cy="48" r="4"/></g></g></svg>

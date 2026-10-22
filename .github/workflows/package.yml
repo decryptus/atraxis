@@ -1,0 +1,43 @@
+name: Installed package and documentation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the daemon native dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libmagic1
+      - run: python -m pip install build==1.6.1
+      - name: Build source archive and wheel from that archive
+        run: python -m build
+      - name: Install only the built wheel in a fresh environment
+        run: |
+          python -m venv "$RUNNER_TEMP/atraxis-installed"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip check
+      - name: Exercise installed CLI and SQLite recovery outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/atraxis-installed/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/installed_tests"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/installed_tests" -v
+  documentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r docs/requirements.txt
+      - run: python -m sphinx -n -W --keep-going -b html . "$RUNNER_TEMP/atraxis-docs"

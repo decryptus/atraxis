@@ -1,0 +1,7 @@
+*
+!.acceptance/
+!.acceptance/engine/
+!.acceptance/engine/client/
+!.acceptance/engine/client/**
+**/__pycache__
+**/*.pyc

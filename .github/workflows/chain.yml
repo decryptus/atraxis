@@ -1,0 +1,81 @@
+name: container chain acceptance
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atropos
+          ref: cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+          path: .acceptance/engine
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/auton
+          ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
+          path: .auton-source
+          persist-credentials: false
+      - name: Verify public inputs and prepare the bounded Auton fixture
+        run: python scripts/chain/prepare-public-inputs.py
+      - name: Build separate installed service images (no publication)
+        run: |
+          docker build --tag atraxis-acceptance:ci .
+          docker build --tag atraxis-ingress:ci --file scripts/network/Dockerfile .
+          docker build --tag atraxis-chain:ci --file scripts/chain/atraxis.Dockerfile .
+          docker build --tag atropos-chain:ci --file scripts/chain/engine.Dockerfile .
+          docker build --tag auton-chain:ci --file scripts/chain/auton.Dockerfile .
+      - name: Verify installed candidates match pinned sources
+        run: python scripts/chain/verify-installed-candidates.py
+      - name: Collect every container acceptance case
+        run: python scripts/check-test-collection.py --runner unittest container_tests
+      - name: Run complete HTTPS chain with disposable effects and failure injection
+        env:
+          AUTON_TEST_SOURCE: ${{ github.workspace }}/.auton-source
+        shell: bash
+        run: python -m unittest discover -s container_tests -v 2>&1 | tee acceptance-artifacts/short-chain.log
+      - name: Preserve synthetic provenance and short-chain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-evidence
+          path: acceptance-artifacts/*
+          retention-days: 7
+          if-no-files-found: error
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atropos
+          ref: cc370fa95ec1daa8d1c7ea9fc5b95fbf29188696
+          path: .acceptance/engine
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/auton
+          ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
+          path: .auton-source
+          persist-credentials: false
+      - name: Verify public inputs and prepare the bounded Auton fixture
+        run: python scripts/chain/prepare-public-inputs.py
+      - name: Collect operator Compose acceptance
+        run: python scripts/check-test-collection.py --runner unittest compose_tests
+      - name: Build and verify operator Compose with disposable pinned inputs
+        # Root prepares test-owned UID 10001 files on this disposable runner only.
+        # All four long-running Compose services retain their non-root protections.
+        run: sudo "$(command -v python)" -m unittest discover -s compose_tests -v

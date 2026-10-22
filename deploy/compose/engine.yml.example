@@ -1,0 +1,14 @@
+version: 1
+namespace: operator-site
+storage:
+  backend: sqlite
+  url: sqlite:////var/lib/atropos/engine.db
+queue:
+  backend: storage
+identities:
+  - token_sha256: REPLACE_WITH_TOKEN_SHA256
+    subject: REPLACE_SUBJECT
+    organization: REPLACE_ORGANIZATION
+resources: []
+grants: []
+# No action bindings, executor, execution worker or implicit intervention.

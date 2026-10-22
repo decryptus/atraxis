@@ -1,0 +1,10 @@
+general:
+  listen_addr: 127.0.0.1
+  listen_port: 9810
+  max_workers: 4
+  auth_basic_file: /run/secrets/atraxis.htpasswd
+  behind_tls_proxy: false
+
+# Collection starts with serve. Empty sources are valid but never ready.
+# Use setup and doctor; see docs/setup.md and docs/source-configuration.md.
+sources: []
