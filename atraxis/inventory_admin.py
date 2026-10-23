@@ -147,8 +147,8 @@ GRANT_FORM_FIELDS = (
     ('organization', 'Organization ID', ''),
     ('subject_kind', 'Recipient type (user or group)', 'user'),
     ('subject', 'Recipient ID', ''),
-    ('kind', 'Target type (source, server, container, certificate or group)', 'container'),
-    ('source', 'Source ID (container or certificate only)', ''),
+    ('kind', 'Target type (source, server, container, certificate, metric or group)', 'container'),
+    ('source', 'Source ID (container, certificate or metric only)', ''),
     ('id', 'Target ID', ''),
 )
 
@@ -157,7 +157,7 @@ def request_from_fields(fields):
     require(type(fields) is dict and set(fields) == {name for name, _, _ in GRANT_FORM_FIELDS})
     require(all(type(v) is str and len(v) <= 128 for v in fields.values()))
     target = dict(kind=fields['kind'], id=fields['id'])
-    if fields['kind'] in ('container', 'certificate'):
+    if fields['kind'] in ('container', 'certificate', 'metric'):
         target['source'] = fields['source']
     else:
         require(not fields['source'])

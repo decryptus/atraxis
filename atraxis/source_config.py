@@ -16,10 +16,11 @@ MIN_TIMEOUT = 1
 MAX_TIMEOUT = 60
 MIN_RESPONSE_BYTES = 1024
 MAX_RESPONSE_BYTES = 4194304
-SOURCE_ROUTES = {'monit_docker': '/v1/status', 'certlord': '/api/certificates/observations'}
+SOURCE_ROUTES = {'monit_docker': '/v1/status', 'certlord': '/api/certificates/observations',
+                 'prometheus': '/api/v1/query'}
 SOURCE_SCHEMA = xys.load('''
 source_id![1,128]: !!str
-kind: !~~enum(monit_docker,certlord)
+kind: !~~enum(monit_docker,certlord,prometheus)
 origin![1,2048]: !!str
 credentials_file![1,4096]: !!str
 ca_file?[1,4096]: !!str
@@ -62,6 +63,7 @@ class SourceConfig:
     max_response_bytes: int
     max_resources: int
     max_clock_skew: int
+    metric: dict | None = field(default=None, repr=False)
 
     @property
     def url(self):
@@ -149,7 +151,18 @@ def parse_sources(documents, config_path):
         _require(type(documents) is list and len(documents) <= MAX_SOURCES)
         sources, seen = [], set()
         for document in documents:
-            _require(xys.validate(document, SOURCE_SCHEMA))
+            _require(type(document) is dict)
+            plain = {k: v for k, v in document.items() if k != 'metric'}
+            _require(xys.validate(plain, SOURCE_SCHEMA))
+            metric = None
+            if document['kind'] == 'prometheus':
+                from atraxis.prometheus import selection, query_parameters
+                metric = selection(document.get('metric'))
+                query_parameters(metric, document.get('max_age', DEFAULT_MAX_AGE),
+                                 document.get('timeout', DEFAULT_TIMEOUT),
+                                 document.get('max_resources', DEFAULT_MAX_RESOURCES))
+            else:
+                _require('metric' not in document)
             identity = document['source_id']
             identity.encode('utf-8')
             _require(identity == identity.strip())
@@ -165,7 +178,7 @@ def parse_sources(documents, config_path):
                            interval, timeout, max_age,
                            document.get('max_response_bytes', DEFAULT_MAX_RESPONSE_BYTES),
                            document.get('max_resources', DEFAULT_MAX_RESOURCES),
-                           document.get('max_clock_skew', DEFAULT_MAX_CLOCK_SKEW)))
+                           document.get('max_clock_skew', DEFAULT_MAX_CLOCK_SKEW), metric))
         return tuple(sources)
     except InvalidSourceConfiguration:
         raise

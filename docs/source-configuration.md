@@ -28,8 +28,11 @@ characters or leading/trailing whitespace). It can contain a name or UUID and mu
 be unique in the file. Keep it when an installation's URL changes. Resource identity
 also includes source identity; identical native IDs on two sources stay distinct.
 
-Only `monit_docker` and `certlord` are accepted. Their GET routes are fixed to
-`/v1/status` and `/api/certificates/observations`. `origin` contains just the scheme,
+Accepted kinds are `monit_docker`, `certlord` and `prometheus`. Their GET routes
+are fixed to `/v1/status`, `/api/certificates/observations` and `/api/v1/query`.
+Prometheus requires an explicit `metric` selection; see the
+[Covenant/Prometheus guide](prometheus.md) for configuration and sample semantics.
+`origin` contains just the scheme,
 host and optional port, with an optional trailing slash. Userinfo, arbitrary paths,
 query strings, fragments, whitespace and percent escapes are rejected. Unicode DNS
 names are normalized to IDNA. Custom proxy path prefixes are not supported yet.
@@ -62,7 +65,7 @@ Certificate and hostname checks are exercised by the transport tests.
 | `max_resources` | 1000 | 1–10000 |
 | `max_clock_skew` | 30 s | 0–300 s |
 
-`max_resources` bounds the container/certificate count and separately the total
+`max_resources` bounds the container/certificate/metric-series count and separately the total
 filesystem observations in a monit-docker response. Oversized collections fail
 without replacing the previous valid snapshot.
 

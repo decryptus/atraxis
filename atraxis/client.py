@@ -6,12 +6,13 @@ from uuid import UUID
 from atraxis.parsing import InvalidPayload, number, require, text
 from atraxis.transport import HTTPTransport
 from atraxis.source_config import MAX_SOURCES
+from atraxis.prometheus import validate_fields as metric_fields
 
 
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_DEGRADED = 2
-SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate'}
+SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate', 'prometheus': 'metric'}
 AVAILABILITY = frozenset(('unknown', 'available', 'unavailable'))
 FRESHNESS = frozenset(('fresh', 'stale', 'unknown'))
 REASONS = frozenset(('no_visible_sources', 'collectors_not_configured', 'collector_stopped', 'sources_not_current'))
@@ -126,17 +127,18 @@ def validate_inventory(payload):
                         and resource.get('kind') == SOURCE_KINDS[kind])
                 native_id = text(resource.get('native_id'))
                 try:
-                    require(DOCKER_ID.fullmatch(native_id) is not None if kind == 'monit_docker'
+                    require(DOCKER_ID.fullmatch(native_id) is not None if kind in ('monit_docker', 'prometheus')
                             else str(UUID(native_id)) == native_id)
                 except ValueError:
                     raise InvalidPayload() from None
                 require(native_id not in native_ids)
                 native_ids.add(native_id)
-                fields = _object(resource.get('fields'),
-                                 CONTAINER_FIELDS if kind == 'monit_docker' else CERTIFICATE_FIELDS)
+                fields = (metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
+                          _object(resource.get('fields'),
+                                 CONTAINER_FIELDS if kind == 'monit_docker' else CERTIFICATE_FIELDS))
                 if kind == 'monit_docker':
                     text(fields.get('name'))
-                else:
+                elif kind == 'certlord':
                     require(type(fields.get('domains')) is list and bool(fields['domains']))
                     for domain in fields['domains']:
                         text(domain)

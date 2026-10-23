@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 22 October 2026. Atraxis is an experimental coordination application.
+Updated 23 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -8,6 +8,9 @@ stable release. Priorities may change; no release date is promised.
 
 - Read-only HTTP collection and an authenticated inventory API and web interface,
   with explicit current, historical and unavailable observations.
+- Selected numeric Prometheus samples, including Covenant exports, with explicit
+  label projection, sample timestamps, read grants and inventory search. This
+  experimental adapter does not supply metric-driven interventions or graphs.
 - Scoped accounts, organizations, memberships, bounded delegation and inventory
   permissions; section searches through the documented web, CLI and Textual flows.
 - SQLite account storage, explicit backup/restore, configuration setup and

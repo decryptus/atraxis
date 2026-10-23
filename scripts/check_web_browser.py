@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import threading
+import time
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 import yaml
@@ -22,6 +23,9 @@ from atraxis.server import _Handler, build_context
 from atraxis.service import ReadService
 from test_web import inventory
 from test_web_rules import REVISION
+from test_prometheus import response as metric_response, SPEC
+from atraxis.source_config import SourceConfig
+from atraxis.transport import TransportResult
 from web_editor_fixture import RetirementLifecycleFake, NEW_REVISION, CASES
 
 
@@ -40,6 +44,13 @@ class FixtureService(ReadService):
             fields=dict(domains=['demo.example.test'], status='exists', material_state='missing',
                         not_after=None, renewal_owner='external'))]
         self.payload['sources'].append(certificate)
+        metrics = ReadService([SourceConfig('covenant-orders', 'prometheus', 'https://prometheus.example',
+            '/synthetic/unused.json', None, 60, 10, 180, 1048576, 10, 2, SPEC)], clock=lambda: 100.)
+        metrics.set_running(True)
+        sampled_at = time.time()
+        metrics.record('covenant-orders', TransportResult('covenant-orders', 'success', sampled_at, sampled_at,
+                                                        100., metric_response(sampled_at-20)))
+        self.payload['sources'].extend(metrics.status()['sources'])
 
     def status(self):
         with self._lock:
@@ -97,7 +108,9 @@ def main():
                     response = page.goto(origin + '/ui')
                     assert response.status == 200
                     assert page.get_by_role('heading', name='Inventory overview').is_visible()
-                    assert page.locator('.source').count() == 2
+                    assert page.locator('.source').count() == 3
+                    assert page.get_by_text('orders_pending', exact=True).is_visible()
+                    assert page.get_by_text('Prometheus metrics', exact=True).is_visible()
                     assert page.locator('body').evaluate('(el) => getComputedStyle(el).backgroundColor') == 'rgb(9, 17, 31)', 'CSP blocked the stylesheet'
                     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'page overflows viewport'
                     page.get_by_text('Details', exact=True).first.focus()
@@ -112,7 +125,7 @@ def main():
                         last_attempt=dict(outcome='timeout'))
                 page.get_by_role('link', name='Refresh snapshot').click()
                 assert page.get_by_text('Historical snapshot', exact=True).is_visible()
-                assert page.get_by_text('Current at page load', exact=True).is_visible()
+                assert page.get_by_text('Current at page load', exact=True).first.is_visible()
                 page.set_viewport_size(dict(width=1440, height=1100))
                 page.screenshot(path=str(output / 'historical.png'), full_page=True)
                 page.get_by_role('link', name='Rules', exact=True).click()
@@ -383,7 +396,7 @@ def inventory_admin_acceptance():
                 page.screenshot(path=str(output/('inventory-admin-'+name+'.png')),full_page=True)
             page.get_by_role('link',name='Add read grant',exact=True).click()
             page.get_by_label('Recipient ID',exact=True).fill('bob')
-            page.get_by_label('Source ID (container or certificate only)',exact=True).fill('docker-lab')
+            page.get_by_label('Source ID (container, certificate or metric only)',exact=True).fill('docker-lab')
             page.get_by_label('Target ID',exact=True).fill('b'*64)
             with page.expect_response(lambda response:response.request.method=='POST' and response.url.endswith('/ui/inventory-access/review')) as reviewed:
                 page.get_by_role('button',name='Review grant',exact=True).click()

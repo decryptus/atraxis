@@ -1,9 +1,9 @@
 # Periodic collection and authenticated inventory
 
-Experimental prototype. Atraxis reads configured monit-docker and
-CertLord installations, keeps their last valid inventory in memory and exposes
-it through `GET /v1/status`. No business mutation, restart, certificate change or
-job submission is implemented. Stopping Atraxis leaves local tools autonomous.
+Experimental prototype. Atraxis reads configured monit-docker, CertLord and
+Prometheus sources, keeps their last valid inventory in memory and exposes it
+through `GET /v1/status`. Collection performs no business mutation, restart,
+certificate change or job submission. Stopping Atraxis leaves local tools autonomous.
 
 ## Lifecycle and scheduling
 
@@ -35,9 +35,11 @@ claim of a hard real-time shutdown bound.
 ## Read API
 
 All routes require inbound Basic authentication. Remote access requires the
-configured TLS reverse proxy. Every authorized reader sees the same configured
-sources: this stage covers one organization, without per-source roles or tenant
-isolation. `GET` and `HEAD` are supported; mutation methods are not.
+configured TLS reverse proxy. Without an inventory access profile, authenticated
+readers share the configured sources. With a profile, current organization
+membership and explicit read grants filter the response; see
+[access and scope](web-inventory.md#access-and-scope). `GET` and `HEAD` are
+supported on these read routes; mutation methods are not.
 
 | Route | Meaning |
 | --- | --- |
@@ -78,6 +80,10 @@ failure, but `current: false` makes clear it is historical. Consumers must check
 `current`, not just the presence of resources or the age label. A fresh,
 authoritative empty result intentionally replaces the previous list with `[]`.
 A never-observed source has `last_valid_snapshot: null`, not an empty-success list.
+For Prometheus, an empty query is unknown and does not replace the previous valid
+snapshot. Prometheus sample age is not original-data age or source health; series
+can remain visible within the configured window after scraping stops. See the
+[metric guide](prometheus.md) for this distinct freshness contract.
 
 For example: if monitor A times out while CertLord B still responds, A retains its
 previous resources with `current: false`; B remains current; `/readyz` returns 503
@@ -95,9 +101,10 @@ Source clock accuracy cannot be proven from an API response. Large configured
 inventories can consume substantial memory; the body/resource bounds are not
 benchmarked total-RSS limits, and inventory pagination is not implemented.
 
-Synthetic tests cover both source kinds, stale/unknown/malformed results, retention,
+Synthetic tests cover all three source kinds, stale/unknown/malformed results, retention,
 authoritative empty inventories, source isolation, bounded admission, scheduling,
 recovery, inbound/outbound authentication and real daemon SIGTERM with a blocked
 source. They do not establish production capacity, leak absence, sustained-load
 behavior or successful integration with deployed sources. The [API-backed CLI](cli.md) is implemented. Synthetic Docker acceptance is covered in the [validation guide](contributing.md).
-TUI, durable storage and live-source acceptance remain future work. No deployment or publication is part of this change.
+The [Textual interface](textual.md) is available. Durable inventory storage and
+live-source qualification remain separate work; these tests use synthetic sources.

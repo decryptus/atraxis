@@ -6,7 +6,7 @@ import hashlib
 from urllib.parse import urlencode
 
 MAX_DISPLAY_ROWS = 200
-SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord'}
+SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics'}
 REASONS = {'no_visible_sources': 'No sources are available in your inventory scope','collectors_not_configured': 'No sources configured',
            'collector_stopped': 'Collection stopped',
            'sources_not_current': 'Some observations are not current'}
@@ -50,6 +50,11 @@ def value(item, suffix=''):
 def details(resource):
     fields = resource['fields']
     rows = '<dt>Resource ID</dt><dd><code>' + text(resource['native_id']) + '</code></dd>'
+    if resource.get('kind') == 'metric':
+        rows += '<dt>Sample value</dt><dd>' + value(fields['value']) + '</dd>'
+        rows += '<dt>Prometheus sample time (UTC)</dt><dd>' + sample_time(fields['sampled_at']) + '</dd>'
+        for label in fields['labels']:
+            rows += '<dt>' + text(label['name']) + '</dt><dd>' + text(label['value']) + '</dd>'
     for name in DETAIL_FIELDS:
         if name in fields:
             item = fields[name]
@@ -57,6 +62,13 @@ def details(resource):
                 item = 'Yes' if item else 'No'
             rows += '<dt>' + text(name.replace('_', ' ').capitalize()) + '</dt><dd>' + value(item) + '</dd>'
     return '<details><summary>Details</summary><dl>' + rows + '</dl></details>'
+
+
+def sample_time(stamp):
+    try:
+        return text(datetime.fromtimestamp(stamp, timezone.utc).isoformat())
+    except (ValueError, OverflowError, OSError):
+        return text(stamp) + ' Unix seconds'
 
 
 def source_panel(source):
@@ -72,6 +84,8 @@ def source_panel(source):
     result = '<section class="source"><div class="source-heading"><div><div class="eyebrow">' + text(SOURCE_NAMES[source['kind']]) + '</div><h2>' + text(source['source_id']) + '</h2></div><span class="badge ' + state + '">' + label + '</span></div>'
     if partial:
         result += '<p class="notice">Selected resources only. Counts reflect your permissions.</p>'
+    if source['kind'] == 'prometheus':
+        result += '<p class="muted">Latest retained Prometheus samples. Sample age does not prove when the original data changed or that its source is healthy.</p>'
     result += '<div class="source-meta"><span>Availability: ' + text(source['availability']) + '</span><span>Last collection: ' + text(outcome) + '</span><span>Observation age at load: ' + ('Unknown' if age is None else text('%.1f s' % age)) + '</span><span>' + ('Visible resources: ' if partial else 'Snapshot resources: ') + value(count) + '</span></div>'
     if snapshot is None:
         return result + '<div class="empty">No valid snapshot available. Resource count and measurements are unknown.</div></section>'
@@ -84,11 +98,17 @@ def source_panel(source):
                    'The current snapshot contains no resources.' if current else 'The retained snapshot contained no resources. Current inventory is unknown.')
         return result + '<div class="empty">' + message + '</div></section>'
     container = source['kind'] == 'monit_docker'
-    titles = ('Container', 'Reported state', 'CPU', 'Memory') if container else ('Certificate', 'Reported state', 'Material', 'Expires')
+    metric = source['kind'] == 'prometheus'
+    titles = (('Metric', 'Sample value', 'Sample time (UTC)', 'Labels') if metric else
+              ('Container', 'Reported state', 'CPU', 'Memory') if container else ('Certificate', 'Reported state', 'Material', 'Expires'))
     result += '<div class="table-wrap" role="region" aria-label="Resources for ' + text(source['source_id']) + '" tabindex="0"><table><thead><tr>' + ''.join('<th scope="col">' + title + '</th>' for title in titles) + '</tr></thead><tbody>'
     for resource in resources[:MAX_DISPLAY_ROWS]:
         fields = resource['fields']
-        name = fields['name'] if container else ', '.join(fields['domains'])
+        name = fields['name'] if container or metric else ', '.join(fields['domains'])
+        if metric:
+            labels = ', '.join(label['name'] + '=' + label['value'] for label in fields['labels'])
+            result += '<tr><td class="name"><span class="resource-name">' + text(name) + '</span>' + details(resource) + '</td><td>' + value(fields['value']) + '</td><td>' + sample_time(fields['sampled_at']) + '</td><td class="name">' + text(labels) + '</td></tr>'
+            continue
         cells = (value(fields.get('cpu_percent'), '%'), value(fields.get('mem_percent'), '%')) if container else (value(fields.get('material_state')), value(fields.get('not_after')))
         result += '<tr><td class="name"><span class="resource-name">' + text(name) + '</span>' + details(resource) + '</td><td>' + value(fields.get('status')) + '</td>' + ''.join('<td class="value">' + item + '</td>' for item in cells) + '</tr>'
     result += '</tbody></table></div>'
@@ -140,5 +160,5 @@ def render_inventory(payload, *, now=None, rules_enabled=False, accounts_enabled
     ready = payload['ready']
     notice = 'All configured sources have current observations.' if ready else REASONS[payload['reason']] + '.'
     metrics = ''.join('<div class="metric"><strong>' + str(count) + '</strong><span>' + label + '</span></div>' for count, label in ((len(sources), 'Configured sources'), (current, 'Current sources'), (observed, 'Resources in current sources')))
-    panels = ''.join(source_panel(source) for source in sources) if sources else '<div class="empty"><h2>No sources configured</h2><p class="muted">Add a monit-docker or CertLord source to the daemon configuration, then restart collection.</p></div>'
-    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inventory · Atraxis</title><style>' + CSS + '</style></head><body><a class="skip" href="#inventory">Skip to inventory</a><header><div class="brand">ATRA<span>XIS</span></div><div class="eyebrow">Operations / Inventory</div><a href="/ui/search">Search inventory</a></header><main id="inventory"><div class="intro"><div><div class="eyebrow">Your infrastructure, in view</div><h1>Inventory overview</h1><p class="muted">Containers, certificates and the sources behind them.</p></div><a class="button" href="/ui">Refresh snapshot</a></div><p class="muted">Snapshot at ' + stamp + '. Refresh to check for changes.</p><div class="notice' + (' good' if ready else '') + '">' + notice + '</div><div class="metrics">' + metrics + '</div>' + panels + '<footer>Read-only inventory · Values are observations, not inferred health scores. CPU may exceed 100% on multi-core hosts.</footer></main></body></html>'
+    panels = ''.join(source_panel(source) for source in sources) if sources else '<div class="empty"><h2>No sources configured</h2><p class="muted">Add a monit-docker, CertLord or Prometheus source to the daemon configuration, then restart collection.</p></div>'
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inventory · Atraxis</title><style>' + CSS + '</style></head><body><a class="skip" href="#inventory">Skip to inventory</a><header><div class="brand">ATRA<span>XIS</span></div><div class="eyebrow">Operations / Inventory</div><a href="/ui/search">Search inventory</a></header><main id="inventory"><div class="intro"><div><div class="eyebrow">Your infrastructure, in view</div><h1>Inventory overview</h1><p class="muted">Containers, certificates, metrics and the sources behind them.</p></div><a class="button" href="/ui">Refresh snapshot</a></div><p class="muted">Snapshot at ' + stamp + '. Refresh to check for changes.</p><div class="notice' + (' good' if ready else '') + '">' + notice + '</div><div class="metrics">' + metrics + '</div>' + panels + '<footer>Read-only inventory · Values are observations, not inferred health scores. CPU may exceed 100% on multi-core hosts.</footer></main></body></html>'

@@ -34,7 +34,7 @@ def render_search(result):
     body+='<div class="search-fields">'
     for key in FILTER_FIELDS:
         body+='<p'+(' class="search-query"' if key=='q' else '')+'><label>'+LABELS[key]+' '
-        choices={'state':('all','current','historical'),'kind':('all','container','certificate')}.get(key)
+        choices={'state':('all','current','historical'),'kind':('all','container','certificate','metric')}.get(key)
         if choices:
             body+='<select name="'+key+'">'+''.join('<option value="'+v+'"'+(' selected' if query[key]==v else '')+'>'+v.capitalize()+'</option>' for v in choices)+'</select>'
         else:
@@ -53,7 +53,7 @@ def render_search(result):
     else:
         body+='<section class="source"><div class="table-wrap"><table><thead><tr><th>Resource</th><th>Source</th><th>Type</th><th>Observation</th><th>Reported state</th></tr></thead><tbody>'
         for row in result['items']:
-            fields=row['fields'];name=fields['name'] if row['kind']=='container' else ', '.join(fields['domains'])
+            fields=row['fields'];name=', '.join(fields['domains']) if row['kind']=='certificate' else fields['name']
             body+='<tr><td class="name">'+text(name)+details(row)+'</td><td>'+text(row['source_id'])+'</td><td>'+text(row['kind'])+'</td><td>'+text(row['state'])+'</td><td>'+value(fields.get('status'))+'</td></tr>'
         body+='</tbody></table></div></section>'
     params=dict(query,**base)

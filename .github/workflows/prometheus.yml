@@ -1,0 +1,27 @@
+name: Prometheus metric chain
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  sample-semantics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/covenant
+          ref: 3b7e446e494847065ac9890e089da0fa75ff590f
+          path: fixture-covenant
+          persist-credentials: false
+      - name: Download and verify Prometheus 3.5.0
+        run: |
+          curl --fail --location --max-time 120 https://github.com/prometheus/prometheus/releases/download/v3.5.0/prometheus-3.5.0.linux-amd64.tar.gz -o "$RUNNER_TEMP/prometheus.tar.gz"
+          echo "e811827af26d822afb09a4f28314f61b618b12cff5369835a67f674d8b46f39a  $RUNNER_TEMP/prometheus.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/prometheus.tar.gz" -C "$RUNNER_TEMP" prometheus-3.5.0.linux-amd64/prometheus
+      - name: Check retained values, configured fallback and recovery
+        run: python scripts/check_prometheus_chain.py --prometheus "$RUNNER_TEMP/prometheus-3.5.0.linux-amd64/prometheus" --covenant-source fixture-covenant

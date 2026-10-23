@@ -21,7 +21,7 @@ from atraxis.source_config import parse_sources, MAX_SOURCES
 MAX_PROFILE_BYTES = 262144
 MAX_HISTORY = 100
 SETTINGS = ('timeout', 'poll_interval', 'max_age')
-CONNECTION_FIELDS = frozenset({'kind','origin','credentials_file','ca_file','allow_loopback_http'})
+CONNECTION_FIELDS = frozenset({'kind','origin','credentials_file','ca_file','allow_loopback_http','metric'})
 OPERATIONS = frozenset({'source.add','source.update','source.remove'})
 HASH = re.compile(r'[0-9a-f]{64}')
 
