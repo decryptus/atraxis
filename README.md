@@ -7,6 +7,17 @@ Coordination layer for the Atraxis observability and automation ecosystem.
 [Website (EN)](https://atraxis.io/) · [Site (FR)](https://atraxis.io/fr.html) ·
 [User guide](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
 
+## Try the public demo
+
+[Open the demo (EN)](https://atraxis.io/demo.html?lang=en) ·
+[Ouvrir la démo (FR)](https://atraxis.io/demo.html?lang=fr)
+
+No account is required. Explore six synthetic resources, inspect retained observations
+when a source is unavailable, and try a CPU-threshold example. This discovery
+walkthrough runs entirely in the browser, stores no data and makes no service calls.
+The local educational simulation is not connected to an Atropos engine or to the
+authenticated pilot; installing Atraxis provides the actual service-backed interfaces.
+
 ## Install from source
 
 Requires Python 3.11 or later. Start in a dedicated virtual environment:
