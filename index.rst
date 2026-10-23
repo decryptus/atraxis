@@ -9,6 +9,7 @@ Experimental GPLv3 software. Evaluate the documented limits before deploying.
    :maxdepth: 1
    :caption: User guide
 
+   docs/README
    docs/setup
    docs/docker-compose
    docs/web-configuration

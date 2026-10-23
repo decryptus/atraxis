@@ -5,7 +5,7 @@
 Coordination layer for the Atraxis observability and automation ecosystem.
 
 [Website (EN)](https://atraxis.io/) · [Site (FR)](https://atraxis.io/fr.html) ·
-[User guide](index.rst) · [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
+[User guide](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
 
 ## Install from source
 
@@ -77,7 +77,7 @@ The [bounded read-only HTTP transport](docs/http-transport.md) is implemented an
 
 ## Documentation
 
-- **Users:** [installation and diagnostics](docs/setup.md), [Docker Compose](docs/docker-compose.md), configuration and operation in the [user guide](index.rst).
+- **Users:** [installation and diagnostics](docs/setup.md), [Docker Compose](docs/docker-compose.md), configuration and operation in the [user guide](docs/README.md).
 - **Contributors:** [architecture, tests and development](https://github.com/decryptus/atraxis/blob/main/CONTRIBUTING.md).
 
 
