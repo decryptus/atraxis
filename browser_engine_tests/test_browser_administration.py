@@ -127,7 +127,7 @@ class AdministrationTests(HTTPSBrowserFixture):
         self.assertEqual(self.page.goto(self.origin + '/ui/inventory-access').status, 200)
         self.follow('Add read grant')
         self.page.get_by_label('Recipient ID', exact=True).fill('bob')
-        self.page.get_by_label('Source ID (container or certificate only)', exact=True).fill('monit')
+        self.page.get_by_label('Source ID (container, certificate or metric only)', exact=True).fill('monit')
         self.page.get_by_label('Target ID', exact=True).fill('a'*64)
         self.submit('Review grant', '/ui/inventory-access/review', status=200)
         self.page.get_by_label('I confirm this inventory access change.', exact=True).wait_for()

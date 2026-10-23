@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict
 from urllib.parse import parse_qsl, urlsplit
 from atraxis.accounts import identifier
 from atraxis.resource_scopes import ResourceScopes, source_id
+from atraxis.client import SOURCE_KINDS
 
 MAX_QUERY_LENGTH = 128
 MAX_QUERY_BYTES = 4096
@@ -11,7 +12,7 @@ MAX_PAGE = 100000
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 200
 STATES = frozenset({'all', 'current', 'historical'})
-KINDS = frozenset({'all', 'container', 'certificate'})
+KINDS = frozenset({'all', 'container', 'certificate', 'metric'})
 FILTER_FIELDS = ('q', 'state', 'status', 'kind', 'source', 'server', 'group')
 
 
@@ -83,7 +84,7 @@ def search_inventory(payload, query, *, servers=(), resource_groups=()):
             continue
         if selection is not None and sid not in selection:
             continue
-        source_kind = 'container' if source['kind'] == 'monit_docker' else 'certificate'
+        source_kind = SOURCE_KINDS[source['kind']]
         if query.kind != 'all' and query.kind != source_kind:
             continue
         snapshot = source['last_valid_snapshot']
@@ -94,7 +95,7 @@ def search_inventory(payload, query, *, servers=(), resource_groups=()):
         if snapshot is None or query.state != 'all' and query.state != state:
             continue
         for resource in snapshot['resources']:
-            kind = resource.get('kind', 'container' if source['kind'] == 'monit_docker' else 'certificate')
+            kind = resource.get('kind', source_kind)
             native_id = resource['native_id']
             if query.kind != 'all' and kind != query.kind:
                 continue
@@ -104,6 +105,8 @@ def search_inventory(payload, query, *, servers=(), resource_groups=()):
             if query.status and str(fields.get('status', '')).casefold() != query.status.casefold():
                 continue
             values = [sid, native_id, fields.get('name', ''), *fields.get('domains', [])]
+            if kind == 'metric':
+                values.extend(label['value'] for label in fields['labels'])
             if needle and not any(needle in str(v).casefold() for v in values):
                 continue
             matches.append(dict(source_id=sid, kind=kind, native_id=native_id, state=state,

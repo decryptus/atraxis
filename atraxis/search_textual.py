@@ -63,7 +63,7 @@ class InventorySearchApp(ServiceDashboard):
         self.data=data
         rows=[]
         for row in data['items']:
-            name=row['fields']['name'] if row['kind']=='container' else ', '.join(row['fields']['domains'])
+            name=', '.join(row['fields']['domains']) if row['kind']=='certificate' else row['fields']['name']
             key=hashlib.sha256(json.dumps([row['source_id'],row['kind'],row['native_id']]).encode()).hexdigest()
             rows.append(TableRow(key,(row['source_id'],name,row['kind'],row['state']),name,json.dumps(row,indent=2,ensure_ascii=True)))
         self.display_rows(rows)
@@ -93,7 +93,7 @@ class InventorySearchApp(ServiceDashboard):
             except (TypeError,ValueError):self.failed(None);return
             self.query_one(Input).value=self.query.q;self.action_refresh()
         self.push_screen(AccountForm('Inventory filters',[(k,k.capitalize(),getattr(self.query,k),False) for k in FILTER_FIELDS],
-            hint='State: all/current/historical. Kind: all/container/certificate. Other filters use IDs.',submit='Search'),received)
+            hint='State: all/current/historical. Kind: all/container/certificate/metric. Other filters use IDs.',submit='Search'),received)
 
     def on_dashboard_app_navigation_requested(self,event):
         if event.key=='refresh':self.action_refresh()

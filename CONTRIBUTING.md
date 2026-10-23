@@ -2,6 +2,7 @@
 
 - [Development and validation](docs/contributing.md)
 - [Read-only adapter design](docs/read-only-adapters.md)
+- [Prometheus adapter review](docs/prometheus-acceptance.md)
 - [Core design](docs-core.md)
 - [Public roadmap](ROADMAP.md)
 

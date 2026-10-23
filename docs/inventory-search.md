@@ -13,10 +13,10 @@ are required. Results come from collected snapshots, not new upstream requests.
 
 | Field | Meaning |
 | --- | --- |
-| Name or identifier (`q`) | Case-insensitive substring of resource name, certificate domain, native resource ID or source ID |
+| Name or identifier (`q`) | Case-insensitive substring of resource name, certificate domain, selected metric label value, native resource ID or source ID |
 | Observation state (`state`) | `all`, `current` or `historical` at search time |
 | Reported state (`status`) | Exact case-insensitive reported status, such as `running`; empty accepts any status |
-| Resource type (`kind`) | `all`, `container` or `certificate` |
+| Resource type (`kind`) | `all`, `container`, `certificate` or `metric` |
 | Source (`source`) | Exact source ID |
 | Server (`server`) | Exact operator-defined server ID in the selected organization |
 | Resource group (`group`) | Exact resource-group ID in the selected organization |

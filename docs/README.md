@@ -11,6 +11,7 @@ interfaces. Atropos is the independent service for rule lifecycle and workflows.
 - [Single-host Docker Compose installation](docker-compose.md)
 - [Runtime configuration](../docs-runtime.md)
 - [Source profiles and collection limits](source-configuration.md)
+- [Covenant metrics through Prometheus](prometheus.md)
 - [Browser source configuration](web-configuration.md)
 
 ## Observe and operate

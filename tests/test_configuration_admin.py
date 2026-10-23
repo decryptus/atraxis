@@ -57,6 +57,20 @@ class ConfigurationFixture(unittest.TestCase):
 
 
 class ConfigurationAdminTests(ConfigurationFixture):
+    def test_metric_selection_is_host_approved_and_cannot_be_overridden_in_request(self):
+        metric = dict(name='orders_pending', match={'job': 'covenant-orders'}, labels=['job', 'instance'])
+        self.profile['connections']['orders'] = dict(kind='prometheus', origin='https://prometheus.invalid',
+                                                     credentials_file='source.json', metric=metric)
+        self.write('administration.yml', self.profile)
+        request = dict(self.request, connection='orders')
+        with self.assertRaises(AccountError):
+            self.prepare(dict(request, metric=dict(metric, name='unapproved_metric')))
+        plan = self.prepare(request)
+        self.admin.commit(plan)
+        source = load_config(self.path).sources[0]
+        self.assertEqual(source.kind, 'prometheus')
+        self.assertEqual(source.metric, metric)
+
     def test_review_is_offline_and_commit_preserves_general_and_audits_atomically(self):
         before=self.path.read_bytes()
         with patch('socket.getaddrinfo',side_effect=AssertionError('No network during setup')):

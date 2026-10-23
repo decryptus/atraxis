@@ -10,5 +10,6 @@ For installation and operation, return to :doc:`/index`.
 
    /docs/contributing
    /docs/read-only-adapters
+   /docs/prometheus-acceptance
    /docs-core
    /ROADMAP

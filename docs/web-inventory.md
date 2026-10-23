@@ -6,8 +6,10 @@ The browser asks for the same HTTP Basic credentials as the inventory API.
 For remote access, use the verified HTTPS reverse proxy described in the
 [runtime guide](../docs-runtime.md). Do not send credentials over remote HTTP.
 
-The page shows configured monit-docker and CertLord sources, collection state,
-containers, certificates and available measurements. Open **Details** for resource
+The page shows configured monit-docker, CertLord and Prometheus sources, collection
+state, containers, certificates and selected metric samples. Prometheus timestamps
+describe samples, not necessarily the original data's age or health; see the
+[metric guide](prometheus.md). Open **Details** for resource
 identity and additional observations. **Refresh snapshot** reloads the page;
 there is no automatic refresh. The UTC timestamp and observation ages describe
 the moment the page was loaded, not a continuous live view.

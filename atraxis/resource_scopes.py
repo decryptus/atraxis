@@ -12,7 +12,7 @@ MAX_EXPANDED_TARGETS = 16384
 MAX_TOTAL_EXPANDED_TARGETS = 65536
 MAX_SOURCES = 32
 SOURCE_ID_LENGTH = 128
-RESOURCE_KINDS = frozenset({'container', 'certificate'})
+RESOURCE_KINDS = frozenset({'container', 'certificate', 'metric'})
 TARGET_KINDS = RESOURCE_KINDS | {'source', 'server', 'group'}
 DOCKER_ID = re.compile(r'[0-9a-f]{64}')
 SOURCE_FIELDS = ('source_id', 'kind', 'availability', 'current')
@@ -32,7 +32,7 @@ def target_key(target):
         require(set(target) == {'kind', 'source', 'id'} and source_id(target['source']))
         value = target['id']
         require(type(value) is str and len(value) <= 64)
-        if kind == 'container':
+        if kind in ('container', 'metric'):
             require(DOCKER_ID.fullmatch(value) is not None)
         else:
             require(str(UUID(value)) == value)

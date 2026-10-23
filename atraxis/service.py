@@ -42,9 +42,15 @@ class ReadService:
                 if source.kind == 'certlord':
                     snapshot = parse_certlord(result.payload,
                         max_clock_skew=source.max_clock_skew, **arguments)
-                else:
+                elif source.kind == 'prometheus':
+                    from atraxis.prometheus import parse_prometheus
+                    snapshot = parse_prometheus(result.payload, metric=source.metric,
+                        max_clock_skew=source.max_clock_skew, **arguments)
+                elif source.kind == 'monit_docker':
                     snapshot = parse_monit(result.payload,
                         transport_elapsed=result.duration_seconds, **arguments)
+                else:
+                    raise InvalidPayload()
             except InvalidPayload:
                 outcome = 'invalid_payload'
         elif outcome not in FAILURE_OUTCOMES:

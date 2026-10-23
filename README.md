@@ -46,6 +46,12 @@ A three-minute tour of Docker monitoring, cron and serve modes, and the web and 
 
 Experimental supervision and coordination software, licensed under GNU GPL version 3. Atraxis provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. This development version is not a general production-readiness claim.
 
+Read containers from monit-docker, certificates from CertLord and selected numeric
+metrics from Prometheus, including metrics exported by Covenant. The
+[Covenant/Prometheus guide](docs/prometheus.md) explains configuration, retained
+values and sample timestamps. Metric history and alert evaluation remain in
+Prometheus; this adapter does not trigger interventions.
+
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 
 ## Responsibilities
@@ -104,7 +110,7 @@ The capture below shows the actual interface with synthetic demonstration data.
 ## Web inventory
 
 Open `/ui` on the running daemon to view authenticated source, container and
-certificate snapshots. The page distinguishes current, historical and unknown
+certificate and metric snapshots. The page distinguishes current, historical and unknown
 observations and refreshes on request. See [web inventory](docs/web-inventory.md)
 for access, navigation and the current read-only scope.
 

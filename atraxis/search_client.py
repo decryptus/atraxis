@@ -7,6 +7,7 @@ from atraxis.parsing import require, text
 from atraxis.transport import HTTPTransport, WORKER_OUTCOMES
 from atraxis.read_request import SEARCH_KIND
 from atraxis.inventory_search import SearchQuery
+from atraxis.prometheus import validate_fields as metric_fields
 
 RESULT_FIELDS = frozenset({'schema_version','context','query','ready','reason','total','items','unavailable','has_more'})
 ROW_FIELDS = frozenset({'source_id','kind','native_id','state','fields'})
@@ -33,14 +34,15 @@ def validate_result(data, query, organization):
     for row in data['items']:
         require(type(row) is dict and set(row) == ROW_FIELDS)
         sid=text(row['source_id']);native=text(row['native_id'])
-        require(type(row['kind']) is str and row['kind'] in ('container','certificate'))
+        require(type(row['kind']) is str and row['kind'] in ('container','certificate','metric'))
         require(type(row['state']) is str and row['state'] in ('current','historical'))
-        require(DOCKER_ID.fullmatch(native) is not None if row['kind']=='container' else str(UUID(native))==native)
+        require(DOCKER_ID.fullmatch(native) is not None if row['kind'] in ('container','metric') else str(UUID(native))==native)
         key=sid,row['kind'],native
         require(key not in seen);seen.add(key)
-        fields=_object(row['fields'],CONTAINER_FIELDS if row['kind']=='container' else CERTIFICATE_FIELDS)
+        fields=(metric_fields(row['fields'],native) if row['kind']=='metric' else
+                _object(row['fields'],CONTAINER_FIELDS if row['kind']=='container' else CERTIFICATE_FIELDS))
         if row['kind']=='container':text(fields.get('name'))
-        else:
+        elif row['kind']=='certificate':
             require(type(fields.get('domains')) is list and bool(fields['domains']))
             for domain in fields['domains']:text(domain)
         rows.append(dict(row,fields=fields))

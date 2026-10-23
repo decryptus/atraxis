@@ -6,10 +6,10 @@ import stat
 import yaml
 
 from atraxis.config import ConfigurationError, parse_config
-from atraxis.source_config import SOURCE_ROUTES
 
 MAX_PATH_LENGTH = 4096
 SOURCE_FIELDS = ('source_id', 'kind', 'origin', 'credentials_file')
+STARTER_SOURCE_KINDS = ('certlord', 'monit_docker')
 
 
 def absolute_path(value):
@@ -88,7 +88,8 @@ def add_parser(commands):
     parser.add_argument('--listen-port', type=int, default=9810)
     parser.add_argument('--behind-tls-proxy', action='store_true')
     parser.add_argument('--source-id')
-    parser.add_argument('--source-kind', choices=sorted(SOURCE_ROUTES))
+    parser.add_argument('--source-kind', choices=STARTER_SOURCE_KINDS,
+                        help='starter source; configure Prometheus metric selection in YAML')
     parser.add_argument('--source-origin')
     parser.add_argument('--source-credentials-file')
     parser.add_argument('--source-ca-file')

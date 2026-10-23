@@ -43,7 +43,7 @@ def main(options):
             print('Collection: '+('Ready' if data['ready'] else data['reason']))
             print(str(data['total'])+' matching resources; page '+str(query.page))
             for row in data['items']:
-                name=row['fields']['name'] if row['kind']=='container' else ', '.join(row['fields']['domains'])
+                name=', '.join(row['fields']['domains']) if row['kind']=='certificate' else row['fields']['name']
                 print(' | '.join(json.dumps(v,ensure_ascii=True) for v in (row['source_id'],row['kind'],row['native_id'],name,row['state'])))
             if data['unavailable']:print('Some sources have no current observations. Absence from results is not proof of absence.')
             if data['has_more']:print('More results: use --page '+str(query.page+1))

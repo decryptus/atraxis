@@ -39,6 +39,10 @@ def fetch(document):
     try:
         origin = _origin(document['origin'], document['origin'].startswith('http://'))
         route = READ_ROUTES[document['kind']]
+        if document['kind'] == 'prometheus':
+            from atraxis.prometheus import query_parameters
+            route += '?' + urlencode(query_parameters(document.get('metric'),
+                document['max_age'], document['timeout'], document['max_resources']))
         organization = document.get('organization')
         if organization is not None:
             if document['kind'] not in (INVENTORY_KIND, SEARCH_KIND) or not identifier(organization):
