@@ -4,6 +4,25 @@
 
 Coordination layer for the Atraxis observability and automation ecosystem.
 
+[Website (EN)](https://atraxis.io/) · [Site (FR)](https://atraxis.io/fr.html) ·
+[User guide](index.rst) · [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
+
+## Install from source
+
+Requires Python 3.11 or later. Start in a dedicated virtual environment:
+
+```sh
+git clone https://github.com/decryptus/atraxis.git
+cd atraxis
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+```
+
+Follow the [setup guide](docs/setup.md) before starting the daemon. To use rule
+features, install the [independent Atropos client](docs/rule-remote.md#install-the-optional-client)
+and connect to an explicitly configured Atropos service.
+
 ## Discover monit-docker in video
 
 A three-minute tour of Docker monitoring, cron and serve modes, and the web and terminal interfaces.
@@ -22,7 +41,8 @@ A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs
 
 | Component | Responsibility |
 | --- | --- |
-| Atraxis | Central inventory, operational context, events and incidents; later, controlled decisions and action audit |
+| Atraxis | Read-only collection, authorized inventory and web/CLI/Textual operator interfaces |
+| [Atropos](https://github.com/decryptus/atropos) | Rule lifecycle, scoped authorization, persistence and guarded workflow execution |
 | Covenant | Collection, transformation and exposition of metrics as an exporter |
 | Prometheus | Metrics storage and alert rule evaluation |
 | Alertmanager | Notification routing, grouping and delivery |
@@ -57,7 +77,7 @@ The [bounded read-only HTTP transport](docs/http-transport.md) is implemented an
 
 ## Documentation
 
-- **Users:** [installation and diagnostics](docs/setup.md), [Docker Compose](docs/docker-compose.md), configuration and operation in this README and the user guide.
+- **Users:** [installation and diagnostics](docs/setup.md), [Docker Compose](docs/docker-compose.md), configuration and operation in the [user guide](index.rst).
 - **Contributors:** [architecture, tests and development](https://github.com/decryptus/atraxis/blob/main/CONTRIBUTING.md).
 
 
