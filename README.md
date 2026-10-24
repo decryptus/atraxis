@@ -12,11 +12,18 @@ Coordination layer for the Atraxis observability and automation ecosystem.
 [Open the demo (EN)](https://atraxis.io/demo.html?lang=en) ·
 [Ouvrir la démo (FR)](https://atraxis.io/demo.html?lang=fr)
 
-No account is required. Explore six synthetic resources, inspect retained observations
-when a source is unavailable, and try a CPU-threshold example. This discovery
-walkthrough runs entirely in the browser, stores no data and makes no service calls.
-The local educational simulation is not connected to an Atropos engine or to the
-authenticated pilot; installing Atraxis provides the actual service-backed interfaces.
+No account is required. Read three real metrics from the public monit-docker demo,
+collected by Covenant and Prometheus: inventory container count, HTTP collection
+outcome and the source observation timestamp. This read-only view refreshes every
+30 seconds and marks retained values as historical when collection fails or data
+becomes old. Successful HTTP collection does not establish workload health.
+
+A separate section lets you explore six synthetic resources, inspect retained
+observations and try a local CPU-threshold example. These scenarios are not
+connected to an Atropos engine and do not trigger interventions. The public feed
+contains only selected numeric measurements and timestamps; private pilot pages
+and APIs remain authenticated. Install Atraxis for the actual service-backed
+inventory and rule-management interfaces.
 
 ## Install from source
 
