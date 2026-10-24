@@ -15,6 +15,7 @@ Experimental GPLv3 software. Evaluate the documented limits before deploying.
    docs/web-configuration
    docs/source-configuration
    docs/prometheus
+   docs/prometheus-alerting
    docs/collection-inventory
    docs/cli
    docs/retention

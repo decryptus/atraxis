@@ -12,6 +12,7 @@ interfaces. Atropos is the independent service for rule lifecycle and workflows.
 - [Runtime configuration](../docs-runtime.md)
 - [Source profiles and collection limits](source-configuration.md)
 - [Covenant metrics through Prometheus](prometheus.md)
+- [Metric alerts and Alertmanager delivery](prometheus-alerting.md)
 - [Browser source configuration](web-configuration.md)
 
 ## Observe and operate

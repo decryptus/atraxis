@@ -18,6 +18,12 @@ outcome and the source observation timestamp. This read-only view refreshes ever
 30 seconds and marks retained values as historical when collection fails or data
 becomes old. Successful HTTP collection does not establish workload health.
 
+The demo also shows Prometheus alert states and actual receipts from a local
+Alertmanager webhook receiver. Its marked pipeline check uses a time-limited
+synthetic signal; no email, SMS or chat notification is forwarded. See
+[metric alerts and Alertmanager delivery](docs/prometheus-alerting.md) to configure
+your own notification path.
+
 A separate section lets you explore six synthetic resources, inspect retained
 observations and try a local CPU-threshold example. These scenarios are not
 connected to an Atropos engine and do not trigger interventions. The public feed
