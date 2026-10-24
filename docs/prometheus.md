@@ -11,6 +11,10 @@ provide time-series graphs, arbitrary PromQL, histogram objects, alert managemen
 or metric-driven interventions. Atropos observation bindings do not accept these
 metric resources as live intervention facts.
 
+For metric-based notifications, configure the separate
+[Prometheus → Alertmanager path](prometheus-alerting.md). Atraxis does not edit
+those alert rules or deliver notifications itself.
+
 ## Configure the chain
 
 First configure Covenant's source and exported metric, for example using its

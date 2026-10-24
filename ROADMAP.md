@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 23 October 2026. Atraxis is an experimental coordination application.
+Updated 25 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -39,6 +39,11 @@ activate it. Execution requires an approved binding and current permissions.
 
 A restricted read-only pilot is running. It does not qualify live intervention
 execution, downstream notifications or general production readiness.
+
+The public demonstration includes Covenant metrics and a separate Prometheus →
+Alertmanager path with a local webhook receiver. A bounded synthetic signal checks
+actual firing and resolved delivery without acting on supervised services. Local
+receiver acceptance does not qualify email/SMS/chat delivery or human receipt.
 
 ## Qualification and limits
 
