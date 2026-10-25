@@ -34,12 +34,45 @@ pin the integrated service inputs and install them into separate environments.
 - Network and container chain: real HTTPS, native services, scoped dispatch,
   disposable synthetic effects and failure injection.
 - Browser/engine: native forms with separately installed Atropos, Redis and Auton.
-- Operator Compose: persistent state, worker profiles, recreation and cold restoration.
+- Operator Compose: scoped access, credential/TLS renewal, persistent state,
+  worker profiles, recreation and cold restoration.
 
 The source pins and Auton fixture patch are recorded in
 [acceptance inputs](../scripts/chain/public-inputs.json). The patch bounds OIDC
 transport work for the pinned upstream fixture; it is not a claim about an
 upstream package release. Every integrated run records its exact source provenance.
+
+## Operator access acceptance
+
+The `operator-compose.yml` workflow builds separately installed services and runs
+the collection guard followed by the single integrated `compose_tests` case.
+`operator_access.py` uses the actual operator guide's YAML access example and an
+authenticated, verified-HTTPS source on the disposable project's network. It
+checks that the reader sees only the granted source, cannot change organization
+or read engine rules, and receives no administrative delegation. Live account
+revocation denies the next inventory read; reinitializing an existing account
+store must fail without changing its directory or audit.
+
+The same case rotates a login with planned service recreation, replaces the
+engine token without changing service container identities, and renews both web
+and engine TLS chains. Old passwords, tokens and CA trust must fail; the current
+credentials must still read the same rule. Inventory account authority remains
+separate from engine account authority; inventory revocation is not claimed to
+revoke engine rights. The token check establishes no service restart, not that
+an existing long-lived client object reloads its token file.
+
+The temporary inventory configuration is removed before the existing worker
+drill. The subsequent cold restoration into separate empty volumes checks the
+preserved reader directory/audit, existing engine-account revocation, rotated
+credentials/TLS, rule history and integrity. It does not establish continued
+activation of the temporary reader profile after restoration.
+
+Inspect `OPERATOR_ACCESS_REPORT`, `COMPOSE_WORKER_REPORT`, `COMPOSE_REPORT` and
+the recorded source pins. These are test-owned containers, synthetic credentials,
+certificate authorities and read-only source requests. There is no production
+probe, automated certificate issuer, live target or external notification channel.
+Real site provisioning, authority mounts, issuer renewal and host-loss recovery
+remain separate operational qualification.
 
 ## Endurance scope
 
