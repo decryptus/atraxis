@@ -209,3 +209,10 @@ credentials or rights revoked since it was taken; restoring bytes does not make
 that authority current. Keep the existing installation and evidence until the
 replacement is verified. Physical host-loss recovery, live execution targets and
 downstream notification delivery still need separate operational qualification.
+
+The access and renewal examples have been exercised with disposable Compose
+services, synthetic credentials and locally issued test certificates. This checks
+the documented boundaries; it does not provision your site's identity authority,
+automate certificate issuance or validate recovery on your host. Contributor
+[acceptance scope](contributing.md#operator-access-acceptance) records the checks
+and their limits.

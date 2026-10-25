@@ -18,6 +18,7 @@ import uuid
 import yaml
 from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
+from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('network', ROOT / 'scripts/docker-network-acceptance.py')
@@ -39,6 +40,7 @@ class InstallationTests(unittest.TestCase):
                 ca.leaf(site / (role + '-tls'), 'server', host)
             # Existing leaf helper names .crt/.key exactly as the operator proxy expects.
             password, token, bob_token = [secrets.token_urlsafe(32) for _ in range(3)]
+            bob_password = password
             def write(role, name, content):
                 path = site / role / name
                 path.write_text(content if isinstance(content, str) else yaml.safe_dump(content))
@@ -115,17 +117,23 @@ print(json.dumps(s.snapshot(), sort_keys=True))
 '''
                 compose('run', '--rm', '--no-deps', '--entrypoint', 'python', 'web', '-c', accounts, 'init')
                 compose('up', '-d', '--no-build')
-                def request(path, secret=password, username='alice'):
+                def request(path, secret=None, username='alice', authority=None):
+                    secret = (bob_password if username == 'bob' else password) if secret is None else secret
+                    trust = ca if authority is None else authority
                     port = compose('port', 'web-tls', '8443').stdout.strip().rsplit(':', 1)[1]
                     auth = base64.b64encode((username + ':' + secret).encode()).decode()
                     request = urllib.request.Request('https://localhost:' + port + path,
                         headers={'Authorization': 'Basic ' + auth})
                     try:
                         with urllib.request.urlopen(request, timeout=5,
-                            context=ssl.create_default_context(cadata=ca.pem().decode())) as response:
-                            return response.status, response.read()
+                            context=ssl.create_default_context(cadata=trust.pem().decode())) as response:
+                            body = response.read(65537)
+                            self.assertLessEqual(len(body), 65536)
+                            return response.status, body
                     except urllib.error.HTTPError as error:
-                        return error.code, error.read()
+                        body = error.read(65537)
+                        self.assertLessEqual(len(body), 65536)
+                        return error.code, body
                 deadline = time.monotonic() + 60
                 while True:
                     try:
@@ -159,6 +167,8 @@ finally:
                 account_before = json.loads(compose('exec', '-T', 'web', 'python', '-c', accounts, 'revoke').stdout)
                 self.assertEqual(len(account_before['audit']), 2)
                 self.assertEqual(request('/ui/rules?name=compose-rule', username='bob')[0], 403)
+                password, ca, reader_snapshot = exercise_operator_access(
+                    self, compose, site, ca, network, request, password, revision)
                 compose('up', '-d', '--no-build', '--force-recreate')
                 # Transport startup probes are read-only; a mutation is never retried.
                 deadline = time.monotonic() + 60
@@ -253,6 +263,7 @@ finally:
                 self.assertEqual(json.loads(result.stdout), before)
                 assert_restored_workers(self, compose, worker_evidence)
                 self.assertEqual(json.loads(compose('exec', '-T', 'web', 'python', '-c', accounts, 'snapshot').stdout), account_before)
+                self.assertEqual(json.loads(compose('exec', '-T', 'web', 'python', '-c', ACCOUNT_SNAPSHOT).stdout), reader_snapshot)
                 self.assertEqual(request('/ui/rules?name=compose-rule')[0], 200)
                 self.assertEqual(request('/ui/rules?name=compose-rule', username='bob')[0], 403)
                 self.assertEqual(request('/healthz', 'wrong-password')[0], 401)

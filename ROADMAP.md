@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 25 October 2026. Atraxis is an experimental coordination application.
+Updated 26 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -28,9 +28,11 @@ activate it. Execution requires an approved binding and current permissions.
 
 ## Next milestones
 
-1. Qualify the documented operator journey on a fresh installation, including
-   site-specific credential provisioning, authority mounts, TLS renewal and recovery.
-   The guide is available; it does not automate those site responsibilities.
+1. Qualify site-specific provisioning and operation on a fresh installation,
+   including the actual identity authority, mounts, certificate issuer and recovery.
+   Controlled Compose acceptance covers scoped inventory access, revocation,
+   login/token/TLS renewal and cold restoration with synthetic inputs; it does
+   not automate or qualify those site responsibilities.
 2. Qualify installed sources, explicitly approved Auton targets and downstream
    notifications in a controlled operational environment.
 3. Complete a live cold-backup/restore and host-loss drill while retaining audit,
@@ -49,6 +51,16 @@ actual firing and resolved delivery without acting on supervised services. Local
 receiver acceptance does not qualify email/SMS/chat delivery or human receipt.
 
 ## Qualification and limits
+
+Disposable Compose acceptance exercises the operator guide's read-only access
+example against an authenticated HTTPS fixture. It verifies source isolation,
+wrong-context denial, account revocation, login rotation with recreation, engine
+token replacement without service restart and web/engine CA renewal. Subsequent
+cold restoration preserves the rotated credentials, account state and audit,
+rule history and revoked access. The inventory profile is a temporary fixture
+extension; its continued activation after restoration is not claimed. This does
+not qualify automated certificate issuance, site identity provisioning or live
+host recovery. See [validation scope](docs/contributing.md#operator-access-acceptance).
 
 A controlled synthetic chain completed 14,436.558 seconds of load, 292 cycles and
 7,300 test admissions, followed by 653.346 seconds of quiescence and recreation
