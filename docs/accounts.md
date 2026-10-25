@@ -104,9 +104,11 @@ explicit length/alphabet checks. Nonnegative integer columns have SQL sign/type
 constraints. Audit row IDs auto-increment; their SQLite declaration must remain
 `INTEGER PRIMARY KEY AUTOINCREMENT`, with a positive-value check.
 
-Earlier prototype schemas are rejected without modifying their contents. These
-applications are not deployed; initialize a new current-format store. There is
-no migration tool and no automatic conversion or deletion.
+Earlier prototype schemas are rejected without modifying their contents. For a
+new installation, initialize a new current-format store. Preserve an existing
+installation and its data when choosing a compatible source revision; do not
+replace its store merely to pass a format check. There is no migration tool and
+no automatic conversion or deletion.
 
 ## Directory schema
 

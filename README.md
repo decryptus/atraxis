@@ -43,7 +43,8 @@ python -m venv .venv
 python -m pip install .
 ```
 
-Follow the [setup guide](docs/setup.md) before starting the daemon. To use rule
+Follow the [operator journey](docs/operator-journey.md) to prepare login, scoped
+access and recovery, then the [setup guide](docs/setup.md) before starting the daemon. To use rule
 features, install the [independent Atropos client](docs/rule-remote.md#install-the-optional-client)
 and connect to an explicitly configured Atropos service.
 

@@ -1,5 +1,8 @@
 # Set up and diagnose Atraxis
 
+For the complete order of installation, access provisioning and maintenance, use
+the [operator journey](operator-journey.md).
+
 Use Python 3.11 or 3.12 and install the native `libmagic` dependency, then install
 Atraxis as described in the [runtime guide](../docs-runtime.md). `setup` prepares
 a starter configuration. `doctor` explains configuration and source-read problems.
@@ -80,8 +83,9 @@ Explicitly opt in to one source observation read per configured source:
 atraxis doctor --config /etc/atraxis/atraxis.yml --probe-sources
 ```
 
-These are fixed-route GET requests to `/v1/status` for monit-docker and
-`/api/certificates/observations` for CertLord. At most four run concurrently,
+These are fixed-route GET requests to `/v1/status` for monit-docker,
+`/api/certificates/observations` for CertLord and `/api/v1/query` for Prometheus
+with the configured metric selection. At most four run concurrently,
 using each source's configured timeout/size/resource limits. Invalid local
 configuration prevents all network probes. A source failure does not suppress
 results for other sources. There are no automatic retries, redirects, rule

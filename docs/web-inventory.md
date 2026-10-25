@@ -166,14 +166,15 @@ changed or deleted automatically.
 
 The local collector still maintains its full configured snapshot; API-backed CLI
 reads use the same HTTP gate and preserve the partial-view marker. This is not
-OS-user isolation. The current CLI selects a sole membership automatically;
-multiple memberships require the browser or an API request with an explicit
-organization until CLI selection is added.
+OS-user isolation. The CLI selects a sole membership automatically. Use
+`atraxis inventory --config /private/client.yml -o operations` to choose an
+organization explicitly; `status` accepts the same option. Multiple memberships
+require an explicit choice, without fallback to global inventory.
 
 The browser manages HTTP Basic credentials; this screen has no application logout.
-Close the browser session to clear cached credentials. The inventory selector does
-not change the separately configured organization for rule operations or account
-administration.
+Close the browser session to clear cached credentials. Organization selection
+does not grant rule or account-administration rights; each surface checks its
+own identity mapping and current permissions.
 
 The optional [web rule explorer](web-rules.md) adds rule revision reads through
 Atropos with per-account mappings. Simulations, interventions and alerts remain

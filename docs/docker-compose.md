@@ -1,5 +1,9 @@
 # Install with Docker Compose
 
+Use the [operator journey](operator-journey.md) alongside this guide to provision
+identities, add scoped inventory access before opening the service, and plan
+credential/certificate renewal and recovery.
+
 This single-host starter runs Atraxis and Atropos behind separate TLS
 proxies. It builds local images from separate source checkouts; it publishes no
 image. Use Docker Compose 2.24 or newer with BuildKit. This is not a release or

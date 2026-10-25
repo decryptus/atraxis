@@ -10,6 +10,7 @@ Experimental GPLv3 software. Evaluate the documented limits before deploying.
    :caption: User guide
 
    docs/README
+   docs/operator-journey
    docs/setup
    docs/docker-compose
    docs/web-configuration
