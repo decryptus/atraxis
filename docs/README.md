@@ -6,6 +6,7 @@ interfaces. Atropos is the independent service for rule lifecycle and workflows.
 
 ## Install and configure
 
+- [Operator journey: installation, access, renewal and recovery](operator-journey.md)
 - [Install from the public source repository](https://github.com/decryptus/atraxis#install-from-source)
 - [Setup and diagnostics](setup.md)
 - [Single-host Docker Compose installation](docker-compose.md)

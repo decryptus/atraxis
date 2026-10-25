@@ -20,14 +20,17 @@ stable release. Priorities may change; no release date is promised.
   client. Atropos owns the engine and authoritative rule state.
 - A single-host Docker Compose installation with persistent storage, verified TLS
   and optional, explicitly selected worker profiles.
+- An [operator journey](docs/operator-journey.md) covering separate credentials,
+  scoped read access, renewal and recovery using the existing commands.
 
 Collection never authorizes an intervention. Saving or testing a rule does not
 activate it. Execution requires an approved binding and current permissions.
 
 ## Next milestones
 
-1. Complete the operator installation journey, including credential and authority
-   provisioning, renewal and recovery documentation.
+1. Qualify the documented operator journey on a fresh installation, including
+   site-specific credential provisioning, authority mounts, TLS renewal and recovery.
+   The guide is available; it does not automate those site responsibilities.
 2. Qualify installed sources, explicitly approved Auton targets and downstream
    notifications in a controlled operational environment.
 3. Complete a live cold-backup/restore and host-loss drill while retaining audit,
