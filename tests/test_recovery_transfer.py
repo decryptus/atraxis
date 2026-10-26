@@ -10,7 +10,7 @@ SPEC = importlib.util.spec_from_file_location('recovery_transfer', MODULE)
 transfer = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transfer)
 COMMIT = 'a' * 40
-DESTINATION = dict(boot='new-boot', daemon='new-daemon')
+DESTINATION = dict(boot='new-boot', vm='new-vm', daemon='cloned-daemon')
 
 
 class RecoveryTransferTests(unittest.TestCase):
@@ -21,7 +21,7 @@ class RecoveryTransferTests(unittest.TestCase):
         for name in transfer.FILES:
             (self.root / name).write_bytes(b'bounded synthetic fixture')
         self.manifest = dict(version=1, synthetic_only=True, source_commit=COMMIT,
-            source=dict(boot='old-boot', daemon='old-daemon'),
+            source=dict(boot='old-boot', vm='old-vm', daemon='cloned-daemon'),
             images={name: 'sha256:' + 'b' * 64 for name in transfer.IMAGES},
             fingerprints={role: {} for role in ('web', 'engine', 'site')},
             files={name: dict(sha256=transfer.digest(self.root / name, transfer.limit(name)),
@@ -82,14 +82,18 @@ class RecoveryTransferTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'transfer_manifest_invalid'):
             self.verify()
 
-    def test_both_boot_and_daemon_must_be_different(self):
-        for destination in (dict(boot='old-boot', daemon='new-daemon'),
-                dict(boot='new-boot', daemon='old-daemon')):
+    def test_both_boot_and_virtual_machine_must_be_different(self):
+        for destination in (dict(boot='old-boot', vm='new-vm'),
+                dict(boot='new-boot', vm='old-vm')):
             with self.subTest(destination=destination):
                 with self.assertRaisesRegex(ValueError, 'transfer_requires_another_host'):
                     self.verify(destination=destination)
         with self.assertRaisesRegex(ValueError, 'transfer_host_identity_missing'):
-            self.verify(destination=dict(boot='', daemon=''))
+            self.verify(destination=dict(boot='', vm=''))
+
+    def test_cloned_daemon_id_is_not_a_virtual_machine_identity(self):
+        self.assertEqual(self.manifest['source']['daemon'], DESTINATION['daemon'])
+        self.assertEqual(self.verify(), self.manifest)
 
     def test_unpinned_image_and_invalid_digest_rejected(self):
         with self.assertRaisesRegex(ValueError, 'transfer_digest_invalid'):

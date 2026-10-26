@@ -77,12 +77,17 @@ remain separate operational qualification.
 ## Recovery on a separate host
 
 The operator workflow now transfers its disposable cold backup to a second GitHub
-runner. The destination must have a different kernel boot ID and Docker daemon ID,
+runner. The destination must have a different kernel boot ID and DMI VM UUID,
 no source volumes and none of the three application/proxy image tags. It loads
 the exact exported images without rebuilding or pulling, and restores both data
 volumes and the private site files into new destinations. The source job must
 first pass its existing acceptance, verify installed package bytes and remove its
 two disposable Compose projects and volumes.
+
+The Docker daemon ID is retained as diagnostic metadata: separate hosted VMs have
+been observed with the same persisted ID. It is not a unique host-identity gate.
+The destination still rejects the source VM/boot and any pre-existing source image
+tags or data volumes before image import.
 
 A manifest digest passed through the workflow job output binds all five transfer
 files, source revision, image IDs and archived fingerprints. Verification rejects

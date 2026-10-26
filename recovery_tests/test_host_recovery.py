@@ -230,7 +230,8 @@ class HostRecoveryTests(unittest.TestCase):
                 # Original transfer evidence is read-only throughout restoration.
                 verify(TRANSFER, expected, commit, destination)
                 evidence = dict(version=1, source_commit=commit, manifest_sha256=expected,
-                    different_boot=True, different_daemon=True, no_image_rebuild=True,
+                    different_boot=True, different_vm=True, no_image_rebuild=True,
+                    daemon_id_reused=manifest['source']['daemon'] == destination['daemon'],
                     archive_bytes_and_modes_verified=True, rule_and_account_audits_preserved=True,
                     revoked_login_token_membership_denied=True, terminal_work_preserved=True,
                     queued_work_and_pause_preserved=True, post_restore_action_revocation_enforced=True,

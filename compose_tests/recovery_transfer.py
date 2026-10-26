@@ -19,6 +19,7 @@ MAX_CONTEXT_BYTES = 2 * 1024 * 1024
 MAX_MANIFEST_BYTES = 16384
 CHUNK_BYTES = 1024 * 1024
 BOOT_ID = Path('/proc/sys/kernel/random/boot_id')
+VM_ID = Path('/sys/class/dmi/id/product_uuid')
 SHA256 = re.compile(r'[0-9a-f]{64}')
 COMMIT = re.compile(r'[0-9a-f]{40}')
 
@@ -47,7 +48,9 @@ def command(*args, timeout=30):
 
 
 def identity():
-    return dict(boot=BOOT_ID.read_text().strip(), daemon=command('docker', 'info', '--format', '{{.ID}}'))
+    # Docker's persisted ID can be cloned in hosted-runner base images.
+    return dict(boot=BOOT_ID.read_text().strip(), vm=VM_ID.read_text().strip().lower(),
+        daemon=command('docker', 'info', '--format', '{{.ID}}'))
 
 
 def write_private(path, value):
@@ -105,7 +108,7 @@ def verify(directory, expected_digest, commit, destination_identity):
         if not isinstance(image, str) or not image.startswith('sha256:') or not SHA256.fullmatch(image[7:]):
             raise ValueError('transfer_image_invalid')
     source = manifest.get('source', {})
-    for key in ('boot', 'daemon'):
+    for key in ('boot', 'vm'):
         if not source.get(key) or not destination_identity.get(key):
             raise ValueError('transfer_host_identity_missing:' + key)
         if source[key] == destination_identity[key]:
