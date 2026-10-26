@@ -221,7 +221,7 @@ The controlled Compose case exercises HTTPS login/refusal, empty-source readines
 engine rule/history/audit preservation through recreation and cold restoration into
 a second project's empty volumes, plus account revision/audit preservation,
 continued refusal of a revoked account, current engine grant checks, SQLite
-integrity and runtime protections. Its worker extension uses only synthetic
+integrity and runtime protections. Its worker extension uses synthetic
 `core.echo` work to check separate real/test queues, execution-time revocation,
 deduplication, recreation and retained run outcomes after cold restoration.
 It does not establish live Auton intervention or downstream delivery acceptance.
@@ -232,7 +232,13 @@ multi-host TLS, live destinations and site backup/restore acceptance remain open
 An additional controlled test transfers the exact images, site files and cold
 volumes to a separate disposable host. It checks preserved authentication, audits,
 queued work and execution pause, followed by explicit resume with a revoked action
-refused. This is evidence for the tested SQLite/storage-queue installation; it does
+refused. A synthetic HTTP request whose response was lost keeps its uncertain
+outcome and target lock after restoration. Reconciliation requires current rights,
+the exact reviewed state and an explicit verification reference; it records an
+operator attestation without replaying the request or executing remaining steps.
+Check the external system independently before making that attestation on your
+site: a copied receipt is historical evidence, not proof of its current state.
+This is evidence for the tested SQLite/storage-queue installation; it does
 not qualify your site's host-loss recovery, external authority, certificate issuer
 or an uncertain external effect. See the contributor
 [separate-host recovery scope](contributing.md#recovery-on-a-separate-host).

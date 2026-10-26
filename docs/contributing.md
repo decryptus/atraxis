@@ -105,6 +105,29 @@ revokes its action grant, explicitly confirms reconciliation and resumes; the
 worker must cancel the same run without an effect. This is a controlled recovery
 test, never an automatic production resume or a new external action.
 
+The source also admits a separate two-step synthetic notification workflow through
+the installed client/API. Its registered Alertmanager transport sends one request
+to a token-protected loopback HTTP fixture, which durably records acceptance and
+closes the connection without a response. The guarded worker must retain an
+uncertain outcome, its target lock and no action result; the later step must not
+run. This is a disposable receipt fixture, not a live Alertmanager deployment.
+
+After restoration, exact state, lock, audit and receipt equality are checked.
+Workers are polled with the receipt fixture available, both before and after the
+explicit execution resume. The fixture deliberately counts every POST without
+deduplication, so a replay cannot be hidden by its receiver. The separate
+reconciliation right must be present at confirmation, and a stale state digest
+must be refused. Successful explicit attestation records the evidence and actor,
+releases the lock atomically and preserves original history, attempts and empty
+results. Neither reconciliation nor a repeated event admission executes the
+uncertain action or its later step. The result artifact includes these checks
+under `uncertainty` and sets `uncertain_work_exercised=true`.
+
+The synthetic receipt ledger is archived with the engine volume and its fixture
+is recreated on the destination. This checks recovery and replay prevention; it
+does not independently establish the survival or current state of a real external
+recipient. No live notification or intervention is issued by this test.
+
 Run the collection guard before `unittest discover -s recovery_tests -v`; the case
 requires the source job's verified transfer and digest and never silently skips.
 Inspect `RECOVERY_SOURCE_RELEASED`, `HOST_RECOVERY_REPORT` and
@@ -113,7 +136,8 @@ disposable test credentials, keys and databases; it is separate from the retaine
 credential-free result artifact and must never receive live site data.
 
 This qualifies migration of the tested SQLite/storage-queue fixture across two
-independent CI hosts. It does not exercise an uncertain external action, an active
+independent CI hosts, including an uncertain synthetic HTTP receipt. It does not
+qualify reconciliation against a surviving real external system, an active
 inventory source after restoration, newer revocations held by an external identity
 authority, a site certificate issuer, live Auton/notification destinations or
 recovery of the deployed pilot. Those operational gates remain open.

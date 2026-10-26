@@ -5,6 +5,7 @@ import subprocess
 import time
 
 import yaml
+import uncertain_recovery
 
 WORKERS = 4
 CAPACITY = 24
@@ -50,7 +51,7 @@ with configured_runtime('/etc/atropos/engine.yml') as runtime:
 
 
 def exercise_workers(case, compose, site, revision):
-    """Never contacts Auton: the only approved fixture action is core.echo."""
+    """Only echo and a disposable loopback receipt fixture; never live targets."""
     config = site / 'engine/engine.yml'
     document = yaml.safe_load(config.read_text())
     grant = document['grants'][0]
@@ -177,6 +178,7 @@ def exercise_workers(case, compose, site, revision):
     evidence = {event: client(operation, event=event) for event, operation in (
         ('before-workers', 'status'), ('simulation', 'test-status'), ('revoked', 'status'),
         ('revoked-simulation', 'test-status'), ('recreated', 'status'))}
+    evidence['uncertain'] = uncertain_recovery.prepare(case, compose, site)
     evidence['recovery-pending'] = client('submit', event='recovery-pending', **arguments)
     case.assertEqual(evidence['recovery-pending']['status'], 'queued')
     paused = json.loads(compose('exec', '-T', 'engine', 'atropos', 'storage-pause',
@@ -187,6 +189,7 @@ def exercise_workers(case, compose, site, revision):
 
 
 def assert_restored_workers(case, compose, evidence):
+    uncertain_recovery.preserved(case, compose, evidence['uncertain'])
     for event, operation, status in (('before-workers', 'status', 'succeeded'),
             ('simulation', 'test-status', 'succeeded'), ('revoked', 'status', 'cancelled'),
             ('revoked-simulation', 'test-status', 'cancelled'), ('recreated', 'status', 'succeeded'),
