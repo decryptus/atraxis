@@ -17,6 +17,12 @@ TARGET = ['server', 'receipt-fixture']
 DEADLINE_SECONDS = 60
 CLIENT_CONFIG = '/etc/atraxis/engine-client.yml'
 SCRIPT = Path(__file__).with_name('uncertain_target.py')
+ADAPTER_REVISIONS = '''from atropos.rule_execution import configured_runtime
+import json
+with configured_runtime('/etc/atropos/engine.yml') as runtime:
+    print(json.dumps({name: action.configuration_revision for name, action in runtime.actions.items()
+        if action.configuration_revision is not None}))
+'''
 CLIENT = '''from atropos_client.client import RuleClient, RemoteRuleError
 import json, sys
 configuration, method, args, kwargs = json.loads(sys.argv[1])
@@ -77,7 +83,10 @@ def prepare(case, compose, site):
     active = client(compose, 'activate', RULE, revision, test_id=tested['id'], expected_generation=None)
     bindings_file = site / 'engine/bindings.yml'
     bindings = yaml.safe_load(bindings_file.read_text())
+    revisions = json.loads(compose('exec', '-T', 'engine', 'python', '-c', ADAPTER_REVISIONS).stdout)
+    case.assertEqual(set(revisions), {ACTION})
     bindings.append(dict(organization='lab', rule=RULE, revision=revision,
+        adapter_revisions=revisions,
         result=dict(decision='review', matched_rule='combined'), input={}, max_age_seconds=300,
         workflow=dict(version=1, name='lost-receipt', start='send', steps={
             'send': dict(action=ACTION, timeout=10, next='later'),
