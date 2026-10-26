@@ -74,6 +74,45 @@ probe, automated certificate issuer, live target or external notification channe
 Real site provisioning, authority mounts, issuer renewal and host-loss recovery
 remain separate operational qualification.
 
+## Recovery on a separate host
+
+The operator workflow now transfers its disposable cold backup to a second GitHub
+runner. The destination must have a different kernel boot ID and Docker daemon ID,
+no source volumes and none of the three application/proxy image tags. It loads
+the exact exported images without rebuilding or pulling, and restores both data
+volumes and the private site files into new destinations. The source job must
+first pass its existing acceptance, verify installed package bytes and remove its
+two disposable Compose projects and volumes.
+
+A manifest digest passed through the workflow job output binds all five transfer
+files, source revision, image IDs and archived fingerprints. Verification rejects
+missing/extra files, links, oversized or changed inputs, a different source
+revision and reuse of the original host. Restore checks complete file contents,
+ownership and modes before application startup, and refuses occupied volumes.
+The separate test checks TLS authentication, rotated login/token refusal, retained
+account revisions/audits, revoked membership, rule/history/audit equality, terminal
+work outcomes, SQLite integrity and the existing resource protections.
+
+One additional synthetic `core.echo` admission remains queued with both execution
+namespaces paused at backup time. Restoration preserves that work and pause. A
+started worker must leave it unchanged. The test operator then stops that worker,
+revokes its action grant, explicitly confirms reconciliation and resumes; the
+worker must cancel the same run without an effect. This is a controlled recovery
+test, never an automatic production resume or a new external action.
+
+Run the collection guard before `unittest discover -s recovery_tests -v`; the case
+requires the source job's verified transfer and digest and never silently skips.
+Inspect `RECOVERY_SOURCE_RELEASED`, `HOST_RECOVERY_REPORT` and
+`operator-host-recovery-evidence`. The one-day transfer artifact contains only
+disposable test credentials, keys and databases; it is separate from the retained
+credential-free result artifact and must never receive live site data.
+
+This qualifies migration of the tested SQLite/storage-queue fixture across two
+independent CI hosts. It does not exercise an uncertain external action, an active
+inventory source after restoration, newer revocations held by an external identity
+authority, a site certificate issuer, live Auton/notification destinations or
+recovery of the deployed pilot. Those operational gates remain open.
+
 ## Endurance scope
 
 The manual four-hour workflow retains the complete short gate, at least 14,400

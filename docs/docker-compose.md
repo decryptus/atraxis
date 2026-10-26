@@ -203,6 +203,20 @@ before enabling execution. Reconnect only intended sources and destinations;
 old backups do not restore revoked authority. Never blindly retry uncertain
 external effects. Do not overwrite the working installation to test a restore.
 
+When replacing the host, retain the exact application and proxy images as well as
+their IDs and source revisions. Transfer the complete cold backup and its recorded
+hashes through your protected backup channel; check every file before loading an
+image or populating a destination. Prepare Docker, empty volumes and private site
+directories on the replacement, and restore the required ownership and modes.
+Use the recorded images with `--no-build --pull never`; rebuilding from a current
+branch is a different software change and needs its own qualification.
+
+Start only the API and TLS services for inspection. Confirm that execution remains
+paused in both engine namespaces, review current authority and external outcomes,
+and explicitly resume only after reconciliation. Starting a worker is not a
+recovery check unless its preserved pause has first been verified. A restored
+queued run must still pass current execution permissions when eventually resumed.
+
 The controlled Compose case exercises HTTPS login/refusal, empty-source readiness,
 engine rule/history/audit preservation through recreation and cold restoration into
 a second project's empty volumes, plus account revision/audit preservation,
@@ -214,3 +228,11 @@ It does not establish live Auton intervention or downstream delivery acceptance.
 Its archive helper is a synthetic test fixture,
 not a general operator backup/import command. Use your approved backup tooling. Physical host/disk loss,
 multi-host TLS, live destinations and site backup/restore acceptance remain open.
+
+An additional controlled test transfers the exact images, site files and cold
+volumes to a separate disposable host. It checks preserved authentication, audits,
+queued work and execution pause, followed by explicit resume with a revoked action
+refused. This is evidence for the tested SQLite/storage-queue installation; it does
+not qualify your site's host-loss recovery, external authority, certificate issuer
+or an uncertain external effect. See the contributor
+[separate-host recovery scope](contributing.md#recovery-on-a-separate-host).

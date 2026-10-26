@@ -210,6 +210,13 @@ that authority current. Keep the existing installation and evidence until the
 replacement is verified. Physical host-loss recovery, live execution targets and
 downstream notification delivery still need separate operational qualification.
 
+The [replacement-host procedure](docker-compose.md#cold-backup-and-restore) also
+requires the recorded images and verified complete backup before any service
+starts. Retain execution pause through inspection; a successful login or restored
+rule history is not permission to resume pending actions. A separate-host test
+exercises this sequence with disposable synthetic state. Site authority changes
+since backup and uncertain external effects still require operator reconciliation.
+
 The access and renewal examples have been exercised with disposable Compose
 services, synthetic credentials and locally issued test certificates. This checks
 the documented boundaries; it does not provision your site's identity authority,
