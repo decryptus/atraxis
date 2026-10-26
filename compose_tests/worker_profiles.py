@@ -174,16 +174,28 @@ def exercise_workers(case, compose, site, revision):
     print('COMPOSE_WORKER_REPORT workers=4 capacity=24 default_workers=0 real_completed=2 '
           'simulations_completed=1 revoked_cancelled=2 recovery_verified=true '
           'deduplication_verified=true test_isolation=true synthetic_only=true', flush=True)
-    return {event: client(operation, event=event) for event, operation in (
+    evidence = {event: client(operation, event=event) for event, operation in (
         ('before-workers', 'status'), ('simulation', 'test-status'), ('revoked', 'status'),
         ('revoked-simulation', 'test-status'), ('recreated', 'status'))}
+    evidence['recovery-pending'] = client('submit', event='recovery-pending', **arguments)
+    case.assertEqual(evidence['recovery-pending']['status'], 'queued')
+    paused = json.loads(compose('exec', '-T', 'engine', 'atropos', 'storage-pause',
+        '--config', '/etc/atropos/engine.yml').stdout)
+    case.assertTrue(paused['execution_paused'])
+    case.assertTrue(paused['test_execution_paused'])
+    return evidence
 
 
 def assert_restored_workers(case, compose, evidence):
     for event, operation, status in (('before-workers', 'status', 'succeeded'),
             ('simulation', 'test-status', 'succeeded'), ('revoked', 'status', 'cancelled'),
-            ('revoked-simulation', 'test-status', 'cancelled'), ('recreated', 'status', 'succeeded')):
+            ('revoked-simulation', 'test-status', 'cancelled'), ('recreated', 'status', 'succeeded'),
+            ('recovery-pending', 'status', 'queued')):
         restored = json.loads(compose('exec', '-T', 'web', 'python', '-c', CLIENT,
             operation, json.dumps(dict(event=event))).stdout)
         case.assertEqual(restored['status'], status)
         case.assertEqual(restored, evidence[event])
+    paused = json.loads(compose('exec', '-T', 'engine', 'atropos', 'storage-status',
+        '--config', '/etc/atropos/engine.yml').stdout)
+    case.assertTrue(paused['execution_paused'])
+    case.assertTrue(paused['test_execution_paused'])

@@ -19,6 +19,7 @@ import yaml
 from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
+from recovery_transfer import capture
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('network', ROOT / 'scripts/docker-network-acceptance.py')
@@ -285,6 +286,11 @@ finally:
                 for role in ('web', 'engine'):
                     self.assertEqual(volume('fingerprint', project, role), source_fingerprints[role])
                     self.assertEqual(hashlib.sha256((backup / (role + '.tar')).read_bytes()).hexdigest(), archive_digests[role])
+                if os.environ.get('ATRAXIS_EXPORT_RECOVERY') == '1':
+                    capture(backup, dict(revision=revision, rule=before, accounts=account_before,
+                        reader=reader_snapshot, workers=worker_evidence, password=password,
+                        bob_password=bob_password, ca=ca.pem().decode()), project,
+                        dict(archive_digests, site=site_digest), dict(source_fingerprints, site=site_fingerprint))
                 print('COMPOSE_REPORT verified_tls=true cases=1 skipped=0 recovery_verified=true cold_restore_verified=true account_audit_preserved=true revoked_access_denied=true current_engine_rights_checked=true source_unchanged=true sqlite_integrity=true synthetic_only=true', flush=True)
             finally:
                 # Only these two unique test-owned projects may be removed.
@@ -292,3 +298,11 @@ finally:
                     prefix[3] = owner
                     env['ATRAXIS_SITE_DIR'] = str(root / 'restored-site' if owner == restored_project and (root / 'restored-site').exists() else site)
                     compose('--profile', '*', 'down', '--volumes', '--remove-orphans', check=False)
+            if os.environ.get('ATRAXIS_EXPORT_RECOVERY') == '1':
+                for owner in (restored_project, project):
+                    prefix[3] = owner
+                    self.assertEqual(compose('ps', '-a', '-q').stdout.strip(), '')
+                    for role in ('web', 'engine'):
+                        self.assertNotEqual(subprocess.run(['docker', 'volume', 'inspect',
+                            owner + '_' + role + '-data'], capture_output=True, timeout=30).returncode, 0)
+                print('RECOVERY_SOURCE_RELEASED projects_removed=true volumes_removed=true synthetic_only=true', flush=True)

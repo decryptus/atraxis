@@ -86,6 +86,7 @@ def main():
             check = docker('run', '--rm', '--name', integration, *HARDENING,
                 '-v', str(ROOT / 'tests') + ':/acceptance/tests:ro',
                 '-v', str(ROOT / 'scripts') + ':/acceptance/scripts:ro',
+                '-v', str(ROOT / 'compose_tests') + ':/acceptance/compose_tests:ro',
                 '--workdir', '/tmp', '--entrypoint', 'python', image,
                 '/acceptance/scripts/check-test-collection.py', '--runner', 'unittest', '/acceptance/tests')
             print(check.stdout, end='')

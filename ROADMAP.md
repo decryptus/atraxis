@@ -62,6 +62,15 @@ extension; its continued activation after restoration is not claimed. This does
 not qualify automated certificate issuance, site identity provisioning or live
 host recovery. See [validation scope](docs/contributing.md#operator-access-acceptance).
 
+A separate-host recovery case transfers the exact application/proxy images,
+complete cold volumes and site files between two disposable CI hosts. It verifies
+retained audits, revoked access, queued work and execution pause; an explicit
+resume after action revocation must cancel the queued synthetic run without an
+effect. This advances recovery qualification for SQLite with the storage-backed
+queue. Recovery of a live site, current external authority, active inventory
+sources and uncertain external actions remain open; see the
+[separate-host scope](docs/contributing.md#recovery-on-a-separate-host).
+
 A controlled synthetic chain completed 14,436.558 seconds of load, 292 cycles and
 7,300 test admissions, followed by 653.346 seconds of quiescence and recreation
 recovery. The workload used four workers, queue capacity 24 and container limits
