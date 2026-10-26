@@ -84,10 +84,12 @@ class RecoveryTransferTests(unittest.TestCase):
 
     def test_both_boot_and_daemon_must_be_different(self):
         for destination in (dict(boot='old-boot', daemon='new-daemon'),
-                dict(boot='new-boot', daemon='old-daemon'), dict(boot='', daemon='')):
+                dict(boot='new-boot', daemon='old-daemon')):
             with self.subTest(destination=destination):
                 with self.assertRaisesRegex(ValueError, 'transfer_requires_another_host'):
                     self.verify(destination=destination)
+        with self.assertRaisesRegex(ValueError, 'transfer_host_identity_missing'):
+            self.verify(destination=dict(boot='', daemon=''))
 
     def test_unpinned_image_and_invalid_digest_rejected(self):
         with self.assertRaisesRegex(ValueError, 'transfer_digest_invalid'):

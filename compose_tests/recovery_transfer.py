@@ -105,9 +105,11 @@ def verify(directory, expected_digest, commit, destination_identity):
         if not isinstance(image, str) or not image.startswith('sha256:') or not SHA256.fullmatch(image[7:]):
             raise ValueError('transfer_image_invalid')
     source = manifest.get('source', {})
-    if any(not source.get(key) or not destination_identity.get(key)
-           or source[key] == destination_identity[key] for key in ('boot', 'daemon')):
-        raise ValueError('transfer_requires_another_host')
+    for key in ('boot', 'daemon'):
+        if not source.get(key) or not destination_identity.get(key):
+            raise ValueError('transfer_host_identity_missing:' + key)
+        if source[key] == destination_identity[key]:
+            raise ValueError('transfer_requires_another_host:' + key)
     for name in FILES:
         path, expected = directory / name, manifest['files'][name]
         if (digest(path, limit(name)) != expected['sha256']
