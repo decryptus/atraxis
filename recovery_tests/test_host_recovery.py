@@ -21,6 +21,7 @@ from cold_volume import restore
 from operator_access import ACCOUNT_SNAPSHOT, CLIENT as READ_RULE, private
 from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify
 from worker_profiles import CLIENT, INSPECT, assert_restored_workers
+import uncertain_recovery
 
 READ_LIMIT = 65536
 DEADLINE_SECONDS = 60
@@ -208,6 +209,7 @@ class HostRecoveryTests(unittest.TestCase):
                 for _ in range(3):
                     self.assertEqual(read_client('status', event=PENDING_EVENT), context['workers'][PENDING_EVENT])
                     time.sleep(1)
+                uncertain_recovery.preserved(self, compose, context['workers']['uncertain'], probe=True)
                 compose('stop', 'worker')
                 # Explicitly revoke the synthetic action before the test operator resumes.
                 config = site / 'engine/engine.yml'
@@ -224,6 +226,9 @@ class HostRecoveryTests(unittest.TestCase):
                 run = json.loads(compose('exec', '-T', 'engine', 'python', '-c', INSPECT, 'run', refused['id']).stdout)
                 self.assertEqual(run['results'], {})
                 self.assertEqual(run['error'], 'execution_authorization_denied')
+                compose('stop', 'worker')
+                uncertain_evidence = uncertain_recovery.reconcile(
+                    self, compose, site, context['workers']['uncertain'])
                 compose('--profile', '*', 'stop')
                 self.assertEqual(compose('ps', '--status', 'running', '-q').stdout.strip(), '')
                 confirm_images(manifest)
@@ -235,7 +240,8 @@ class HostRecoveryTests(unittest.TestCase):
                     archive_bytes_and_modes_verified=True, rule_and_account_audits_preserved=True,
                     revoked_login_token_membership_denied=True, terminal_work_preserved=True,
                     queued_work_and_pause_preserved=True, post_restore_action_revocation_enforced=True,
-                    synthetic_only=True, uncertain_work_exercised=False, live_site_qualified=False)
+                    synthetic_only=True, uncertain_work_exercised=True, live_site_qualified=False,
+                    uncertainty=uncertain_evidence, external_target_survival_qualified=False)
                 output = ROOT / 'acceptance-artifacts'
                 output.mkdir(exist_ok=True)
                 (output / 'host-recovery.json').write_text(json.dumps(evidence, indent=2) + '\n')
