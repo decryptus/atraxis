@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 26 October 2026. Atraxis is an experimental coordination application.
+Updated 27 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -57,10 +57,10 @@ example against an authenticated HTTPS fixture. It verifies source isolation,
 wrong-context denial, account revocation, login rotation with recreation, engine
 token replacement without service restart and web/engine CA renewal. Subsequent
 cold restoration preserves the rotated credentials, account state and audit,
-rule history and revoked access. The inventory profile is a temporary fixture
-extension; its continued activation after restoration is not claimed. This does
-not qualify automated certificate issuance, site identity provisioning or live
-host recovery. See [validation scope](docs/contributing.md#operator-access-acceptance).
+rule history and revoked access. A separate scoped inventory reader and its TLS
+source configuration remain active in the cold backup. This does not qualify
+automated certificate issuance, site identity provisioning or live host recovery.
+See [validation scope](docs/contributing.md#operator-access-acceptance).
 
 A separate-host recovery case transfers the exact application/proxy images,
 complete cold volumes and site files between two disposable CI hosts. It verifies
@@ -71,9 +71,16 @@ uncertain state and target lock across the transfer. Guarded workers do not repl
 it; explicit reconciliation checks current rights and the reviewed state, records
 an attestation and releases the lock without executing later steps. This advances
 recovery qualification for SQLite with the storage-backed queue. Recovery of a
-live site, current external authority, active inventory sources and reconciliation
+live site, current external authority, installed live inventory sources and reconciliation
 against surviving real external systems remain open; see the
 [separate-host scope](docs/contributing.md#recovery-on-a-separate-host).
+
+The restored inventory profile initially reports its absent source as unavailable.
+Reconnecting a disposable HTTPS source must produce fresh source and receipt
+timestamps, preserve read scope and unknown values, and grant no engine rights.
+Timeouts and refused redirects retain the last snapshot as history; reconnection
+restores current data. Revoking the restored reader must immediately deny access.
+These checks use synthetic data and do not qualify a live source or its authority.
 
 A controlled synthetic chain completed 14,436.558 seconds of load, 292 cycles and
 7,300 test admissions, followed by 653.346 seconds of quiescence and recreation

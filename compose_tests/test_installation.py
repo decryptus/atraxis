@@ -20,6 +20,7 @@ from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
 from recovery_transfer import capture
+import inventory_recovery
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('network', ROOT / 'scripts/docker-network-acceptance.py')
@@ -200,6 +201,9 @@ finally:
                 worker_evidence = exercise_workers(self, compose, site, revision)
                 before = json.loads(compose('exec', '-T', 'web', 'python', '-c', probe, revision).stdout)
                 check_runtime()
+                inventory_request = lambda path, username, password: request(path, password, username)
+                inventory_evidence, reader_snapshot = inventory_recovery.prepare(
+                    self, compose, site, ca, inventory_request)
                 compose('stop')
                 self.assertEqual(compose('ps', '--status', 'running', '-q').stdout.strip(), '')
                 backup = root / 'backup'
@@ -268,7 +272,7 @@ finally:
                 self.assertEqual(request('/ui/rules?name=compose-rule')[0], 200)
                 self.assertEqual(request('/ui/rules?name=compose-rule', username='bob')[0], 403)
                 self.assertEqual(request('/healthz', 'wrong-password')[0], 401)
-                self.assertEqual(request('/readyz')[0], 503)
+                inventory_recovery.unavailable(self, inventory_request, inventory_evidence)
                 compose('exec', '-T', 'engine', 'python', '-c', integrity)
                 compose('exec', '-T', 'web', 'python', '-c', integrity.replace('/var/lib/atropos/engine.db', '/var/lib/atraxis/accounts.db'))
                 # A restored configuration is not a cached authorization grant.
@@ -289,7 +293,7 @@ finally:
                 if os.environ.get('ATRAXIS_EXPORT_RECOVERY') == '1':
                     capture(backup, dict(revision=revision, rule=before, accounts=account_before,
                         reader=reader_snapshot, workers=worker_evidence, password=password,
-                        bob_password=bob_password, ca=ca.pem().decode()), project,
+                        bob_password=bob_password, ca=ca.pem().decode(), inventory=inventory_evidence), project,
                         dict(archive_digests, site=site_digest), dict(source_fingerprints, site=site_fingerprint))
                 print('COMPOSE_REPORT verified_tls=true cases=1 skipped=0 recovery_verified=true cold_restore_verified=true account_audit_preserved=true revoked_access_denied=true current_engine_rights_checked=true source_unchanged=true sqlite_integrity=true synthetic_only=true', flush=True)
             finally:
