@@ -62,10 +62,13 @@ revoke engine rights. The token check establishes no service restart, not that
 an existing long-lived client object reloads its token file.
 
 The temporary inventory configuration is removed before the existing worker
-drill. The subsequent cold restoration into separate empty volumes checks the
-preserved reader directory/audit, existing engine-account revocation, rotated
-credentials/TLS, rule history and integrity. It does not establish continued
-activation of the temporary reader profile after restoration.
+drill. After that drill, `inventory_recovery.py` adds a separate, scoped inventory
+reader while keeping the original reader revoked. It leaves the new profile,
+source credentials and renewed CA in the cold backup. Restoration into separate
+empty volumes checks the preserved directory/audit, engine-account revocation,
+rotated credentials/TLS, rule history and integrity. The source fixture is absent
+at startup, so its restored configuration must report unavailable with no cached
+snapshot presented as a new observation.
 
 Inspect `OPERATOR_ACCESS_REPORT`, `COMPOSE_WORKER_REPORT`, `COMPOSE_REPORT` and
 the recorded source pins. These are test-owned containers, synthetic credentials,
@@ -128,6 +131,19 @@ is recreated on the destination. This checks recovery and replay prevention; it
 does not independently establish the survival or current state of a real external
 recipient. No live notification or intervention is issued by this test.
 
+The active inventory profile is then exercised on the destination against its
+own authenticated HTTPS fixture, started from the archived fixture files and the
+same exported web image. Source and receipt timestamps must advance beyond the
+pre-backup observation. The reader sees only its granted source, native units
+and unknown values; wrong organizations, the original revoked reader and engine
+rule access remain denied. A source timeout makes readiness fail while preserving
+the last observation as history. Redirects are refused without replacing that
+snapshot. Reconnection produces a new current observation. Finally, revoking the
+restored reader through the reviewed account command denies status, readiness and
+UI access immediately while preserving previous audit entries. Source logs must
+contain only authenticated GET requests. Inspect the result artifact's `inventory`
+checks; `live_source_qualified` remains false.
+
 Run the collection guard before `unittest discover -s recovery_tests -v`; the case
 requires the source job's verified transfer and digest and never silently skips.
 Inspect `RECOVERY_SOURCE_RELEASED`, `HOST_RECOVERY_REPORT` and
@@ -136,9 +152,9 @@ disposable test credentials, keys and databases; it is separate from the retaine
 credential-free result artifact and must never receive live site data.
 
 This qualifies migration of the tested SQLite/storage-queue fixture across two
-independent CI hosts, including an uncertain synthetic HTTP receipt. It does not
-qualify reconciliation against a surviving real external system, an active
-inventory source after restoration, newer revocations held by an external identity
+independent CI hosts, including an uncertain synthetic HTTP receipt and an active
+synthetic inventory profile. It does not qualify reconciliation against a surviving
+real external system, an installed live inventory source, newer revocations held by an external identity
 authority, a site certificate issuer, live Auton/notification destinations or
 recovery of the deployed pilot. Those operational gates remain open.
 

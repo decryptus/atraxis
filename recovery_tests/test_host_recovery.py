@@ -22,6 +22,7 @@ from operator_access import ACCOUNT_SNAPSHOT, CLIENT as READ_RULE, private
 from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify
 from worker_profiles import CLIENT, INSPECT, assert_restored_workers
 import uncertain_recovery
+import inventory_recovery
 
 READ_LIMIT = 65536
 DEADLINE_SECONDS = 60
@@ -175,7 +176,7 @@ class HostRecoveryTests(unittest.TestCase):
                 self.assertEqual(request('/healthz', password='invalid')[0], 401)
                 self.assertEqual(request('/healthz', password=context['bob_password'])[0], 401)
                 self.assertEqual(request(RULE_PATH, 'bob', context['bob_password'])[0], 403)
-                self.assertEqual(request('/readyz')[0], 503)
+                inventory_recovery.unavailable(self, request, context['inventory'])
                 self.assertEqual(json.loads(compose('exec', '-T', 'web', 'python', '-c',
                     RULE_SNAPSHOT, context['revision']).stdout), context['rule'])
                 self.assertEqual(json.loads(compose('exec', '-T', 'web', 'python', '-c',
@@ -229,6 +230,7 @@ class HostRecoveryTests(unittest.TestCase):
                 compose('stop', 'worker')
                 uncertain_evidence = uncertain_recovery.reconcile(
                     self, compose, site, context['workers']['uncertain'])
+                inventory_evidence = inventory_recovery.recover(self, compose, site, request, context['inventory'])
                 compose('--profile', '*', 'stop')
                 self.assertEqual(compose('ps', '--status', 'running', '-q').stdout.strip(), '')
                 confirm_images(manifest)
@@ -241,7 +243,8 @@ class HostRecoveryTests(unittest.TestCase):
                     revoked_login_token_membership_denied=True, terminal_work_preserved=True,
                     queued_work_and_pause_preserved=True, post_restore_action_revocation_enforced=True,
                     synthetic_only=True, uncertain_work_exercised=True, live_site_qualified=False,
-                    uncertainty=uncertain_evidence, external_target_survival_qualified=False)
+                    uncertainty=uncertain_evidence, external_target_survival_qualified=False,
+                    inventory=inventory_evidence)
                 output = ROOT / 'acceptance-artifacts'
                 output.mkdir(exist_ok=True)
                 (output / 'host-recovery.json').write_text(json.dumps(evidence, indent=2) + '\n')

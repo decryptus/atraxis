@@ -203,6 +203,14 @@ before enabling execution. Reconnect only intended sources and destinations;
 old backups do not restore revoked authority. Never blindly retry uncertain
 external effects. Do not overwrite the working installation to test a restore.
 
+Preserve the inventory access profile, source credentials and CA files with their
+restricted ownership and modes. Review current account and source permissions
+before reconnecting. Restoring configuration does not restore an in-memory
+inventory observation: the source remains unavailable until a successful fresh
+collection. Check the source timestamp separately from the receipt timestamp.
+A later collection failure retains the last valid snapshot as historical data;
+it must not be treated as current or as permission to execute an action.
+
 When replacing the host, retain the exact application and proxy images as well as
 their IDs and source revisions. Transfer the complete cold backup and its recorded
 hashes through your protected backup channel; check every file before loading an
