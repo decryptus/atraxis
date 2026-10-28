@@ -1,7 +1,7 @@
 # Manage inventory read grants
 
-The optional web and local Textual editors let authorized operators add or remove inventory read
-grants without editing YAML. It does not manage account membership, server/resource
+The optional web, local CLI and Textual interfaces let authorized operators add or remove inventory read
+grants without editing the profile by hand. They do not manage account membership, server/resource
 catalogs or Atropos intervention permissions. It is separate from the account editor.
 
 ## Enable the editor
@@ -123,6 +123,11 @@ These captures contain synthetic identities and resources only.
 
 
 ## Local Textual editor
+
+The base package also provides `show`, `check` and `apply` using the same local
+identity and authority. See [local administration](local-administration.md) for
+request examples, exact review revisions and failure handling. Textual is not
+required for those commands.
 
 Install the optional terminal dependencies with `pip install '.[textual]'` from
 the source checkout. Add an explicit OS UID mapping to the **same version-3

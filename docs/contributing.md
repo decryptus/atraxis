@@ -158,6 +158,20 @@ real external system, an installed live inventory source, newer revocations held
 authority, a site certificate issuer, live Auton/notification destinations or
 recovery of the deployed pilot. Those operational gates remain open.
 
+## Local administration CLI validation
+
+Core tests exercise UID/web identity separation, CLI-only configuration without
+web routes, offline source add/update/remove, bounded private requests, scoped
+grant add/remove, revocation and conflicts across check/apply. The review digest
+also binds target paths and the account directory, including an approved-connection
+change while the daemon configuration is unchanged. Post-replacement sync failure
+must return an unconfirmed outcome without retrying an already saved change.
+
+Installed-package acceptance runs source onboarding and inventory grant/revoke
+through the built wheel's CLI outside the checkout, without Textual or network
+sources. This establishes the offline operator path, not source connectivity,
+service restart behavior or a live installation's authority configuration.
+
 ## Endurance scope
 
 The manual four-hour workflow retains the complete short gate, at least 14,400

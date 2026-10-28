@@ -16,7 +16,8 @@ from atraxis.account_store import AccountStore
 from atraxis.accounts import AccountError, Directory, identifier
 from atraxis.config import _StrictLoader, _MAX_CONFIG_BYTES
 from atraxis.rule_files import read_private
-from atraxis.source_config import parse_sources, MAX_SOURCES
+from atraxis.source_config import (parse_sources, MAX_SOURCES, DEFAULT_TIMEOUT,
+                                  DEFAULT_POLL_INTERVAL, DEFAULT_MAX_AGE)
 
 MAX_PROFILE_BYTES = 262144
 MAX_HISTORY = 100
@@ -24,6 +25,9 @@ SETTINGS = ('timeout', 'poll_interval', 'max_age')
 CONNECTION_FIELDS = frozenset({'kind','origin','credentials_file','ca_file','allow_loopback_http','metric'})
 OPERATIONS = frozenset({'source.add','source.update','source.remove'})
 HASH = re.compile(r'[0-9a-f]{64}')
+MAX_IDENTITIES = 128
+MAX_UID = 2**32 - 1
+IDENTITY_FIELDS = frozenset({'subject', 'organization'})
 
 
 def fingerprint(value):
@@ -41,12 +45,16 @@ def load_profile(path):
             and type(document['version']) is int and document['version']==1)
     store=storage_config(document['store'],path.parent)
     identities=document['identities'];admins=document['administrators'];connections=document['connections']
-    require(type(identities) is list and 1<=len(identities)<=128 and type(admins) is list and len(admins)<=128)
+    require(type(identities) is list and 1<=len(identities)<=MAX_IDENTITIES and type(admins) is list and len(admins)<=MAX_IDENTITIES)
     seen=set()
     for item in identities:
-        require(type(item) is dict and set(item)=={'username','subject','organization'}
-                and all(identifier(value) for value in item.values()) and item['username'] not in seen)
-        seen.add(item['username'])
+        require(type(item) is dict and set(item) in (IDENTITY_FIELDS|{'username'}, IDENTITY_FIELDS|{'uid'}))
+        require(all(identifier(item[key]) for key in IDENTITY_FIELDS))
+        key = 'username' if 'username' in item else 'uid'
+        value = item[key]
+        require(identifier(value) if key == 'username' else type(value) is int and 0 <= value <= MAX_UID)
+        require((key, value) not in seen)
+        seen.add((key, value))
     seen=set()
     for item in admins:
         require(type(item) is dict and set(item)=={'subject','organization'} and all(identifier(value) for value in item.values()))
@@ -73,13 +81,14 @@ def validate_history(history):
 
 
 class ConfigurationAdmin:
-    def __init__(self,profile_path,config_path,username):
+    def __init__(self,profile_path,config_path,username=None):
         self.path=Path(profile_path).absolute();self.config_path=Path(config_path).absolute();self.username=username
         self.initial=self.entry()
 
     def entry(self):
         profile,store,_=load_profile(self.path)
-        matches=[e for e in profile['identities'] if e['username']==self.username]
+        key,value=('username',self.username) if self.username is not None else ('uid',os.getuid())
+        matches=[e for e in profile['identities'] if e.get(key)==value]
         if len(matches)!=1:raise PermissionError('configuration_identity_denied')
         entry=dict(matches[0],store=store)
         if hasattr(self,'initial') and entry!=self.initial:raise PermissionError('configuration_identity_changed')
@@ -128,7 +137,8 @@ class ConfigurationAdmin:
                     path=Path(candidate[key]);candidate[key]=str(path if path.is_absolute() else self.config_path.parent/path)
             if candidate==spec:connection=name;break
         return dict(source_id=source['source_id'],kind=source['kind'],origin=source['origin'],connection=connection,
-            timeout=source.get('timeout',10),poll_interval=source.get('poll_interval',60),max_age=source.get('max_age',180))
+            timeout=source.get('timeout',DEFAULT_TIMEOUT),poll_interval=source.get('poll_interval',DEFAULT_POLL_INTERVAL),
+            max_age=source.get('max_age',DEFAULT_MAX_AGE))
 
     def propose(self,request):
         entry,profile,profile_revision,snapshot,document=self.state()

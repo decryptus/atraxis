@@ -1,4 +1,8 @@
-# Read-only CLI
+# Command-line usage
+
+For reviewed local source changes and inventory read grants, use the separate
+[local administration guide](local-administration.md). The status and inventory
+commands below remain read-only.
 
 `atraxis status` summarizes configured sources. `atraxis inventory` also prints
 each retained resource and its projected fields. Both issue exactly one

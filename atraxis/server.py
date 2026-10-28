@@ -49,7 +49,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
     access = InventoryAccess(config.inventory_access_file) if config.inventory_access_file else None
 
     def configuration_link(body):
-        return body.replace('</header>', '<a href="/ui/configuration">Configuration</a></header>', 1) if config.configuration_web_file else body
+        return body.replace('</header>', '<a href="/ui/configuration">Configuration</a></header>', 1) if config.configuration_web_origin else body
 
     def scoped_inventory(request, readiness=False, html=False):
         try:
@@ -234,7 +234,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
             for verb in verbs:
                 context.register(inventory_admin_page,op=verb,name=name,to_auth=True,to_log=False,max_body_size=INVENTORY_ADMIN_BYTES)
 
-    if config.configuration_web_file is not None:
+    if config.configuration_web_origin is not None:
         from atraxis.web_configuration import WebConfiguration, HEADERS as CONFIG_HEADERS, FORM_BYTES as CONFIG_FORM_BYTES
         configuration = WebConfiguration(config.configuration_web_file, config.configuration_path,
                                          config.configuration_web_origin, config.sources)

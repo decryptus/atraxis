@@ -40,9 +40,14 @@ configuration; a path selects SQLite by default. The mapped account must current
 have enabled membership in the named organization and be listed explicitly in
 `administrators`. An empty administrator list revokes all configuration access.
 Host administrators own these mappings and the approved connection catalog.
-Connection types are `monit_docker` and `certlord`; their credential and CA formats
+Connection types are `monit_docker`, `certlord` and `prometheus`; their credential and CA formats
 follow [source configuration](source-configuration.md). `ca_file` is optional for
 system-trusted HTTPS. Paths resolve beside the administration profile.
+
+The same profile supports [local CLI administration](local-administration.md) with
+an explicit `uid` identity instead of a web `username`. An identity cannot contain
+both. A profile without `configuration_web_origin` enables only local administration;
+the page requires the paired settings below.
 
 Add the paired settings to the existing daemon's `general` section:
 

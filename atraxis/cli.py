@@ -38,7 +38,12 @@ def main(argv=None):
     add_admin(commands)
     from atraxis.inventory_commands import add_parser as add_inventory_admin
     add_inventory_admin(commands)
+    from atraxis.configuration_commands import add_parser as add_sources_admin
+    add_sources_admin(commands)
     options = parser.parse_args(argv)
+    if options.command == 'sources-admin':
+        from atraxis.configuration_commands import main as sources_admin_main
+        return sources_admin_main(options)
     if options.command == 'retention':
         from atraxis.retention import main as retention_main
         return retention_main(options)
