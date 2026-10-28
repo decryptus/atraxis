@@ -14,6 +14,7 @@ Experimental GPLv3 software. Evaluate the documented limits before deploying.
    docs/setup
    docs/docker-compose
    docs/web-configuration
+   docs/local-administration
    docs/source-configuration
    docs/prometheus
    docs/prometheus-alerting

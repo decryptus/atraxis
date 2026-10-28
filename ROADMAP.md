@@ -15,6 +15,9 @@ stable release. Priorities may change; no release date is promised.
   permissions; section searches through the documented web, CLI and Textual flows.
 - SQLite account storage, explicit backup/restore, configuration setup and
   diagnostics.
+- Local source configuration and inventory grant commands with explicit OS identity,
+  separate review/apply, current authority checks and atomic audit. Host-provisioned
+  connection catalogs and inventory scopes remain separately managed.
 - Rule authoring, scenario tests, explicit activation and rollback, intervention
   inspection and uncertainty reconciliation through the independent Atropos API
   client. Atropos owns the engine and authoritative rule state.

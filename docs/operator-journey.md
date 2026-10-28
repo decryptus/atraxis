@@ -44,6 +44,12 @@ their designated component directories. See the [Compose file layout](docker-com
 
 ## Give a reader one inventory source
 
+Once the host owner has provisioned approved connections, inventory catalog and
+administration authority, use [local administration](local-administration.md) to
+review source additions and read grants from the CLI. Adding a source does not
+grant access; each operation has a separate review and audit. The bootstrap
+example below remains useful for an installation with no delegated operator yet.
+
 This example uses a **new** account store, login `reader-login`, subject `reader`,
 organization `default` and configured source ID `monitor-a`. Replace these names
 consistently for your installation. `init` creates the `default` organization;

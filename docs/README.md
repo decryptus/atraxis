@@ -15,6 +15,7 @@ interfaces. Atropos is the independent service for rule lifecycle and workflows.
 - [Covenant metrics through Prometheus](prometheus.md)
 - [Metric alerts and Alertmanager delivery](prometheus-alerting.md)
 - [Browser source configuration](web-configuration.md)
+- [Local source and inventory administration](local-administration.md)
 
 ## Observe and operate
 

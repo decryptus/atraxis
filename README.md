@@ -145,6 +145,10 @@ Optional [browser source configuration](docs/web-configuration.md) provides revi
 source changes for explicitly authorized installation administrators. Defaults stay
 disabled; saved changes require an explicit daemon restart.
 
+The base package also offers [local source and inventory administration](docs/local-administration.md):
+inspect, review and apply source changes or scoped read grants using an explicit
+OS identity. CLI use does not require enabling web administration or installing Textual.
+
 Use the offline [retention report](docs/retention.md) to inspect account archive
 and configuration audit capacity without modifying evidence.
 

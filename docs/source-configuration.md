@@ -1,5 +1,10 @@
 # Source configuration
 
+After the host owner provisions approved connections, an authorized operator can
+use the [local administration commands](local-administration.md) to review and
+save source changes. Credential/catalog provisioning and service restarts remain
+explicit host operations.
+
 `atraxis check-config` validates up to 32 source definitions without DNS resolution
 or requests. `atraxis serve` periodically reads configured sources and exposes
 their inventory through the authenticated API; see [collection](collection-inventory.md).

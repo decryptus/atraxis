@@ -163,7 +163,7 @@ def parse_config(data, path):
         _require(address.is_loopback or proxy)
         configuration_file = general.get('configuration_web_file')
         configuration_origin = general.get('configuration_web_origin')
-        _require((configuration_file is None) == (configuration_origin is None))
+        _require(configuration_origin is None or configuration_file is not None)
         if configuration_file is not None:
             _require(bool(configuration_file) and len(configuration_file) <= 4096)
             configuration_file = Path(configuration_file)
@@ -171,7 +171,8 @@ def parse_config(data, path):
             from atraxis.configuration_admin import load_profile
             from atraxis.web_rule_editor import validate_origin
             load_profile(configuration_file)
-            validate_origin(configuration_origin)
+            if configuration_origin is not None:
+                validate_origin(configuration_origin)
             configuration_file = str(configuration_file)
         secret = general['auth_basic_file']
         secret_path = Path(secret)

@@ -47,6 +47,52 @@ class InstalledPackageTests(unittest.TestCase):
         self.cli(code=2)
         self.cli('check-config', '--config', str(self.root / 'absent.yml'), code=1)
 
+    def test_source_onboarding_and_inventory_grant_use_installed_base_cli(self):
+        self.accounts('accounts.db', 'init', '--subject', 'operator', '--administrator')
+        def private_file(name, value):
+            path = self.root / name
+            path.write_text(json.dumps(value))
+            path.chmod(0o600)
+            return str(path)
+        def reviewed(command, config, request):
+            path = private_file('request.json', request)
+            review = json.loads(self.cli(command, '--config', config, 'check', '--file', path).stdout)
+            result = json.loads(self.cli(command, '--config', config, 'apply', '--file', path,
+                                         '--expected-revision', review['revision'], '--confirm').stdout)
+            self.assertTrue(result['saved'])
+            return result
+        private_file('source.json', dict(username='reader', password='synthetic-private-secret'))
+        users = self.root / 'users'
+        users.write_text('operator:{SHA}' + base64.b64encode(hashlib.sha1(b'synthetic').digest()).decode() + '\n')
+        users.chmod(0o600)
+        source_origin = 'https://monitor.invalid'
+        private_file('configuration-admin.json', dict(version=1, store='accounts.db',
+            identities=[dict(uid=os.getuid(), subject='operator', organization='default')],
+            administrators=[dict(subject='operator', organization='default')],
+            connections=dict(monitor=dict(kind='monit_docker', origin=source_origin, credentials_file='source.json'))))
+        daemon = private_file('daemon.json', dict(general=dict(auth_basic_file='users',
+            configuration_web_file='configuration-admin.json'), sources=[]))
+        inventory = private_file('inventory.json', dict(version=3, store='accounts.db',
+            identities=[dict(uid=os.getuid(), subject='operator')],
+            servers=[dict(id='host-a', organization='default', sources=['monitor-a'])],
+            resource_groups=[], grants=[], audit=[],
+            administrators=[dict(subject='operator', organization='default', targets=[dict(kind='server', id='host-a')])]))
+        result = reviewed('sources-admin', daemon, dict(operation='source.add', source_id='monitor-a',
+            connection='monitor', timeout=2, poll_interval=15, max_age=45))
+        self.assertFalse(result['runtime_changed'])
+        self.cli('check-config', '--config', daemon)
+        state = json.loads(self.cli('inventory-admin', '--config', inventory, 'show').stdout)
+        self.assertEqual(state['organizations'][0]['grants'], [])
+        reviewed('inventory-admin', inventory, dict(operation='grant.add', organization='default',
+            subject_kind='user', subject='operator', targets=[dict(kind='source', id='monitor-a')]))
+        state = json.loads(self.cli('inventory-admin', '--config', inventory, 'show').stdout)
+        grant = state['organizations'][0]['grants'][0]
+        reviewed('inventory-admin', inventory, dict(operation='grant.remove', grant=grant['id']))
+        state = json.loads(self.cli('inventory-admin', '--config', inventory, 'show').stdout)
+        self.assertEqual(state['organizations'][0]['grants'], [])
+        self.assertEqual(len(state['audit']), 2)
+        self.assertIsNone(importlib.util.find_spec('textual'))
+
     def test_default_sqlite_cli_backup_restore_preserves_directory_and_audit(self):
         initialized = json.loads(self.accounts('accounts.db', 'init', '--subject', 'operator', '--administrator').stdout)
         before = json.loads(self.accounts('accounts.db', 'show').stdout)
