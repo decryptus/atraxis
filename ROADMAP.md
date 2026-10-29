@@ -36,8 +36,8 @@ to implemented capabilities, define concrete exit criteria and separate later
 features. Existing qualification is reused within its proven scope.
 
 1. **G1 — scope and contracts:** record the exact supported configurations and
-   matching contracts. The functional baseline is documented; the explicit
-   intervention-language decision and candidate support manifest remain open.
+   matching contracts. The version-1 YAML models and ZEN 2.1.2 are explicitly
+   selected; the [candidate matrix](docs/v1-candidate.md) bounds initial support.
 2. **G2 — installation and complete recovery:** qualify a fresh operational site
    and recovery on another host, including identity, certificates, configuration,
    persistent state, audit, revocation and uncertain work.
@@ -47,7 +47,10 @@ features. Existing qualification is reused within its proven scope.
 4. **G4 — release candidate:** finalize packages, documentation and the evidence
    index after the preceding gates pass. Publication is a separate action.
 
-G2–G4 remain open. New features do not automatically join this baseline; relevant
+The first distribution checkpoint is `1.0.0rc1`, explicitly a prerelease.
+Its reference profile is Linux amd64 with SQLite and the integrated queue.
+G2–G4 remain open for the stable release. New features do not automatically join
+this baseline; relevant
 defects are corrected without reopening unrelated completed checks. No new campaign
 or external notification is authorized merely by this roadmap.
 

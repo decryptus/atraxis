@@ -13,7 +13,7 @@ def files(directory):
 
 client = files('.acceptance/engine/client/atropos_client')
 targets = {
-    'atraxis-chain:ci': (dict(atraxis='0.0.1.dev0', sonicprobe='0.3.62'),
+    'atraxis-chain:ci': (dict(atraxis='1.0.0rc1', sonicprobe='0.3.62'),
                          files('atraxis') | client),
     'atropos-chain:ci': ({'atraxis-atropos': '0.1.0a21', 'atropos-client': '0.1.0a10',
                           'sonicprobe': '0.3.62'}, files('.acceptance/engine/atropos') | client),

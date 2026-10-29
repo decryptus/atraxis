@@ -9,6 +9,8 @@ For installation and operation, use the [user guide](../index.rst).
 The [public roadmap](../ROADMAP.md) distinguishes existing behavior from planned scope.
 The [1.0 delivery baseline](v1-delivery.md) fixes included/deferred functionality,
 the four exit gates and when existing evidence needs to be repeated.
+The [manual candidate release procedure](release-candidate.md) publishes exact
+qualified package artifacts without claiming operational gate closure.
 
 ## Local development
 
