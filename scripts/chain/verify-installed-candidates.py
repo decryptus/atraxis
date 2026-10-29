@@ -25,6 +25,10 @@ from pathlib import Path
 versions, files = json.loads(%r)
 for name, expected in versions.items():
     assert version(name) == expected, name
+ENGINE_DISTRIBUTION = 'atraxis-atropos'
+if ENGINE_DISTRIBUTION in versions:
+    from atropos import __version__ as engine_version
+    assert engine_version == versions[ENGINE_DISTRIBUTION], 'engine_runtime_version_mismatch'
 for name, expected in files.items():
     package, relative = name.split('/', 1)
     spec = importlib.util.find_spec(package)
