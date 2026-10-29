@@ -11,6 +11,9 @@ jobs:
         python: ['3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -18,19 +21,64 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends libmagic1
-      - run: python -m pip install build==1.6.1
+      - name: Prepare build frontend and evidence directory
+        run: |
+          python -m pip install build==1.6.1
+          mkdir -p package-evidence
+          python -m pip freeze --all > package-evidence/build-environment.txt
       - name: Build source archive and wheel from that archive
         run: python -m build
-      - name: Install only the built wheel in a fresh environment
+      - name: Record candidate source and archive identities
         run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import subprocess
+          import sys
+          import tomllib
+
+          DISTRIBUTION_DIRECTORY = Path('dist')
+          EVIDENCE_DIRECTORY = Path('package-evidence')
+          archives = sorted(DISTRIBUTION_DIRECTORY.iterdir())
+          assert len(archives) == 2
+          assert len(list(DISTRIBUTION_DIRECTORY.glob('*.whl'))) == 1
+          assert len(list(DISTRIBUTION_DIRECTORY.glob('*.tar.gz'))) == 1
+          metadata = tomllib.loads(Path('pyproject.toml').read_text())['project']
+          manifest = dict(schema=1,
+              source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True, timeout=10).strip(),
+              source_tree=subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True, timeout=10).strip(),
+              python=sys.version, distribution=metadata['name'], version=metadata['version'],
+              files={str(path): dict(sha256=hashlib.sha256(path.read_bytes()).hexdigest(), size=path.stat().st_size)
+                  for path in archives}, source_archives_and_wheels=True,
+              registry_publication=False, synthetic_only=True)
+          (EVIDENCE_DIRECTORY / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          PY
+      - name: Install only the built wheel in a fresh environment
+        shell: bash
+        run: |
+          wheels=(dist/*.whl)
+          test "${#wheels[@]}" -eq 1
           python -m venv "$RUNNER_TEMP/atraxis-installed"
-          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip install dist/*.whl
-          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip check
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip install "${wheels[0]}"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip check 2>&1 | tee package-evidence/pip-check.log
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip freeze --all > package-evidence/installed-dependencies.txt
       - name: Exercise installed CLI and SQLite recovery outside the checkout
         working-directory: ${{ runner.temp }}
+        shell: bash
         run: |
-          "$RUNNER_TEMP/atraxis-installed/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/installed_tests"
-          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/installed_tests" -v
+          "$RUNNER_TEMP/atraxis-installed/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/installed_tests" 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/collection.log"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/installed_tests" -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/installed-tests.log"
+      - name: Retain candidate archives and installed acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-package-${{ matrix.python }}
+          path: |
+            package-evidence/
+            dist/
+          retention-days: 14
+          if-no-files-found: error
   documentation:
     runs-on: ubuntu-latest
     timeout-minutes: 10
