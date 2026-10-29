@@ -87,6 +87,8 @@ def main():
                 '-v', str(ROOT / 'tests') + ':/acceptance/tests:ro',
                 '-v', str(ROOT / 'scripts') + ':/acceptance/scripts:ro',
                 '-v', str(ROOT / 'compose_tests') + ':/acceptance/compose_tests:ro',
+                '-v', str(ROOT / 'deploy/compose/locks/record-environment.py') +
+                    ':/acceptance/deploy/compose/locks/record-environment.py:ro',
                 '--workdir', '/tmp', '--entrypoint', 'python', image,
                 '/acceptance/scripts/check-test-collection.py', '--runner', 'unittest', '/acceptance/tests')
             print(check.stdout, end='')
