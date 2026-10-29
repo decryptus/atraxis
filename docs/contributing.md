@@ -44,6 +44,32 @@ The source pins and Auton fixture patch are recorded in
 transport work for the pinned upstream fixture; it is not a claim about an
 upstream package release. Every integrated run records its exact source provenance.
 
+## Installed package evidence
+
+The package workflow builds the source archive and its wheel on Python 3.11 and
+3.12. It checks out the exact PR head (or pushed commit), installs the single
+wheel into a fresh base environment and runs the collection guard and existing
+installed tests outside the source checkout. Dependency checks and piped test
+commands must succeed; retaining a log never turns a failed command into a pass.
+
+Each `installed-package-<python>` artifact is retained for 14 days and contains:
+
+- The wheel and source archive actually built by that job.
+- `package-evidence/manifest.json`, recording source commit/tree, Python and package
+  versions, plus each archive's SHA-256 and size.
+- The build frontend environment and installed base environment from
+  `pip freeze --all`, including bootstrap tools.
+- Dependency-check, collection and installed-test logs.
+
+Artifacts are also retained on failure when files exist. A manifest identifies
+files; it does not claim the job passed. Verify the run/job outcome, collection
+and test result before treating an artifact as qualified. Keep the exact archive
+hash associated with the installed wheel reference in the dependency inventory.
+The build frontend inventory does not capture every isolated build dependency,
+system library or base-image byte, and is not a reproducible-build guarantee.
+These base-package checks do not qualify every optional UI/client profile or
+operational recovery. No registry release or deployment is performed.
+
 ## Operator access acceptance
 
 The `operator-compose.yml` workflow builds separately installed services and runs
