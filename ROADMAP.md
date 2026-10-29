@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 27 October 2026. Atraxis is an experimental coordination application.
+Updated 29 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -29,21 +29,27 @@ stable release. Priorities may change; no release date is promised.
 Collection never authorizes an intervention. Saving or testing a rule does not
 activate it. Execution requires an approved binding and current permissions.
 
-## Next milestones
+## Four steps to the first stable release
 
-1. Qualify site-specific provisioning and operation on a fresh installation,
-   including the actual identity authority, mounts, certificate issuer and recovery.
-   Controlled Compose acceptance covers scoped inventory access, revocation,
-   login/token/TLS renewal and cold restoration with synthetic inputs; it does
-   not automate or qualify those site responsibilities.
-2. Qualify installed sources, explicitly approved Auton targets and downstream
-   notifications in a controlled operational environment.
-3. Complete a live cold-backup/restore and host-loss drill while retaining audit,
-   uncertain outcomes and deduplication evidence.
-4. Extend sustained-operation and retained-history measurements before publishing
-   capacity guidance.
-5. Finalize supported contracts, packaging and distribution, then qualify a release
-   candidate against the documented acceptance gates.
+The [1.0 scope and delivery gates](docs/v1-delivery.md) fix the functional baseline
+to implemented capabilities, define concrete exit criteria and separate later
+features. Existing qualification is reused within its proven scope.
+
+1. **G1 — scope and contracts:** record the exact supported configurations and
+   matching contracts. The functional baseline is documented; the explicit
+   intervention-language decision and candidate support manifest remain open.
+2. **G2 — installation and complete recovery:** qualify a fresh operational site
+   and recovery on another host, including identity, certificates, configuration,
+   persistent state, audit, revocation and uncertain work.
+3. **G3 — final integration and endurance:** qualify installed sources, approved
+   Auton targets, actual notification destinations and representative retained-history
+   workloads for the configurations claimed as supported.
+4. **G4 — release candidate:** finalize packages, documentation and the evidence
+   index after the preceding gates pass. Publication is a separate action.
+
+G2–G4 remain open. New features do not automatically join this baseline; relevant
+defects are corrected without reopening unrelated completed checks. No new campaign
+or external notification is authorized merely by this roadmap.
 
 A restricted read-only pilot is running. It does not qualify live intervention
 execution, downstream notifications or general production readiness.

@@ -9,6 +9,7 @@ For installation and operation, return to :doc:`/index`.
    :caption: Contributors
 
    /docs/contributing
+   /docs/v1-delivery
    /docs/read-only-adapters
    /docs/prometheus-acceptance
    /docs-core
