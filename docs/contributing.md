@@ -101,6 +101,41 @@ SQL server fixtures, the host kernel and Docker/BuildKit are separate environmen
 Pinned inputs do not promise bit-identical wheel or image reconstruction; source
 revisions, resulting hashes and qualified image archives still belong together.
 
+## Fixed chain and browser image inputs
+
+The [integration image inputs](../scripts/chain/image-inputs.json) pin the Python
+base used by the root, engine and Auton Dockerfiles, and the Playwright job image
+shared by the web and browser/engine workflows. Both digests match the preceding
+successful qualification; this does not implicitly upgrade Python or Playwright.
+The ingress and chain web images derive from the local `atraxis-acceptance:ci`
+image built earlier in the same job. These local output tags are not published
+registry inputs and are not presented as immutable identities.
+
+The [identity verifier](../scripts/chain/image-identities.py) rejects Dockerfile
+or workflow references that differ from the shared lock. It checks all five
+built chain images for the locked Python base's ordered root filesystem layers.
+The browser workflows check their own explicit job container's requested image,
+actual configuration ID, platform and layers against the lock. These inspections
+use bounded GET requests over the runner's existing local Docker socket; they
+never create, stop or modify containers. Only allowlisted public identity fields
+are retained, without environment variables or full Docker inspect payloads.
+
+`chain-evidence` retains `image-identities.json` for seven days alongside the
+existing installed-source checks and test log. The browser workflows retain
+`image-identity-web` and `image-identity-browser-engine` for 14 days. Each JSON
+identifies the exact checked-out source, shared inputs, source-file hashes and
+actual image identities. Check the corresponding workflow and test results:
+an identity artifact alone never establishes a passing qualification.
+
+This qualifies Linux amd64 base images only. The installed apt/Python dependencies
+of these integration jobs remain resolved at build/install time, unlike the
+separately locked operator Compose profile. Docker/BuildKit, runner kernels and
+other test fixtures are outside this lock. The root Dockerfile's base is also
+fixed for subsequent builds, but no existing image is rebuilt or deployed merely
+by merging this change. Image updates require changing the lock and declarations
+together and passing the affected existing workflows; no endurance run is started
+by this procedure.
+
 ## Operator access acceptance
 
 The `operator-compose.yml` workflow builds separately installed services and runs

@@ -8,6 +8,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -33,6 +36,8 @@ jobs:
           docker build --tag atraxis-chain:ci --file scripts/chain/atraxis.Dockerfile .
           docker build --tag atropos-chain:ci --file scripts/chain/engine.Dockerfile .
           docker build --tag auton-chain:ci --file scripts/chain/auton.Dockerfile .
+      - name: Verify built image identities and locked base layers
+        run: python scripts/chain/image-identities.py chain acceptance-artifacts/image-identities.json
       - name: Verify installed candidates match pinned sources
         run: python scripts/chain/verify-installed-candidates.py
       - name: Collect every container acceptance case
