@@ -7,10 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-      image: mcr.microsoft.com/playwright/python:v1.55.0-noble
+      image: mcr.microsoft.com/playwright/python:v1.55.0-noble@sha256:640d578aae63cfb632461d1b0aecb01414e4e020864ac3dd45a868dc0eff3078
       options: --init --ipc=host
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify running browser image identity
+        env:
+          CI_JOB_CONTAINER_ID: ${{ job.container.id }}
+        run: python scripts/chain/image-identities.py web image-evidence/web.json
       - name: Install HTTPdis native dependency
         timeout-minutes: 3
         run: |
@@ -26,3 +33,11 @@ jobs:
           name: web-inventory-synthetic
           path: web-browser-artifacts/*.png
           retention-days: 7
+      - name: Retain browser image identity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-identity-web
+          path: image-evidence/web.json
+          retention-days: 14
+          if-no-files-found: error

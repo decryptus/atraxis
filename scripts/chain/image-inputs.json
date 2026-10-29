@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "platform": "linux/amd64",
+  "images": {
+    "python": {
+      "reference": "python:3.12.16-slim-trixie@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159",
+      "linux_amd64_manifest": "sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b",
+      "linux_amd64_image_id": "sha256:ae4e8b7c575fabea88a029b6cae757f342ca2525e07f7c22272d5105c346b35e",
+      "rootfs_layers": [
+        "sha256:a5d6d345f6afa08d7c31272055746d60a838b290bfcc82c0a23e8e984d61a933",
+        "sha256:fab99bd4639aec48a77ec4d2e3564c0907e0e1e962bbf773219a0b503a168955",
+        "sha256:bca572b9549074f7cbc5f2d9d29f589038ff21c5f68cef2965167a33f177a9c0",
+        "sha256:cae4cb2b5e819765b847e67faa443b377607452f2ec949d142cad15d9d7ea0b3"
+      ]
+    },
+    "playwright": {
+      "reference": "mcr.microsoft.com/playwright/python:v1.55.0-noble@sha256:640d578aae63cfb632461d1b0aecb01414e4e020864ac3dd45a868dc0eff3078",
+      "linux_amd64_manifest": "sha256:f48dffadeef431c469ddb4d3325abaa084a855cc2ef7c89c9c44537acca23a2b",
+      "linux_amd64_image_id": "sha256:1334391b71a5f43741a270eab8a221ab8a4b7f461f6dbdb6fc1bbceeeab45825",
+      "rootfs_layers": [
+        "sha256:cd9664b1462ea111a41bdadf65ce077582cdc77e28683a4f6996dd03afcc56f5",
+        "sha256:c92cd4ea8eacd488389233f35b8f90c16adbee19115607f85f63a7e697893e0c",
+        "sha256:7718d6ab6914bf24393f81725375cf74facb879751fb067a41120870e78250b5",
+        "sha256:770461c166e320fcf8da480cc7424a02a57a6119a7fa4678075647048fe79227"
+      ]
+    }
+  }
+}
