@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/atropos
-          ref: 58fe1241267eca99f78229b44f3f2599229594a5
+          ref: dedb114217c3df5fe0ab79d7acc53cd5636ebee0
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v4
@@ -57,6 +57,9 @@ jobs:
           project, release = json.loads(%r)
           assert version(project) == release
           assert version('sonicprobe') == '0.3.62'
+          if project == 'atraxis-atropos':
+              from atropos import __version__ as engine_version
+              assert engine_version == release, 'engine_runtime_version_mismatch'
           for name, digest in json.loads(%r).items():
               package, relative = name.split('/', 1)
               spec = importlib.util.find_spec(package)

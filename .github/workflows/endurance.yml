@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/atropos
-          ref: 58fe1241267eca99f78229b44f3f2599229594a5
+          ref: dedb114217c3df5fe0ab79d7acc53cd5636ebee0
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v4
