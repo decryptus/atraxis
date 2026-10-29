@@ -70,6 +70,37 @@ system library or base-image byte, and is not a reproducible-build guarantee.
 These base-package checks do not qualify every optional UI/client profile or
 operational recovery. No registry release or deployment is performed.
 
+## Fixed Compose build inputs
+
+The operator Compose Dockerfile pins the Python image and Dockerfile frontend by
+digest. Its Debian and Debian-security sources use a dated snapshot with normal
+signature verification; only snapshot expiry checking is disabled. The three
+files in `deploy/compose/locks/` named `build.txt`, `web.txt` and `engine.txt`
+pin every external Python input and its allowed release-archive SHA-256 values.
+Web and engine have separate dependency sets, including their different Redis
+client versions. This does not select Redis as the starter's storage or queue.
+
+Build tools are installed from verified wheels. Dependency downloads enforce
+hashes and disable isolated build dependency resolution. Wheel construction then
+runs without network access, including the local application and independent
+client sources. Final images install only those wheels without network/index
+access and run dependency checks. Build tools remain in separate builder stages;
+the runtime keeps only the explicitly listed packages. Exact installed versions
+are checked against `versions.json`, including absence of extra distributions.
+
+Each image stores `/usr/local/share/atraxis/environment.json`: Python and native
+package versions, lock hashes and, for web/engine, verified input-archive and
+built-wheel hashes plus the builder inventory. CI retains those records with the
+exact image IDs and exercises the existing installation and separate-host recovery.
+Changing an archive, adding a wheel or drifting an installed version is an error.
+
+Update the base/frontend digests, Debian snapshot and affected dependency locks
+deliberately, then requalify the affected profiles. These inputs cover the operator
+Compose images on Linux amd64. Standalone package jobs, other integration images,
+SQL server fixtures, the host kernel and Docker/BuildKit are separate environments.
+Pinned inputs do not promise bit-identical wheel or image reconstruction; source
+revisions, resulting hashes and qualified image archives still belong together.
+
 ## Operator access acceptance
 
 The `operator-compose.yml` workflow builds separately installed services and runs

@@ -9,6 +9,12 @@ proxies. It builds local images from separate source checkouts; it publishes no
 image. Use Docker Compose 2.24 or newer with BuildKit. This is not a release or
 permission to deploy a particular site.
 
+This Compose profile fixes its Python base image, Debian package snapshot and
+Python dependency archives. The qualified platform is Linux amd64 with Python
+3.12.16; other architectures need their own acceptance. Builds fail if locked
+inputs are unavailable or do not match. Updating security fixes requires a reviewed
+lock update and rebuilding the images; restarting a container does not update them.
+
 The default is SQLite storage and its durable storage-backed queue. No Redis,
 Auton, execution worker, action binding, automatic activation or intervention is
 started. Optional profiles below start guarded workers after explicit configuration.

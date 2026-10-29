@@ -4,5 +4,9 @@
 !LICENSE
 !atraxis/
 !atraxis/**
+!deploy/
+!deploy/compose/
+!deploy/compose/locks/
+!deploy/compose/locks/**
 **/__pycache__
 **/*.pyc

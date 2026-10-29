@@ -81,6 +81,31 @@ jobs:
                   ['docker', 'image', 'inspect', '--format', '{{.Id}}', image], text=True).strip())
           Path('acceptance-artifacts/installed-packages.json').write_text(json.dumps(images, indent=2) + '\n')
           PY
+      - name: Retain the locked Python and native environments
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          specification = json.loads(Path('deploy/compose/locks/versions.json').read_text())
+          environments = {}
+          for profile in ('web', 'engine', 'proxy'):
+              image = 'atraxis-install-' + profile + ':local'
+              output = subprocess.check_output(['docker', 'run', '--rm', '--network', 'none',
+                  '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
+                  '--memory', '128m', '--cpus', '1', '--pids-limit', '32', '--entrypoint', 'cat',
+                  image, '/usr/local/share/atraxis/environment.json'], timeout=30)
+              assert len(output) <= 1024 * 1024
+              environment = json.loads(output)
+              assert environment['profile'] == profile
+              assert environment['base_image'] == specification['base_image']
+              assert environment['python'] == specification['python']
+              environments[profile] = dict(environment=environment, image_id=subprocess.check_output(
+                  ['docker', 'image', 'inspect', '--format', '{{.Id}}', image],
+                  text=True, timeout=30).strip())
+          Path('acceptance-artifacts/locked-environments.json').write_text(
+              json.dumps(environments, indent=2) + '\n')
+          PY
       - name: Bind transferred images and manifest to the verified source job
         id: transfer
         run: |
