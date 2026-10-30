@@ -4,7 +4,8 @@ import time
 from copy import deepcopy
 
 from atraxis.models import SnapshotStore, public_fields
-from atraxis.parsing import InvalidPayload, parse_certlord, parse_monit
+from atraxis.parsing import InvalidPayload
+from atraxis.source_adapters import DecodeContext, get_adapter
 
 
 SCHEMA_VERSION = 1
@@ -35,22 +36,12 @@ class ReadService:
         if result.source_id != source_id:
             outcome = 'collector_error'
         elif outcome == 'success':
-            arguments = dict(source_id=source_id, received_at=result.received_at,
+            context = DecodeContext(source_id=source_id, received_at=result.received_at,
                 monotonic=result.received_monotonic, max_age=source.max_age,
-                max_resources=source.max_resources)
+                max_resources=source.max_resources, max_clock_skew=source.max_clock_skew,
+                transport_elapsed=result.duration_seconds, metric=source.metric)
             try:
-                if source.kind == 'certlord':
-                    snapshot = parse_certlord(result.payload,
-                        max_clock_skew=source.max_clock_skew, **arguments)
-                elif source.kind == 'prometheus':
-                    from atraxis.prometheus import parse_prometheus
-                    snapshot = parse_prometheus(result.payload, metric=source.metric,
-                        max_clock_skew=source.max_clock_skew, **arguments)
-                elif source.kind == 'monit_docker':
-                    snapshot = parse_monit(result.payload,
-                        transport_elapsed=result.duration_seconds, **arguments)
-                else:
-                    raise InvalidPayload()
+                snapshot = get_adapter(source.kind).decode(result.payload, context)
             except InvalidPayload:
                 outcome = 'invalid_payload'
         elif outcome not in FAILURE_OUTCOMES:

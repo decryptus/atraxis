@@ -10,6 +10,9 @@ The [public roadmap](../ROADMAP.md) distinguishes existing behavior from planned
 The [1.0 delivery baseline](v1-delivery.md) fixes included/deferred functionality,
 the four exit gates and when existing evidence needs to be repeated.
 
+The [source adapter contract](read-only-adapters.md) describes the common collection
+interface, separate built-in modules and the remaining live-rule mapping limits.
+
 ## Local development
 
 Use Python 3.11 or 3.12, the system `libmagic` library and a fresh environment:
