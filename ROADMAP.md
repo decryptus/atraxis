@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 29 October 2026. Atraxis is an experimental coordination application.
+Updated 30 October 2026. Atraxis is an experimental coordination application.
 This roadmap distinguishes implemented behavior from work still required for a
 stable release. Priorities may change; no release date is promised.
 
@@ -11,6 +11,10 @@ stable release. Priorities may change; no release date is promised.
 - Selected numeric Prometheus samples, including Covenant exports, with explicit
   label projection, sample timestamps, read grants and inventory search. This
   experimental adapter does not supply metric-driven interventions or graphs.
+- Complete Monit-Docker and CertLord inventory through optional Covenant observation
+  plugins and Prometheus, with native field/freshness correspondence checks.
+  Direct API access remains recommended; production capacity and retention costs
+  for the indirect routes remain to be qualified.
 - Scoped accounts, organizations, memberships, bounded delegation and inventory
   permissions; section searches through the documented web, CLI and Textual flows.
 - SQLite account storage, explicit backup/restore, configuration setup and
@@ -36,8 +40,8 @@ to implemented capabilities, define concrete exit criteria and separate later
 features. Existing qualification is reused within its proven scope.
 
 1. **G1 — scope and contracts:** record the exact supported configurations and
-   matching contracts. The functional baseline is documented; the explicit
-   intervention-language decision and candidate support manifest remain open.
+   matching contracts. The version-1 YAML models and ZEN 2.1.2 are explicitly
+   selected; the [candidate matrix](docs/v1-candidate.md) bounds initial support.
 2. **G2 — installation and complete recovery:** qualify a fresh operational site
    and recovery on another host, including identity, certificates, configuration,
    persistent state, audit, revocation and uncertain work.
@@ -47,7 +51,10 @@ features. Existing qualification is reused within its proven scope.
 4. **G4 — release candidate:** finalize packages, documentation and the evidence
    index after the preceding gates pass. Publication is a separate action.
 
-G2–G4 remain open. New features do not automatically join this baseline; relevant
+The first distribution checkpoint is `1.0.0rc1`, explicitly a prerelease.
+Its reference profile is Linux amd64 with SQLite and the integrated queue.
+G2–G4 remain open for the stable release. New features do not automatically join
+this baseline; relevant
 defects are corrected without reopening unrelated completed checks. No new campaign
 or external notification is authorized merely by this roadmap.
 

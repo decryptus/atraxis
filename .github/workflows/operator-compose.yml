@@ -71,7 +71,7 @@ jobs:
           images = {}
           for image, project, release, files in (
                   ('atraxis-install-engine:local', 'atraxis-atropos', '0.1.0a21', expected),
-                  ('atraxis-install-web:local', 'atraxis', '0.0.1.dev0', web_files)):
+                  ('atraxis-install-web:local', 'atraxis', '1.0.0rc1', web_files)):
               subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
                   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
                   '--cpus', '2', '--pids-limit', '128', '--entrypoint', 'python', image, '-'],

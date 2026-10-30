@@ -48,7 +48,7 @@
       "PyJWT": "2.15.1",
       "PyYAML": "6.0.3",
       "Unidecode": "1.2.0",
-      "atraxis": "0.0.1.dev0",
+      "atraxis": "1.0.0rc1",
       "atropos-client": "0.1.0a10",
       "certifi": "2026.10.23",
       "cffi": "2.1.1",

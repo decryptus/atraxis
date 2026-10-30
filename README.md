@@ -31,6 +31,12 @@ contains only selected numeric measurements and timestamps; private pilot pages
 and APIs remain authenticated. Install Atraxis for the actual service-backed
 inventory and rule-management interfaces.
 
+## Release candidate
+
+`1.0.0rc1` is the first prerelease checkpoint on the path to 1.0. It retains the
+existing interfaces and integrations; it is not a stable-production declaration.
+See the [candidate scope and limitations](docs/v1-candidate.md) before adoption.
+
 ## Install from source
 
 Requires Python 3.11 or later. Start in a dedicated virtual environment:
