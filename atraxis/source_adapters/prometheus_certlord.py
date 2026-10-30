@@ -1,4 +1,4 @@
-"""Read-only adapter for Covenant's existing CertLord metrics endpoint."""
+"""Read-only complete CertLord observations through Covenant and Prometheus."""
 
 from urllib.parse import urlencode
 from atraxis.prometheus_certlord import (

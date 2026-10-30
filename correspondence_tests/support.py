@@ -36,7 +36,7 @@ from atraxis.service import ReadService
 from atraxis.source_config import parse_sources
 from atraxis.transport import HTTPTransport, TransportResult
 
-FIXTURE = Path(__file__).resolve().parents[1] / "examples" / "covenant-monit.yml"
+FIXTURE = Path(__file__).resolve().parent / "fixtures" / "covenant-monit-legacy.yml"
 CONTAINER = "a" * 64
 INPUTS = tuple(SCALAR_FIELDS) + tuple(FILESYSTEM_FIELDS)
 MAX_AGE = 15

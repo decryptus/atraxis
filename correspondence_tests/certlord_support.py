@@ -5,6 +5,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import base64
+import json
 import os
 from pathlib import Path
 import sys
@@ -12,8 +13,11 @@ import threading
 import time
 import yaml
 
-from support import Chain
-from covenant.plugins.certlord import CovenantCertlordPlugin
+from support import Chain, payload, CONTAINER
+from covenant.plugins.observations import (
+    CovenantCertlordObservationPlugin,
+    CovenantMonitObservationPlugin,
+)
 from covenant.classes.plugins import CovenantEPTObject, EPTS_SYNC
 from atraxis.service import ReadService
 from atraxis.transport import TransportResult
@@ -65,10 +69,14 @@ def certificate_payload():
     )
 
 
-class CertlordChain(Chain):
-    def __init__(self):
+class ObservationChain(Chain):
+    def __init__(self, kind="certlord"):
         super().__init__()
-        self.raw = certificate_payload()
+        self.kind = kind
+        self.raw = certificate_payload() if kind == "certlord" else payload()
+        self.route = (
+            "/api/certificates/observations" if kind == "certlord" else "/v1/status"
+        )
         self.bad_exposition = False
         self.previous_sync = EPTS_SYNC.copy()
 
@@ -87,7 +95,7 @@ class CertlordChain(Chain):
                     "Basic " + base64.b64encode(b"reader:synthetic-certlord").decode()
                 )
                 if (
-                    self.path != "/api/certificates/metrics"
+                    self.path != chain.route
                     or self.headers.get("Authorization") != auth
                 ):
                     self.send_error(403)
@@ -99,10 +107,10 @@ class CertlordChain(Chain):
                     data = (
                         b"malformed"
                         if chain.bad_exposition
-                        else prometheus_metrics(deepcopy(chain.raw)).encode()
+                        else json.dumps(chain.raw).encode()
                     )
                 self.send_response(200)
-                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
@@ -112,11 +120,11 @@ class CertlordChain(Chain):
             target=self.source_server.serve_forever, daemon=True
         )
         self.source_thread.start()
-        config = yaml.safe_load(FIXTURE.read_text())["endpoints"]["certificates"]
+        config = yaml.safe_load(
+            (FIXTURE.parent / ("covenant-" + self.kind + ".yml")).read_text()
+        )["endpoints"]["certificates" if self.kind == "certlord" else "monit"]
         config["metrics"][0]["config"].update(
-            url="http://127.0.0.1:"
-            + str(self.source_server.server_port)
-            + "/api/certificates/metrics",
+            url="http://127.0.0.1:" + str(self.source_server.server_port) + self.route,
             username="reader",
             password_file="reader.password",
             timeout=1,
@@ -127,7 +135,12 @@ class CertlordChain(Chain):
             general=dict(result_timeout=30, server_id="synthetic"),
             covenant=dict(config_dir=str(self.root)),
         )
-        self.certlord_plugin = CovenantCertlordPlugin("certlord-correspondence")
+        cls = (
+            CovenantCertlordObservationPlugin
+            if self.kind == "certlord"
+            else CovenantMonitObservationPlugin
+        )
+        self.certlord_plugin = cls("observation-correspondence")
         self.certlord_plugin.init(config)
         self.certlord_plugin.safe_init()
         return super().start()
@@ -157,13 +170,24 @@ class CertlordChain(Chain):
         source = super().bundle_source(site)
         return replace(
             source,
-            kind="prometheus_certlord",
-            metric=dict(match=source.metric["match"]),
+            kind="prometheus_" + self.kind,
+            metric=dict(
+                match=source.metric["match"],
+                **(
+                    {"prefix": "covenant_monit_observation_"}
+                    if self.kind == "monit"
+                    else {}
+                ),
+            ),
+            max_response_bytes=4 * 1024 * 1024,
         )
 
     def direct(self, raw):
         source = replace(
-            self.bundle_source(), source_id="direct", kind="certlord", metric=None
+            self.bundle_source(),
+            source_id="direct",
+            kind="certlord" if self.kind == "certlord" else "monit_docker",
+            metric=None,
         )
         service = ReadService([source])
         service.set_running(True)
@@ -174,3 +198,35 @@ class CertlordChain(Chain):
             ),
         )
         return service.status()
+
+    def bundle(self, after=0, site="east"):
+        from atraxis.transport import HTTPTransport
+        from atraxis.client import validate_inventory
+
+        source = self.bundle_source(site)
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            result = HTTPTransport().fetch(source)
+            if result.outcome == "success":
+                clocks = [
+                    float(r["value"][1])
+                    for r in result.payload["data"]["result"]
+                    if r["metric"].get("covenant_metric") == "up"
+                    and r["metric"].get("covenant_sample_time") == "1"
+                ]
+                if clocks and max(clocks) > after:
+                    service = ReadService([source])
+                    service.set_running(True)
+                    service.record(source.source_id, result)
+                    return validate_inventory(service.status())
+            time.sleep(0.1)
+        raise AssertionError("Expected complete observation scrape not observed")
+
+
+class CertlordChain(ObservationChain):
+    pass
+
+
+class MonitChain(ObservationChain):
+    def __init__(self):
+        super().__init__("monit")

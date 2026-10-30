@@ -7,7 +7,6 @@ from atraxis.parsing import InvalidPayload, number, require, text
 from atraxis.transport import HTTPTransport
 from atraxis.source_config import MAX_SOURCES
 from atraxis.prometheus import validate_fields as metric_fields
-from atraxis.prometheus_certlord import validate_fields as certificate_metric_fields
 
 
 EXIT_OK = 0
@@ -135,13 +134,12 @@ def validate_inventory(payload):
                     raise InvalidPayload() from None
                 require(native_id not in native_ids)
                 native_ids.add(native_id)
-                fields = (certificate_metric_fields(resource.get('fields'), native_id) if kind == 'prometheus_certlord' else
-                          metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
+                fields = (metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
                           _object(resource.get('fields'),
                                  CONTAINER_FIELDS if kind in CONTAINER_SOURCES else CERTIFICATE_FIELDS))
                 if kind in CONTAINER_SOURCES:
                     text(fields.get('name'))
-                elif kind == 'certlord':
+                elif kind in ('certlord', 'prometheus_certlord'):
                     require(type(fields.get('domains')) is list and bool(fields['domains']))
                     for domain in fields['domains']:
                         text(domain)

@@ -1,4 +1,4 @@
-"""Explicit Monit-Docker metric contract via a single read-only Prometheus query."""
+"""Complete Monit-Docker observations via one read-only Prometheus query."""
 
 from urllib.parse import urlencode
 

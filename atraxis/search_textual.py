@@ -68,8 +68,7 @@ class InventorySearchApp(ServiceDashboard):
             rows.append(TableRow(key,(row['source_id'],name,row['kind'],row['state']),name,json.dumps(row,indent=2,ensure_ascii=True)))
         self.display_rows(rows)
         self.set_notice('info',str(data['total'])+' matches · Page '+str(self.query.page)+' · Organization: '+str(data['context']['organization'] if data['context'] else 'unscoped'))
-        metric_notice='CertLord metrics: collection freshness only; domains unavailable.\n' if any(row['fields'].get('projection')=='certlord_metrics' for row in data['items']) else ''
-        self.set_activity(metric_notice+('Some sources have no current observations. No match is not proof of absence.\n' if data['unavailable'] else '')+
+        self.set_activity(('Some sources have no current observations. No match is not proof of absence.\n' if data['unavailable'] else '')+
                           'Enter submits the complete query · f Filters · n/p Pages · r Refresh\nObservation state is reported at search time.')
 
     def failed(self,error):

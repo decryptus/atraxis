@@ -41,8 +41,8 @@ Prometheus requires an explicit `metric` selection; see the
 [Covenant/Prometheus guide](prometheus.md) for configuration and sample semantics.
 For source-timed container observations, use the separate
 [Monit-Docker via Covenant contract](prometheus-monit.md). CertLord
-[metric projections](prometheus-certlord.md) preserve UUIDs and lifecycle metrics
-with explicitly collection-only freshness.
+[complete observations](prometheus-certlord.md) preserve domains, UUIDs, versions,
+fingerprints, full TLS evidence and per-certificate freshness.
 `origin` contains just the scheme,
 host and optional port, with an optional trailing slash. Userinfo, arbitrary paths,
 query strings, fragments, whitespace and percent escapes are rejected. Unicode DNS

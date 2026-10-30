@@ -45,8 +45,6 @@ def main(options):
             for row in data['items']:
                 name=(', '.join(row['fields'].get('domains') or []) or row['native_id']) if row['kind']=='certificate' else row['fields']['name']
                 print(' | '.join(json.dumps(v,ensure_ascii=True) for v in (row['source_id'],row['kind'],row['native_id'],name,row['state'])))
-            if any(row['fields'].get('projection')=='certlord_metrics' for row in data['items']):
-                print('CertLord metrics: collection freshness only; domains unavailable.')
             if data['unavailable']:print('Some sources have no current observations. Absence from results is not proof of absence.')
             if data['has_more']:print('More results: use --page '+str(query.page+1))
         return 0 if data['ready'] else 2

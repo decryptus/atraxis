@@ -86,8 +86,6 @@ def source_panel(source):
     result = '<section class="source"><div class="source-heading"><div><div class="eyebrow">' + text(SOURCE_NAMES[source['kind']]) + '</div><h2>' + text(source['source_id']) + '</h2></div><span class="badge ' + state + '">' + label + '</span></div>'
     if partial:
         result += '<p class="notice">Selected resources only. Counts reflect your permissions.</p>'
-    if source['kind'] == 'prometheus_certlord':
-        result += '<p class="muted">Collection freshness only. Domains, fingerprints and per-certificate observation times are unavailable in this metric feed. TLS status describes the last stored verification.</p>'
     if source['kind'] == 'prometheus':
         result += '<p class="muted">Latest retained Prometheus samples. Sample age does not prove when the original data changed or that its source is healthy.</p>'
     result += '<div class="source-meta"><span>Availability: ' + text(source['availability']) + '</span><span>Last collection: ' + text(outcome) + '</span><span>Observation age at load: ' + ('Unknown' if age is None else text('%.1f s' % age)) + '</span><span>' + ('Visible resources: ' if partial else 'Snapshot resources: ') + value(count) + '</span></div>'

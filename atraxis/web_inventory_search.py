@@ -54,8 +54,7 @@ def render_search(result):
         body+='<section class="source"><div class="table-wrap"><table><thead><tr><th>Resource</th><th>Source</th><th>Type</th><th>Observation</th><th>Reported state</th></tr></thead><tbody>'
         for row in result['items']:
             fields=row['fields'];name=(', '.join(fields.get('domains') or []) or row['native_id']) if row['kind']=='certificate' else fields['name']
-            hint = '<span class="muted">Collection freshness only; domains unavailable.</span>' if fields.get('projection')=='certlord_metrics' else ''
-            body+='<tr><td class="name">'+text(name)+hint+details(row)+'</td><td>'+text(row['source_id'])+'</td><td>'+text(row['kind'])+'</td><td>'+text(row['state'])+'</td><td>'+value(fields.get('status'))+'</td></tr>'
+            body+='<tr><td class="name">'+text(name)+details(row)+'</td><td>'+text(row['source_id'])+'</td><td>'+text(row['kind'])+'</td><td>'+text(row['state'])+'</td><td>'+value(fields.get('status'))+'</td></tr>'
         body+='</tbody></table></div></section>'
     params=dict(query,**base)
     body+='<nav aria-label="Search pages">'

@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/covenant
-          ref: 3b7e446e494847065ac9890e089da0fa75ff590f
+          ref: 331e56367ef92ff24a5f3931b650d9301a298bed
           path: fixture-covenant
           persist-credentials: false
       - uses: actions/checkout@v4
@@ -23,6 +23,12 @@ jobs:
           repository: decryptus/certlord
           ref: 908834f3d3b89d579a908391ce435cc5b419451f
           path: fixture-certlord
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/monit-docker
+          ref: 4927c336611fda1f46d7e01c709cafc0026909c5
+          path: fixture-monit
           persist-credentials: false
       - name: Download and verify Prometheus 3.5.0
         run: |
@@ -34,6 +40,7 @@ jobs:
       - name: Qualify direct and Covenant metric correspondence
         env:
           COVENANT_SOURCE: ${{ github.workspace }}/fixture-covenant
+          MONIT_SOURCE: ${{ github.workspace }}/fixture-monit
           CERTLORD_SOURCE: ${{ github.workspace }}/fixture-certlord
           PROMETHEUS_BINARY: ${{ runner.temp }}/prometheus-3.5.0.linux-amd64/prometheus
         run: |

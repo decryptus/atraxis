@@ -1,34 +1,25 @@
-# CertLord metrics through Covenant
+# CertLord observations through Covenant
 
-Use `kind: prometheus_certlord` to read the existing CertLord metric contract from
-Covenant through Prometheus. It preserves certificate UUIDs, lifecycle metadata,
-stored certificate expiration, pending ACME retries and the last recorded TLS
-verification outcome. Collection failure, incomplete inventory and stale collection
-metadata invalidate the current view. The adapter is read-only.
-
-**This is a metric projection, not the full CertLord observation API.** Domains,
-certificate version, fingerprint, not-before date, per-certificate observation
-time and full verification evidence are absent from the native metric endpoint.
-They remain `null`; the UI uses the UUID when no domain name is available.
-Freshness describes the collection and scrape, not each certificate's observation.
-These resources do not supply live rule/intervention facts.
+Use `kind: prometheus_certlord` for the same read-only certificate inventory as
+Atraxis's direct CertLord source. This uses `/api/certificates/observations`, not
+the limited `/api/certificates/metrics` endpoint. Domains, UUIDs, versions,
+fingerprints, validity dates, lifecycle/retry fields, full stored TLS verification
+and per-certificate observation times are preserved. Native parsing and freshness
+rules are reused, including freshness of the oldest certificate observation.
 
 ## Configure the chain
 
-Merge the [Covenant endpoint example](https://github.com/decryptus/atraxis/blob/main/examples/covenant-certlord.yml)
-into an existing Covenant configuration. It uses Covenant's existing `certlord`
-plugin, one fixed `/api/certificates/metrics` source, a finite timeout, verified TLS
-and explicit read credentials. Set Covenant's `general.result_timeout` above twice
-the network timeout (for example 30 seconds for a 10-second timeout). Keep the
-password file private and grant its CertLord user only read access. Protect the
-exporter separately; certificate UUIDs and lifecycle states are operational data.
+Use Covenant's optional `certlord_observation` plugin and the
+[endpoint example](https://github.com/decryptus/atraxis/blob/main/examples/covenant-certlord.yml).
+It performs one fixed, authenticated, read-only JSON request per collection.
+Set `general.result_timeout` above twice the source network timeout. Use HTTPS,
+verified TLS and a private password/token file with source read permission only.
+Literal loopback HTTP is supported for local testing. Redirects and dynamic
+source targets are refused. Failures emit `covenant_certlord_observation_up=0`
+without any previously collected fields. The existing Covenant `certlord` plugin
+and its legacy numeric metrics remain available for their existing uses.
 
-The plugin validates each complete source snapshot. A failure emits
-`covenant_certlord_source_up=0` without cached certificate gauges. It needs no
-custom `collects` filters. See [Covenant's CertLord guide](https://github.com/decryptus/covenant/blob/master/docs/certlord.md)
-for its credential and transport settings.
-
-Example Prometheus scrape configuration:
+Example Prometheus scrape (add ingress authentication and CA settings):
 
 ```yaml
 scrape_configs:
@@ -42,11 +33,7 @@ scrape_configs:
       - targets: [covenant.example.org:443]
 ```
 
-Add appropriate ingress authentication and CA settings. Do not give `up` different
-`job`/`instance` labels from the certificate metrics. Use one source per scrape
-target; do not aggregate unrelated CertLord installations into that target.
-
-Atraxis source configuration:
+Atraxis configuration:
 
 ```yaml
 sources:
@@ -63,64 +50,37 @@ sources:
     max_age: 60
     max_clock_skew: 2
     max_resources: 100
+    max_response_bytes: 4194304
 ```
 
-Both matcher keys are mandatory and exact. Extra stable target labels are allowed;
-certificate-specific labels are not target matchers. The metric names are fixed,
-not operator-supplied PromQL. A browser source administrator can select a
-host-approved connection containing this complete contract. Configure source
-access/grants explicitly, validate with `atraxis check-config`, and restart the
-daemon after review. No deployed setting changes automatically.
+Exactly one target is selected. Both matchers are mandatory; include all additional
+target labels. Do not combine unrelated source installations. Host-approved
+connections, source/resource grants and domain search work as with direct sources.
+Validate with `atraxis check-config` before restarting the daemon.
 
-## What is preserved
+## Equivalent result
 
-| Native metric | Atraxis fields / meaning |
+| Native observation | Covenant / Prometheus result |
 | --- | --- |
-| `certlord_certificate_info` | UUID, origin, renewal owner, status, pending action and material state |
-| `certlord_certificate_not_after_timestamp_seconds` | `not_after_timestamp_seconds` and UTC `not_after`; only for readable material |
-| `certlord_certificate_issuance_retry_count` | Integer `issuance_retry_count` for currently pending ACME create/renew |
-| `certlord_certificate_tls_verification` | `tls_verification_status`: `verified`, `failed` or `not_checked` |
-| `certlord_certificate_tls_verified_at_timestamp_seconds` | UTC `tls_verified_at`, only for a recorded successful verification |
-| `certlord_observation_completed_timestamp_seconds` | `collection_completed_at` and source collection freshness |
-| `certlord_certificates_observed` | Completeness/empty-inventory check |
+| Certificate UUID | Same stable native identity, including renewal |
+| Domains, version, SHA-256 fingerprint | Same values and domain order; searchable/displayable domains |
+| Lifecycle, origin, renewal owner, pending action | Same states |
+| Not-before, not-after, expiry epoch | Same dates and precision; missing material remains null |
+| Retry count and last retry time | Same values, including zero versus unknown |
+| Verification status, check time, error, expected/observed/target hashes | Full stored verification object or null |
+| Per-certificate observation time | Same value; oldest observation controls freshness |
+| Started/completed times and completion epoch | Same source metadata |
+| Empty, stale, future or invalid snapshot | Same native interpretation, with additional transport guards |
 
-The projection is marked `projection: certlord_metrics`. Its `verification` field
-stays `null`: the metric status lacks the fingerprints, error details and timing
-needed for the full verification object. A historical successful TLS check does
-not establish what every destination currently serves. Certificate expiry is not
-observation freshness: an expired certificate can be observed in a fresh collection.
-Retry zero remains zero; absent/inapplicable retry or expiry stays unknown.
+A recent collection containing an old certificate observation is stale. Expired
+certificate material can still be a fresh observation: expiry and data age are
+separate concepts. Stored TLS verification describes the last recorded check; it
+is not a new probe. Certificate observation does not grant live intervention rights.
 
-Resource grants use `kind: certificate`, the source ID and the original UUID.
-Web, CLI and Textual search support these resources by UUID, source and lifecycle
-status. Domain search cannot find a name that was not exported. Collection-only
-freshness is labelled in the inventory and search displays.
-
-## Coherence and failure semantics
-
-One bounded range query reads Prometheus `up`, Covenant's `source_up`, collection
-completion/count and all seven CertLord metric families. The latest `up` sample
-anchors the scrape. Both up values must be one; metadata timestamps must match
-the anchor. Only certificate series from that same scrape are projected. Old
-status labels, deleted UUIDs and previous successful TLS results cannot be reused
-from earlier scrapes. Duplicate identities/guard series or incomplete required
-expiry, retry or TLS data fail closed.
-
-Collection and scrape age must fit `max_age`; future collection times outside
-`max_clock_skew` are rejected. Age advances monotonically after receipt. A fresh
-zero count with matching metadata is an authoritative empty inventory. Failed,
-missing, stale or partial responses leave prior data historical. Recovery requires
-a complete valid collection. Detection waits for the next scrape and Atraxis poll.
-
-**Per-certificate freshness is unavailable.** A long collection can complete
-recently even though a certificate was read earlier. The direct `certlord` adapter
-has each certificate's `observed_at`; this metric endpoint does not. Keep the direct
-adapter when you require those timestamps, domains, fingerprints or full verification
-evidence. This adapter does not manufacture them or authorize interventions.
-
-Limits include the configured response byte budget and certificate count,
-`min(10000, 10 * max_resources + 4)` returned series including historical label
-sets, 1,000 samples per series, 10,000 samples per response, 12 exact target
-matchers, 256 characters per label value and an 8 KiB encoded query. Non-finite
-values, warnings, informational annotations, truncated/ambiguous results and
-excess budgets invalidate the response.
+The same complete-scrape, schema/count/digest and transport checks described in the
+[Monit-Docker guide](prometheus-monit.md#freshness-and-completeness) apply here.
+No old label generation is reused after a change or deletion. No missing domain or
+fingerprint is invented. Limits and Prometheus storage/cardinality considerations
+are documented under [capacity and operation](prometheus-monit.md#capacity-and-operation).
+Protect the exported domains and fingerprints as operational inventory data.
+Neither PEM material nor unrecognized source fields are exported.

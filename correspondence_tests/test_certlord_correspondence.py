@@ -35,34 +35,11 @@ class CertlordCorrespondenceTests(unittest.TestCase):
         ][0]["fields"]
         for site in ("east", "west"):
             fields = self.fields(self.chain.bundle(self.changed, site))
-            for key in (
-                "origin",
-                "renewal_owner",
-                "status",
-                "pending_action",
-                "material_state",
-                "not_after_timestamp_seconds",
-                "issuance_retry_count",
-            ):
-                self.assertEqual(fields[key], direct[key])
-            self.assertEqual(
-                fields["tls_verification_status"], direct["verification"]["status"]
-            )
-            self.assertEqual(
-                fields["tls_verified_at"], direct["verification"]["checked_at"]
-            )
-            for key in (
-                "domains",
-                "fingerprint_sha256",
-                "observed_at",
-                "verification",
-                "version",
-            ):
-                self.assertIsNone(fields[key])
+            self.assertEqual(fields, direct)
         self.assertTrue(self.chain.source_calls)
         self.assertEqual(
             {(method, path) for method, path, _ in self.chain.source_calls},
-            {("GET", "/api/certificates/metrics")},
+            {("GET", "/api/certificates/observations")},
         )
         self.assertTrue(
             all(
@@ -80,9 +57,8 @@ class CertlordCorrespondenceTests(unittest.TestCase):
         changed = self.chain.set(self.raw)
         fields = self.fields(self.chain.bundle(changed))
         self.assertEqual(fields["status"], "renew")
-        self.assertEqual(fields["tls_verification_status"], "failed")
-        self.assertIsNone(fields["tls_verified_at"])
-        self.assertIsNone(fields["verification"])
+        self.assertEqual(fields["verification"]["status"], "failed")
+        self.assertEqual(fields["verification"]["error_code"], "fingerprint_mismatch")
 
     def test_disappearance_and_empty_inventory_are_authoritative(self):
         self.chain.bundle(self.changed)
@@ -110,7 +86,7 @@ class CertlordCorrespondenceTests(unittest.TestCase):
         fields = self.fields(self.chain.bundle(changed))
         self.assertIsNone(fields["not_after"])
         self.assertIsNone(fields["issuance_retry_count"])
-        self.assertEqual(fields["tls_verification_status"], "not_checked")
+        self.assertIsNone(fields["verification"])
 
     def test_zero_retry_and_expired_certificate_keep_native_meaning(self):
         record = self.raw["certificates"][0]
@@ -148,12 +124,113 @@ class CertlordCorrespondenceTests(unittest.TestCase):
         self.raw["certificates"][0]["not_after_timestamp_seconds"] = None
         self.assertFalse(self.chain.bundle(self.chain.set(self.raw))["ready"])
 
-    def test_collection_freshness_does_not_claim_individual_observation_freshness(self):
-        # The native metric endpoint omits this per-certificate timestamp entirely.
+    def test_fresh_collection_with_old_certificate_is_stale_like_direct(self):
         raw = deepcopy(self.raw)
         raw["started_at"] = iso(time.time() - MAX_AGE - 40)
         raw["certificates"][0]["observed_at"] = iso(time.time() - MAX_AGE - 30)
         self.assertFalse(self.chain.direct(raw)["ready"])
-        fields = self.fields(self.chain.bundle(self.chain.set(raw)))
-        self.assertIsNone(fields["observed_at"])
-        self.assertEqual(fields["projection"], "certlord_metrics")
+        self.assertFalse(self.chain.bundle(self.chain.set(raw))["ready"])
+
+    def test_domain_fingerprint_version_changes_preserve_uuid_and_full_metadata(self):
+        self.chain.bundle(self.changed)
+        self.raw["certificates"][0].update(
+            domains=["new.test", "*.new.test"],
+            version=2**54 + 1,
+            fingerprint_sha256="c" * 64,
+        )
+        expected = self.chain.direct(self.raw)["sources"][0]["last_valid_snapshot"]
+        actual = self.chain.bundle(self.chain.set(self.raw))["sources"][0][
+            "last_valid_snapshot"
+        ]
+        self.assertEqual(actual["source_metadata"], expected["source_metadata"])
+        self.assertEqual(actual["resources"][0]["native_id"], ID)
+        self.assertEqual(
+            actual["resources"][0]["fields"], expected["resources"][0]["fields"]
+        )
+
+    def test_real_native_certificate_projection_preserves_material_fingerprint(self):
+        from datetime import datetime, timezone, timedelta
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from certlord.services.observations import certificate_observation
+
+        started = time.time()
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        name = x509.Name(
+            [x509.NameAttribute(NameOID.COMMON_NAME, "native.example.test")]
+        )
+        now = datetime.now(timezone.utc)
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(1)
+            .not_valid_before(now - timedelta(days=1))
+            .not_valid_after(now + timedelta(days=30))
+            .add_extension(
+                x509.SubjectAlternativeName([x509.DNSName("native.example.test")]),
+                critical=False,
+            )
+            .sign(key, hashes.SHA256())
+        )
+        record = certificate_observation(
+            ID,
+            "native.example.test",
+            dict(
+                origin="external",
+                status="deployed",
+                cert=cert.public_bytes(serialization.Encoding.PEM).decode(),
+            ),
+            7,
+            {},
+        )
+        completed = time.time()
+        raw = dict(
+            schema_version=1,
+            started_at=iso(started),
+            completed_at=iso(completed),
+            completed_timestamp_seconds=completed,
+            certificates=[record],
+        )
+        expected = self.chain.direct(raw)["sources"][0]["last_valid_snapshot"][
+            "resources"
+        ][0]["fields"]
+        actual = self.fields(self.chain.bundle(self.chain.set(raw)))
+        self.assertEqual(actual, expected)
+        self.assertEqual(
+            actual["fingerprint_sha256"], cert.fingerprint(hashes.SHA256()).hex()
+        )
+
+    def test_real_sample_clock_matches_raw_selector_not_query_evaluation(self):
+        import requests
+        from atraxis.transport import HTTPTransport
+
+        self.chain.bundle(self.changed)
+        source = self.chain.bundle_source()
+        response = HTTPTransport().fetch(source).payload
+        clock = next(
+            r
+            for r in response["data"]["result"]
+            if r["metric"].get("covenant_metric") == "up"
+            and r["metric"].get("covenant_sample_time") == "1"
+        )
+        reference = requests.get(
+            source.origin + "/api/v1/query",
+            params=dict(query="timestamp(up)", time=clock["value"][0]),
+            auth=("reader", "synthetic-only"),
+            timeout=2,
+        ).json()
+        self.assertEqual(clock["value"][1], reference["data"]["result"][0]["value"][1])
+        self.assertLessEqual(float(clock["value"][1]), clock["value"][0])
+
+    def test_wire_codec_is_identical_to_exporter_schema(self):
+        from pathlib import Path
+        import atraxis.observation_codec as consumer
+        import covenant.services.observation_codec as exporter
+
+        self.assertEqual(
+            Path(consumer.__file__).read_bytes(), Path(exporter.__file__).read_bytes()
+        )

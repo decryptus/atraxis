@@ -66,9 +66,10 @@ metrics from Prometheus, including metrics exported by Covenant. The
 values and sample timestamps. Metric history and alert evaluation remain in
 Prometheus; this adapter does not trigger interventions. For container observations
 through Covenant, the [Monit-Docker metric contract](docs/prometheus-monit.md)
-checks source readiness and freshness and preserves the nine supported rule inputs.
-The [CertLord metric projection](docs/prometheus-certlord.md) preserves UUIDs,
-lifecycle states and expiry with collection-only freshness.
+preserves the complete native inventory, metadata and supported rule inputs.
+The [CertLord observation contract](docs/prometheus-certlord.md) preserves domains,
+UUIDs, versions, fingerprints, full TLS evidence and per-certificate freshness.
+Both require Covenant’s complete observation plugins and validate coherent scrapes.
 
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 

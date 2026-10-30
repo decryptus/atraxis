@@ -72,7 +72,7 @@ class ConfigurationAdminTests(ConfigurationFixture):
         self.assertEqual(source.metric, metric)
 
     def test_bundle_contract_is_host_approved_and_not_operator_overridable(self):
-        metric = dict(prefix='monitor_', match={'job':'monitor','instance':'exporter.example:9118'})
+        metric = dict(prefix='covenant_monit_observation_', match={'job':'monitor','instance':'exporter.example:9118'})
         self.profile['connections']['bundle'] = dict(kind='prometheus_monit',
             origin='https://prometheus.invalid', credentials_file='source.json', metric=metric)
         self.write('administration.yml', self.profile)
