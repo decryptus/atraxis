@@ -1,0 +1,15 @@
+# Add this endpoint to an existing Covenant configuration.
+# Requires the complete observation plugin, not the legacy limited metrics feed.
+# Protect the exporter and grant source read permission only.
+endpoints:
+  monit:
+    plugin: monit_observation
+    metrics:
+      - name: monit
+        config:
+          url: https://monit.example.org/v1/status
+          username: covenant-reader
+          password_file: secrets/monit-read.password
+          timeout: 10
+          # ca_file: source-ca.pem
+        collects: []

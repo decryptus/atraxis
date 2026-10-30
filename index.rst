@@ -18,6 +18,8 @@ Experimental GPLv3 software. Evaluate the documented limits before deploying.
    docs/local-administration
    docs/source-configuration
    docs/prometheus
+   docs/prometheus-monit
+   docs/prometheus-certlord
    docs/prometheus-alerting
    docs/collection-inventory
    docs/cli

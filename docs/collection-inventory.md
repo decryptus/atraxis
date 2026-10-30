@@ -101,7 +101,7 @@ Source clock accuracy cannot be proven from an API response. Large configured
 inventories can consume substantial memory; the body/resource bounds are not
 benchmarked total-RSS limits, and inventory pagination is not implemented.
 
-Synthetic tests cover all three source kinds, stale/unknown/malformed results, retention,
+Synthetic tests cover the supported source kinds, stale/unknown/malformed results, retention,
 authoritative empty inventories, source isolation, bounded admission, scheduling,
 recovery, inbound/outbound authentication and real daemon SIGTERM with a blocked
 source. They do not establish production capacity, leak absence, sustained-load

@@ -12,7 +12,8 @@ from atraxis.prometheus import validate_fields as metric_fields
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_DEGRADED = 2
-SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate', 'prometheus': 'metric'}
+SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate', 'prometheus': 'metric', 'prometheus_monit': 'container', 'prometheus_certlord': 'certificate'}
+CONTAINER_SOURCES = frozenset(('monit_docker', 'prometheus_monit'))
 AVAILABILITY = frozenset(('unknown', 'available', 'unavailable'))
 FRESHNESS = frozenset(('fresh', 'stale', 'unknown'))
 REASONS = frozenset(('no_visible_sources', 'collectors_not_configured', 'collector_stopped', 'sources_not_current'))
@@ -127,7 +128,7 @@ def validate_inventory(payload):
                         and resource.get('kind') == SOURCE_KINDS[kind])
                 native_id = text(resource.get('native_id'))
                 try:
-                    require(DOCKER_ID.fullmatch(native_id) is not None if kind in ('monit_docker', 'prometheus')
+                    require(DOCKER_ID.fullmatch(native_id) is not None if kind in CONTAINER_SOURCES or kind == 'prometheus'
                             else str(UUID(native_id)) == native_id)
                 except ValueError:
                     raise InvalidPayload() from None
@@ -135,10 +136,10 @@ def validate_inventory(payload):
                 native_ids.add(native_id)
                 fields = (metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
                           _object(resource.get('fields'),
-                                 CONTAINER_FIELDS if kind == 'monit_docker' else CERTIFICATE_FIELDS))
-                if kind == 'monit_docker':
+                                 CONTAINER_FIELDS if kind in CONTAINER_SOURCES else CERTIFICATE_FIELDS))
+                if kind in CONTAINER_SOURCES:
                     text(fields.get('name'))
-                elif kind == 'certlord':
+                elif kind in ('certlord', 'prometheus_certlord'):
                     require(type(fields.get('domains')) is list and bool(fields['domains']))
                     for domain in fields['domains']:
                         text(domain)

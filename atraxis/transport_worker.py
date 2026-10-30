@@ -15,6 +15,7 @@ from atraxis.source_config import (MAX_CA_BYTES, MAX_RESPONSE_BYTES, MAX_TIMEOUT
                                  _unique_pairs, read_credentials)
 from atraxis.read_request import READ_ROUTES, INVENTORY_KIND, SEARCH_KIND
 from atraxis.accounts import identifier
+from atraxis.source_adapters import SOURCE_KINDS, get_adapter
 
 
 MAX_REQUEST_BYTES = 131072
@@ -38,11 +39,8 @@ def fetch(document):
     connection = None
     try:
         origin = _origin(document['origin'], document['origin'].startswith('http://'))
-        route = READ_ROUTES[document['kind']]
-        if document['kind'] == 'prometheus':
-            from atraxis.prometheus import query_parameters
-            route += '?' + urlencode(query_parameters(document.get('metric'),
-                document['max_age'], document['timeout'], document['max_resources']))
+        route = (get_adapter(document['kind']).read_route(document)
+                 if document['kind'] in SOURCE_KINDS else READ_ROUTES[document['kind']])
         organization = document.get('organization')
         if organization is not None:
             if document['kind'] not in (INVENTORY_KIND, SEARCH_KIND) or not identifier(organization):

@@ -12,6 +12,9 @@ the four exit gates and when existing evidence needs to be repeated.
 The [manual candidate release procedure](release-candidate.md) publishes exact
 qualified package artifacts without claiming operational gate closure.
 
+The [source adapter contract](read-only-adapters.md) describes the common collection
+interface, separate built-in modules and the remaining live-rule mapping limits.
+
 ## Local development
 
 Use Python 3.11 or 3.12, the system `libmagic` library and a fresh environment:

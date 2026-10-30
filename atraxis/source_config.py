@@ -8,6 +8,8 @@ from urllib.parse import urlsplit
 
 from sonicprobe.libs import network, xys
 
+from atraxis.source_adapters import SOURCE_KINDS, SOURCE_ROUTES, get_adapter
+
 
 MAX_SOURCES = 32
 MAX_CREDENTIAL_BYTES = 8192
@@ -16,11 +18,9 @@ MIN_TIMEOUT = 1
 MAX_TIMEOUT = 60
 MIN_RESPONSE_BYTES = 1024
 MAX_RESPONSE_BYTES = 4194304
-SOURCE_ROUTES = {'monit_docker': '/v1/status', 'certlord': '/api/certificates/observations',
-                 'prometheus': '/api/v1/query'}
 SOURCE_SCHEMA = xys.load('''
 source_id![1,128]: !!str
-kind: !~~enum(monit_docker,certlord,prometheus)
+kind: !~~enum(%s)
 origin![1,2048]: !!str
 credentials_file![1,4096]: !!str
 ca_file?[1,4096]: !!str
@@ -31,7 +31,7 @@ max_age?: !~~between(1,86400) 1
 max_response_bytes?: !~~between(1024,4194304) 1
 max_resources?: !~~between(1,10000) 1
 max_clock_skew?: !~~between(0,300) 0
-''')
+''' % ','.join(SOURCE_KINDS))
 DEFAULT_POLL_INTERVAL = 60
 DEFAULT_TIMEOUT = 10
 DEFAULT_MAX_AGE = 180
@@ -154,15 +154,10 @@ def parse_sources(documents, config_path):
             _require(type(document) is dict)
             plain = {k: v for k, v in document.items() if k != 'metric'}
             _require(xys.validate(plain, SOURCE_SCHEMA))
-            metric = None
-            if document['kind'] == 'prometheus':
-                from atraxis.prometheus import selection, query_parameters
-                metric = selection(document.get('metric'))
-                query_parameters(metric, document.get('max_age', DEFAULT_MAX_AGE),
-                                 document.get('timeout', DEFAULT_TIMEOUT),
-                                 document.get('max_resources', DEFAULT_MAX_RESOURCES))
-            else:
-                _require('metric' not in document)
+            metric = get_adapter(document['kind']).configure(document,
+                max_age=document.get('max_age', DEFAULT_MAX_AGE),
+                timeout=document.get('timeout', DEFAULT_TIMEOUT),
+                max_resources=document.get('max_resources', DEFAULT_MAX_RESOURCES))
             identity = document['source_id']
             identity.encode('utf-8')
             _require(identity == identity.strip())

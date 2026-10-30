@@ -1,4 +1,4 @@
-# Read-only source adapter contract — draft 1
+# Read-only source adapter contract
 
 Read-only adapter design. The current prototype connects bounded HTTP collection and authenticated inventory; the first inventory projection and API-backed CLI are implemented (see core limits and collection documentation). Scope: one organization, multiple configured sources; no business mutations, job submission or automatic discovery of network targets.
 
@@ -21,11 +21,42 @@ No need to change either public project for the initial data adapter. The remote
 
 ## Neutral result model
 
-An adapter exposes `collect(source_config) -> CollectionResult`. HTTP sessions, credentials and parsing remain inside transport/adapters; core models never depend on requests, CLI or TUI classes.
+The built-in adapters live in `atraxis/source_adapters/`, with separate modules
+for Monit-Docker, CertLord and Prometheus. Each implements the same `SourceAdapter`
+contract:
 
-A result contains:
+- `configure(document, *, max_age, timeout, max_resources)` validates source-specific
+  selection options offline.
+- `read_route(document)` returns a fixed read route and, where needed, bounded
+  query parameters. The shared transport remains GET-only and owns explicit
+  credentials, TLS, deadlines, cancellation and response-size limits.
+- `decode(payload, DecodeContext) -> Snapshot` reuses the pure source parsers and
+  returns the existing immutable domain projection. The context carries identity,
+  receipt times, freshness/resource limits and selection, without credentials or URLs.
+
+The immutable built-in registry supplies the configured kinds and routes. Both
+configuration and collection use it; configuration cannot load arbitrary Python
+modules. The scheduler and `ReadService` do not select source-specific parsers.
+`TransportResult` still represents the request outcome; `Snapshot` represents the
+validated observation. No new public API or configuration format is introduced.
+
+Monit-Docker and CertLord remain supported optional adapters, not temporary migration
+paths. Multiple Prometheus instances can be configured with distinct `source_id`
+values and their own origins, credentials and selections. Covenant metrics already
+stored in Prometheus use the Prometheus adapter; a dedicated Covenant adapter is
+not needed for that path. The modules ship inside Atraxis rather than as separately
+versioned packages for this first extraction.
+
+This is collection abstraction, not resource equivalence: Prometheus still projects
+`metric` resources, Monit-Docker `container` resources and CertLord `certificate`
+resources. Live rule observations still require the existing Monit-Docker container
+contract. Switching that path to Prometheus requires an explicit mapping and parity
+validation of identity, units, missing values and freshness; changing `kind` alone
+is not supported. Action admission and execution are unchanged.
+
+A transport/observation result contains:
 - source_id: stable configured identity for one installation, independent of its mutable URL or display name.
-- source_kind: monit_docker or certlord.
+- source_kind: monit_docker, certlord, prometheus, prometheus_monit or prometheus_certlord.
 - attempted_at and received_at: UTC timestamps measured by Atraxis.
 - outcome: success, timeout, transport_error, authentication_error, forbidden, endpoint_unavailable, source_error, invalid_payload or response_too_large.
 - freshness: fresh, stale or unknown; separate from transport outcome and resource health.
@@ -34,7 +65,7 @@ A result contains:
 - resources: typed domain projections from an explicit allowlist.
 - safe error_code: no response-body dump, credentials or raw exception text.
 
-Resource identity is the tuple (source_id, resource_kind, native_id). Use the full Docker ID or CertLord UUID, never a container name, domain name, short prefix or hash of a mutable endpoint. Atraxis must not invent replacement certificate UUIDs. Cross-source copies remain distinct.
+Resource identity is the tuple (source_id, resource_kind, native_id). Use the full Docker ID or CertLord UUID, never a container name, domain name, short prefix or hash of a mutable endpoint. Atraxis must not invent replacement certificate UUIDs. Cross-source copies remain distinct. Prometheus resource IDs derive from the selected metric and identity labels; source identity remains part of the full resource key.
 
 The application retains a last valid snapshot separately from the latest attempt. A failed or non-authoritative attempt cannot delete that snapshot or silently serve it as fresh. Any retained resources must show their age and previous-observation status. The implemented cache is in memory and is lost on restart; it is not a durable history.
 
@@ -90,3 +121,7 @@ Use unittest and verify discovery before execution:
 ## Remaining work
 
 The first projection, bounded transport, polling, authenticated inventory and explicit CLI reads are implemented and covered by synthetic tests. The milestone review and synthetic Docker runtime acceptance are recorded in [validation guide](contributing.md). Live-source acceptance requires explicit authorization and must record deployed versions and ingress permissions. Select durable storage and additional UI only after the contract is exercised. No live credentials, deployment changes or container actions were used for this work.
+
+The `prometheus_monit` adapter projects the explicit coherent metric contract into
+container observations with native IDs. See the [correspondence qualification](source-correspondence.md)
+and [user contract](prometheus-monit.md) for supported facts and acceptance limits.

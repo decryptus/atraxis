@@ -19,7 +19,8 @@ remain required for execution.
 | Atropos engine | `0.1.0a21`; integrated source `dedb114217c3df5fe0ab79d7acc53cd5636ebee0` | Independently installed engine, still an alpha dependency; no claim of an Atropos stable release |
 | Independent client | `0.1.0a10`, source from the same Atropos revision | Client/API and source identity checked independently of the engine |
 | Rules and workflows | Existing version-1 YAML authoring/workflow models; ZEN 2.1.2 | First-match typed decisions, bounded registered-action workflows; no arbitrary scripts or JDM imports |
-| Observations | Existing monit-docker, CertLord and selected Prometheus/Covenant adapters | Unknown, unavailable, authoritative empty and historical values stay distinct |
+| Native inventory | Direct `monit_docker` and `certlord`; optional `prometheus_monit` and `prometheus_certlord` through Covenant and Prometheus | Complete native projections, including certificate domains/fingerprints; unknown, unavailable, authoritative empty and historical values stay distinct |
+| Selected metrics | Generic `prometheus` adapter, with Covenant optional | Explicit numeric selections; does not reconstruct native inventories |
 | Execution | Existing approved Auton adapter; workers opt-in | CI uses disposable effects and a pinned, patched Auton fixture; live targets are not yet qualified |
 | Notifications | Existing Alertmanager adapter | Local/synthetic receiver evidence does not establish actual email/SMS/chat receipt |
 | Optional storage | Existing JSON accounts and engine Redis/PostgreSQL/MySQL/MariaDB adapters retained | Existing contract/TLS tests only; not additional operational support promises for this first target |
@@ -29,6 +30,30 @@ Compose default starts no execution worker. Explicit `simulation` and `execution
 profiles retain their different rights and isolation requirements. Install
 matching engine/client sources when enabling optional rule interfaces; never
 install an engine inside the Atraxis process.
+
+## Source adapter prerequisites
+
+Prefer direct `monit_docker` and `certlord` connections when Atraxis can reach
+their APIs. Neither requires Covenant or Prometheus. Each configured source
+discovers the resources returned by its API; domains and containers do not need
+individual configuration. The generic `prometheus` adapter retains explicit metric
+selections. See [adapter selection](source-configuration.md#choose-an-adapter).
+
+The optional `prometheus_monit` and `prometheus_certlord` routes require both
+Prometheus and Covenant's `monit_observation` / `certlord_observation` plugins.
+These plugins are available in Covenant source revision
+[`331e56367ef92ff24a5f3931b650d9301a298bed`](https://github.com/decryptus/covenant/commit/331e56367ef92ff24a5f3931b650d9301a298bed).
+Use a build containing that change: the previously published Covenant `0.0.72`
+does not include it. Atraxis's candidate publication does not publish Covenant.
+The legacy metric plugins cannot supply complete inventories.
+
+The indirect routes preserve the same inventory fields and native freshness
+semantics, with collection/scrape delay taken into account. They have no automatic
+fallback to direct APIs or deduplication between separately configured sources.
+Prometheus retention and changing text labels incur additional storage costs;
+the 10,000-row and 4 MiB transport bounds reject an oversized snapshot as a whole.
+Capacity for a production inventory remains to be qualified. See the
+[Monit guide](prometheus-monit.md) and [CertLord guide](prometheus-certlord.md).
 
 ## Limits and remaining stable-release work
 

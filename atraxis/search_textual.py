@@ -63,7 +63,7 @@ class InventorySearchApp(ServiceDashboard):
         self.data=data
         rows=[]
         for row in data['items']:
-            name=', '.join(row['fields']['domains']) if row['kind']=='certificate' else row['fields']['name']
+            name=(', '.join(row['fields'].get('domains') or []) or row['native_id']) if row['kind']=='certificate' else row['fields']['name']
             key=hashlib.sha256(json.dumps([row['source_id'],row['kind'],row['native_id']]).encode()).hexdigest()
             rows.append(TableRow(key,(row['source_id'],name,row['kind'],row['state']),name,json.dumps(row,indent=2,ensure_ascii=True)))
         self.display_rows(rows)
