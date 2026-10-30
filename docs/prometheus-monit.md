@@ -134,5 +134,6 @@ characters; up to 12 exact target matchers and 256 characters per label value.
 The encoded query must fit 8 KiB. Large scopes/history may need narrower selection.
 
 The general `kind: prometheus` [metric adapter](prometheus.md) keeps its existing
-sample-display semantics and cannot supply container rule facts. CertLord requires
-its own correspondence contract and is not covered by this adapter.
+sample-display semantics and cannot supply container rule facts. CertLord uses a separate
+[metric contract](prometheus-certlord.md), with collection-only freshness and
+explicitly unavailable observation details.

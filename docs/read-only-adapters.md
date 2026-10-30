@@ -56,7 +56,7 @@ is not supported. Action admission and execution are unchanged.
 
 A transport/observation result contains:
 - source_id: stable configured identity for one installation, independent of its mutable URL or display name.
-- source_kind: monit_docker, certlord, prometheus or prometheus_monit.
+- source_kind: monit_docker, certlord, prometheus, prometheus_monit or prometheus_certlord.
 - attempted_at and received_at: UTC timestamps measured by Atraxis.
 - outcome: success, timeout, transport_error, authentication_error, forbidden, endpoint_unavailable, source_error, invalid_payload or response_too_large.
 - freshness: fresh, stale or unknown; separate from transport outcome and resource health.

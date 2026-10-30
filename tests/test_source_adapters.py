@@ -117,7 +117,7 @@ class Block(importlib.abc.MetaPathFinder):
             raise AssertionError('unexpected adapter dependency: ' + fullname)
 sys.meta_path.insert(0, Block())
 from atraxis.source_adapters import ADAPTERS
-assert set(ADAPTERS) == {'monit_docker', 'certlord', 'prometheus', 'prometheus_monit'}
+assert set(ADAPTERS) == {'monit_docker', 'certlord', 'prometheus', 'prometheus_monit', 'prometheus_certlord'}
 '''
         completed = subprocess.run([sys.executable, '-c', script], capture_output=True, text=True)
         self.assertEqual(completed.returncode, 0, completed.stderr)

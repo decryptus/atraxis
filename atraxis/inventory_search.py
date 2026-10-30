@@ -104,7 +104,7 @@ def search_inventory(payload, query, *, servers=(), resource_groups=()):
             fields = resource['fields']
             if query.status and str(fields.get('status', '')).casefold() != query.status.casefold():
                 continue
-            values = [sid, native_id, fields.get('name', ''), *fields.get('domains', [])]
+            values = [sid, native_id, fields.get('name', ''), *(fields.get('domains') or [])]
             if kind == 'metric':
                 values.extend(label['value'] for label in fields['labels'])
             if needle and not any(needle in str(v).casefold() for v in values):

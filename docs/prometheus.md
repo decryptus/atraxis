@@ -16,6 +16,10 @@ To read source-timed container observations for rule inputs, use the separate
 timestamps and a coherent set of metrics; ordinary metric selections remain
 display-only.
 
+For the existing CertLord metric export, use the
+[`prometheus_certlord` projection](prometheus-certlord.md). It preserves UUIDs and
+lifecycle fields and explicitly identifies the information absent from metrics.
+
 For metric-based notifications, configure the separate
 [Prometheus → Alertmanager path](prometheus-alerting.md). Atraxis does not edit
 those alert rules or deliver notifications itself.

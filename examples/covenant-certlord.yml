@@ -1,0 +1,14 @@
+# Merge this endpoint into an existing Covenant configuration.
+# Protect the exporter; source credentials require CertLord read permission only.
+endpoints:
+  certificates:
+    plugin: certlord
+    metrics:
+      - name: certlord
+        config:
+          url: https://certlord.example.org/api/certificates/metrics
+          username: covenant-reader
+          password_file: secrets/certlord-read.password
+          timeout: 10
+          # ca_file: certlord-ca.pem
+        collects: []

@@ -11,12 +11,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0
+      - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0 cryptography==50.0.2
       - uses: actions/checkout@v4
         with:
           repository: decryptus/covenant
           ref: 3b7e446e494847065ac9890e089da0fa75ff590f
           path: fixture-covenant
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/certlord
+          ref: 908834f3d3b89d579a908391ce435cc5b419451f
+          path: fixture-certlord
           persist-credentials: false
       - name: Download and verify Prometheus 3.5.0
         run: |
@@ -28,6 +34,7 @@ jobs:
       - name: Qualify direct and Covenant metric correspondence
         env:
           COVENANT_SOURCE: ${{ github.workspace }}/fixture-covenant
+          CERTLORD_SOURCE: ${{ github.workspace }}/fixture-certlord
           PROMETHEUS_BINARY: ${{ runner.temp }}/prometheus-3.5.0.linux-amd64/prometheus
         run: |
           python scripts/check-test-collection.py --runner unittest correspondence_tests

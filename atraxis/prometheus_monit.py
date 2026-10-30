@@ -3,18 +3,14 @@
 from copy import deepcopy
 from dataclasses import replace
 import json
-import math
 from urllib.parse import urlencode
 
 from atraxis.models import Freshness, Snapshot
+from atraxis.prometheus_bundle import matrix_series
 from atraxis.parsing import number, parse_monit, require, settings
 from atraxis.prometheus import (
-    LABEL_NAME,
     MAX_QUERY_BYTES,
-    MAX_SERIES_SAMPLES,
-    MAX_TOTAL_SAMPLES,
     METRIC_NAME,
-    SAMPLE_VALUE,
     label_name,
     label_value,
 )
@@ -38,7 +34,6 @@ SUFFIXES = (*GUARDS, "container_info", *SCALARS, *FILESYSTEMS)
 MAX_PREFIX = 80
 MAX_MATCHERS = 12
 MAX_SERIES = 10000
-MAX_RAW_LABELS = 32
 
 
 def selection(document):
@@ -95,42 +90,8 @@ def query_parameters(metric, max_age, timeout, max_resources):
 
 
 def _series(payload, spec, max_resources):
-    require(type(payload) is dict and payload.get("status") == "success")
-    require(not payload.get("warnings") and not payload.get("infos"))
-    data = payload.get("data")
-    require(type(data) is dict and data.get("resultType") == "matrix")
-    rows = data.get("result")
-    require(type(rows) is list and len(rows) <= series_limit(max_resources))
     names = {"up": "up", **{spec["prefix"] + suffix: suffix for suffix in SUFFIXES}}
-    grouped = {suffix: [] for suffix in ("up", *SUFFIXES)}
-    total = 0
-    for row in rows:
-        require(type(row) is dict and set(row) == {"metric", "values"})
-        labels, samples = row["metric"], row["values"]
-        require(type(labels) is dict and len(labels) <= MAX_RAW_LABELS)
-        require(
-            all(
-                type(k) is str and LABEL_NAME.fullmatch(k) and label_value(v)
-                for k, v in labels.items()
-            )
-        )
-        require(labels.get("__name__") in names)
-        require(all(labels.get(k) == v for k, v in spec["match"].items()))
-        require(type(samples) is list and 1 <= len(samples) <= MAX_SERIES_SAMPLES)
-        total += len(samples)
-        require(total <= MAX_TOTAL_SAMPLES)
-        previous = -1
-        for sample in samples:
-            require(type(sample) is list and len(sample) == 2)
-            stamp, raw = sample
-            number(stamp)
-            require(stamp > previous)
-            previous = stamp
-            require(type(raw) is str and len(raw) <= 64 and SAMPLE_VALUE.fullmatch(raw))
-            value = float(raw)
-            require(math.isfinite(value))
-        grouped[names[labels["__name__"]]].append((stamp, value, labels))
-    return grouped
+    return matrix_series(payload, names, spec["match"], series_limit(max_resources))
 
 
 def parse_prometheus_monit(

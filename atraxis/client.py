@@ -7,12 +7,13 @@ from atraxis.parsing import InvalidPayload, number, require, text
 from atraxis.transport import HTTPTransport
 from atraxis.source_config import MAX_SOURCES
 from atraxis.prometheus import validate_fields as metric_fields
+from atraxis.prometheus_certlord import validate_fields as certificate_metric_fields
 
 
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_DEGRADED = 2
-SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate', 'prometheus': 'metric', 'prometheus_monit': 'container'}
+SOURCE_KINDS = {'monit_docker': 'container', 'certlord': 'certificate', 'prometheus': 'metric', 'prometheus_monit': 'container', 'prometheus_certlord': 'certificate'}
 CONTAINER_SOURCES = frozenset(('monit_docker', 'prometheus_monit'))
 AVAILABILITY = frozenset(('unknown', 'available', 'unavailable'))
 FRESHNESS = frozenset(('fresh', 'stale', 'unknown'))
@@ -134,7 +135,8 @@ def validate_inventory(payload):
                     raise InvalidPayload() from None
                 require(native_id not in native_ids)
                 native_ids.add(native_id)
-                fields = (metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
+                fields = (certificate_metric_fields(resource.get('fields'), native_id) if kind == 'prometheus_certlord' else
+                          metric_fields(resource.get('fields'), native_id) if kind == 'prometheus' else
                           _object(resource.get('fields'),
                                  CONTAINER_FIELDS if kind in CONTAINER_SOURCES else CERTIFICATE_FIELDS))
                 if kind in CONTAINER_SOURCES:

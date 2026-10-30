@@ -63,12 +63,13 @@ class InventorySearchApp(ServiceDashboard):
         self.data=data
         rows=[]
         for row in data['items']:
-            name=', '.join(row['fields']['domains']) if row['kind']=='certificate' else row['fields']['name']
+            name=(', '.join(row['fields'].get('domains') or []) or row['native_id']) if row['kind']=='certificate' else row['fields']['name']
             key=hashlib.sha256(json.dumps([row['source_id'],row['kind'],row['native_id']]).encode()).hexdigest()
             rows.append(TableRow(key,(row['source_id'],name,row['kind'],row['state']),name,json.dumps(row,indent=2,ensure_ascii=True)))
         self.display_rows(rows)
         self.set_notice('info',str(data['total'])+' matches · Page '+str(self.query.page)+' · Organization: '+str(data['context']['organization'] if data['context'] else 'unscoped'))
-        self.set_activity(('Some sources have no current observations. No match is not proof of absence.\n' if data['unavailable'] else '')+
+        metric_notice='CertLord metrics: collection freshness only; domains unavailable.\n' if any(row['fields'].get('projection')=='certlord_metrics' for row in data['items']) else ''
+        self.set_activity(metric_notice+('Some sources have no current observations. No match is not proof of absence.\n' if data['unavailable'] else '')+
                           'Enter submits the complete query · f Filters · n/p Pages · r Refresh\nObservation state is reported at search time.')
 
     def failed(self,error):

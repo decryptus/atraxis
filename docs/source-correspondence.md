@@ -54,10 +54,11 @@ boundary remains independent of HTTP, UI, credentials and source SDKs.
 
 The Prometheus workflow pins Covenant to
 `3b7e446e494847065ac9890e089da0fa75ff590f` and checksum-verifies Prometheus 3.5.0.
-It explicitly guards and executes all 15 correspondence tests:
+It explicitly guards and executes the Monit-Docker correspondence tests alongside the CertLord suite:
 
 ```sh
 export COVENANT_SOURCE=/absolute/path/to/pinned/covenant
+export CERTLORD_SOURCE=/absolute/path/to/pinned/certlord
 export PROMETHEUS_BINARY=/absolute/path/to/prometheus
 python scripts/check-test-collection.py --runner unittest correspondence_tests
 python -m unittest discover -s correspondence_tests -v
@@ -84,7 +85,8 @@ specified exporter contract. The source JSON is synthetic, not a running Docker
 installation. The test calls the real Covenant HTTP plugin and renders its output;
 it does not start the full Covenant HTTPdis daemon or its queue workers. It does
 not qualify a deployed installation, remote TLS, clock synchronization, capacity,
-CertLord correspondence, or actual engine/action execution.
+or actual engine/action execution. CertLord has a separate
+[correspondence record](certlord-correspondence.md).
 
 The contract requires a coherent source response rendered by the serial exporter
 endpoint and removal of invalid/missing values. Generic retain/default policies,

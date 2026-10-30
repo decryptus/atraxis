@@ -13,5 +13,6 @@ For installation and operation, return to :doc:`/index`.
    /docs/read-only-adapters
    /docs/prometheus-acceptance
    /docs/source-correspondence
+   /docs/certlord-correspondence
    /docs-core
    /ROADMAP

@@ -7,7 +7,8 @@ from urllib.parse import urlencode
 
 MAX_DISPLAY_ROWS = 200
 SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics',
-                'prometheus_monit': 'Monit-Docker via Prometheus'}
+                'prometheus_monit': 'Monit-Docker via Prometheus',
+                'prometheus_certlord': 'CertLord via Covenant / Prometheus'}
 REASONS = {'no_visible_sources': 'No sources are available in your inventory scope','collectors_not_configured': 'No sources configured',
            'collector_stopped': 'Collection stopped',
            'sources_not_current': 'Some observations are not current'}
@@ -85,6 +86,8 @@ def source_panel(source):
     result = '<section class="source"><div class="source-heading"><div><div class="eyebrow">' + text(SOURCE_NAMES[source['kind']]) + '</div><h2>' + text(source['source_id']) + '</h2></div><span class="badge ' + state + '">' + label + '</span></div>'
     if partial:
         result += '<p class="notice">Selected resources only. Counts reflect your permissions.</p>'
+    if source['kind'] == 'prometheus_certlord':
+        result += '<p class="muted">Collection freshness only. Domains, fingerprints and per-certificate observation times are unavailable in this metric feed. TLS status describes the last stored verification.</p>'
     if source['kind'] == 'prometheus':
         result += '<p class="muted">Latest retained Prometheus samples. Sample age does not prove when the original data changed or that its source is healthy.</p>'
     result += '<div class="source-meta"><span>Availability: ' + text(source['availability']) + '</span><span>Last collection: ' + text(outcome) + '</span><span>Observation age at load: ' + ('Unknown' if age is None else text('%.1f s' % age)) + '</span><span>' + ('Visible resources: ' if partial else 'Snapshot resources: ') + value(count) + '</span></div>'
@@ -105,7 +108,7 @@ def source_panel(source):
     result += '<div class="table-wrap" role="region" aria-label="Resources for ' + text(source['source_id']) + '" tabindex="0"><table><thead><tr>' + ''.join('<th scope="col">' + title + '</th>' for title in titles) + '</tr></thead><tbody>'
     for resource in resources[:MAX_DISPLAY_ROWS]:
         fields = resource['fields']
-        name = fields['name'] if container or metric else ', '.join(fields['domains'])
+        name = fields['name'] if container or metric else (', '.join(fields.get('domains') or []) or resource['native_id'])
         if metric:
             labels = ', '.join(label['name'] + '=' + label['value'] for label in fields['labels'])
             result += '<tr><td class="name"><span class="resource-name">' + text(name) + '</span>' + details(resource) + '</td><td>' + value(fields['value']) + '</td><td>' + sample_time(fields['sampled_at']) + '</td><td class="name">' + text(labels) + '</td></tr>'
