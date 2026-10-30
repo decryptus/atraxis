@@ -11,14 +11,27 @@ provide time-series graphs, arbitrary PromQL, histogram objects, alert managemen
 or metric-driven interventions. Atropos observation bindings do not accept these
 metric resources as live intervention facts.
 
-To read source-timed container observations for rule inputs, use the separate
-[`prometheus_monit` contract](prometheus-monit.md). It requires readiness, origin
-timestamps and a coherent set of metrics; ordinary metric selections remain
-display-only.
+## Choose metrics or native inventory
 
-For the existing CertLord metric export, use the
-[`prometheus_certlord` projection](prometheus-certlord.md). It preserves UUIDs and
-lifecycle fields and explicitly identifies the information absent from metrics.
+This guide describes `kind: prometheus`, the adapter for explicitly selected
+numeric series. Prometheus is required for this adapter; Covenant is one possible
+exporter. Resource discovery here follows the configured metric and label selector,
+not an automatic scan of all containers, certificates or metrics.
+
+For native inventory, direct [`monit_docker` and `certlord` access](source-configuration.md#choose-an-adapter)
+is the default recommendation and does not require Prometheus or Covenant.
+Keep direct inventory collection independent even when using a separate
+Prometheus path for metric history or alerting.
+
+When centralized collection is needed, the dedicated
+[`prometheus_monit`](prometheus-monit.md) and
+[`prometheus_certlord`](prometheus-certlord.md) adapters reconstruct complete native
+inventories, including source metadata, domains and fingerprints. They require
+Covenant's observation plugins reading the original JSON APIs, plus Prometheus.
+The ordinary numeric exports do not supply this complete contract. Resources are
+automatically included from those APIs, and native freshness rules are preserved
+with additional coherent-scrape and transport checks. There is no direct Covenant
+JSON adapter or automatic fallback to source APIs.
 
 For metric-based notifications, configure the separate
 [Prometheus → Alertmanager path](prometheus-alerting.md). Atraxis does not edit

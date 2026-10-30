@@ -5,6 +5,50 @@ use the [local administration commands](local-administration.md) to review and
 save source changes. Credential/catalog provisioning and service restarts remain
 explicit host operations.
 
+## Choose an adapter
+
+The `kind` field selects an explicit read path. For container and certificate
+inventory, prefer `monit_docker` and `certlord` when Atraxis can reach the source
+APIs. These direct adapters require neither Covenant nor Prometheus. The YAML
+example below uses only direct access.
+
+- `monit_docker` reads `/v1/status` from a Monit-Docker instance and produces
+  container resources with filesystem observations and native source metadata.
+- `certlord` reads `/api/certificates/observations` from a CertLord instance and
+  produces certificate resources with domains, fingerprints, versions, full stored
+  TLS verification and per-certificate observation times.
+- `prometheus` reads explicitly selected numeric series from Prometheus. Their
+  exporter can be Covenant or another producer. These are metric resources,
+  not native container/certificate inventories. See [metric selection](prometheus.md).
+- `prometheus_monit` and `prometheus_certlord` reconstruct complete native
+  inventories from Covenant's dedicated observation plugins through Prometheus.
+  Use them for centralized collection when Atraxis cannot or should not connect
+  directly to the source APIs. They require both Covenant and Prometheus, preserve
+  native validation and add transport/scrape checks. See the
+  [Monit-Docker](prometheus-monit.md) and [CertLord](prometheus-certlord.md) guides.
+
+For direct kinds, `origin` points to the native service or its protected ingress.
+For all Prometheus kinds, `origin` points to Prometheus; the original service URL
+belongs in the exporter configuration. There is currently no supported Covenant
+JSON relay that Atraxis can read without Prometheus.
+
+Container/certificate discovery is automatic within the inventory returned by each
+source API. Configure one source connection per instance; do not enumerate each
+container, certificate or domain in Atraxis or Covenant's observation plugins.
+Changes appear on subsequent collection cycles (plus scraping and polling for the
+Prometheus path), subject to resource/response limits and explicit inventory grants.
+The generic metric adapter requires an explicit metric name and selector.
+
+Keep one inventory route per upstream instance. Two configured source IDs remain
+separate identities even if they expose the same native resources; there is no
+automatic deduplication or fallback between direct and Prometheus adapters.
+Direct inventory collection can operate alongside independently configured
+Covenant/Prometheus metric history and alerting without depending on that path.
+If a configured source fails, its retained snapshot becomes historical and global
+readiness degrades; other sources continue to be collected.
+
+## Configure connections
+
 `atraxis check-config` validates up to 32 source definitions without DNS resolution
 or requests. `atraxis serve` periodically reads configured sources and exposes
 their inventory through the authenticated API; see [collection](collection-inventory.md).

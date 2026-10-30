@@ -7,6 +7,16 @@ Monit-Docker parser. Full Docker IDs, every container and filesystem field,
 source metadata, action counters, nulls, booleans and integer precision survive.
 The nine supported rule inputs retain their native units and authorization rules.
 
+## When to use this adapter
+
+Prefer direct `monit_docker` access for container inventory when Atraxis can reach the
+source API. Direct access requires neither Covenant nor Prometheus. This adapter
+is an optional route for centralized collection or restricted network access;
+**both Covenant and Prometheus are required** once this route is configured.
+It does not automatically fall back to the native API. See
+[adapter selection](source-configuration.md#choose-an-adapter) for resource discovery,
+source identity and using direct inventory alongside optional metric history.
+
 ## Configure the chain
 
 Use the optional `monit_observation` Covenant plugin and the

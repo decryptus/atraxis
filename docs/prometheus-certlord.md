@@ -7,6 +7,16 @@ fingerprints, validity dates, lifecycle/retry fields, full stored TLS verificati
 and per-certificate observation times are preserved. Native parsing and freshness
 rules are reused, including freshness of the oldest certificate observation.
 
+## When to use this adapter
+
+Prefer direct `certlord` access for certificate inventory when Atraxis can reach the
+source API. Direct access requires neither Covenant nor Prometheus. This adapter
+is an optional route for centralized collection or restricted network access;
+**both Covenant and Prometheus are required** once this route is configured.
+It does not automatically fall back to the native API. See
+[adapter selection](source-configuration.md#choose-an-adapter) for resource discovery,
+source identity and using direct inventory alongside optional metric history.
+
 ## Configure the chain
 
 Use Covenant's optional `certlord_observation` plugin and the
