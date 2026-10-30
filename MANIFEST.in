@@ -1,0 +1,26 @@
+include .dockerignore .gitignore .readthedocs.yaml
+include AGENTS.md CONTRIBUTING.md Dockerfile LICENSE README.md ROADMAP.md
+include conf.py index.rst docs-core.md docs-runtime.md pyproject.toml MANIFEST.in
+graft .github
+graft _templates
+graft assets
+graft atraxis
+graft browser_engine_tests
+graft client_tests
+graft compose_tests
+graft container_tests
+graft correspondence_tests
+graft deploy
+graft docs
+graft engine_tests
+graft examples
+graft installed_tests
+graft integration_tests
+graft recovery_tests
+graft scripts
+graft tests
+graft textual_tests
+graft tools
+global-exclude *.py[cod]
+global-exclude __pycache__
+prune docs/_build

@@ -16,6 +16,12 @@ version, exact wheel/sdist filenames, sizes and SHA-256 values. It does not rebu
 packages after qualification. Python 3.11 remains covered by the same required
 package workflow. Exact provenance and checksums accompany both archives.
 
+The package workflow compares every tracked source file byte-for-byte with the
+source archive, including documentation, scripts, examples and test helpers.
+It extracts that archive outside the checkout and runs collection plus the core
+suite on Python 3.11 and 3.12. Installed-wheel checks remain separate so that
+source imports cannot hide a missing installed module.
+
 The tag points at the main checkout, whose tree matches the tested source. Both
 source commits are recorded. Existing tags/releases are never overwritten. The
 release is created as a draft, files are attached, and only then is it made public

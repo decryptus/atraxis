@@ -69,6 +69,17 @@ jobs:
         run: |
           "$RUNNER_TEMP/atraxis-installed/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/installed_tests" 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/collection.log"
           "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/installed_tests" -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/installed-tests.log"
+      - name: Verify source archive completeness and run its core tests
+        shell: bash
+        run: |
+          archives=(dist/*.tar.gz)
+          test "${#archives[@]}" -eq 1
+          python scripts/check-source-archive.py "${archives[0]}" "$RUNNER_TEMP/atraxis-source" 2>&1 | tee package-evidence/source-archive.log
+          sources=("$RUNNER_TEMP/atraxis-source"/*)
+          test "${#sources[@]}" -eq 1
+          cd "${sources[0]}"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" scripts/check-test-collection.py --runner unittest tests 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/source-collection.log"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s tests -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/source-tests.log"
       - name: Retain candidate archives and installed acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
