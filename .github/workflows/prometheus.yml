@@ -25,3 +25,10 @@ jobs:
           tar -xzf "$RUNNER_TEMP/prometheus.tar.gz" -C "$RUNNER_TEMP" prometheus-3.5.0.linux-amd64/prometheus
       - name: Check retained values, configured fallback and recovery
         run: python scripts/check_prometheus_chain.py --prometheus "$RUNNER_TEMP/prometheus-3.5.0.linux-amd64/prometheus" --covenant-source fixture-covenant
+      - name: Qualify direct and Covenant metric correspondence
+        env:
+          COVENANT_SOURCE: ${{ github.workspace }}/fixture-covenant
+          PROMETHEUS_BINARY: ${{ runner.temp }}/prometheus-3.5.0.linux-amd64/prometheus
+        run: |
+          python scripts/check-test-collection.py --runner unittest correspondence_tests
+          python -m unittest discover -s correspondence_tests -v

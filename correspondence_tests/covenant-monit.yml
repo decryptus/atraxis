@@ -1,0 +1,194 @@
+# Synthetic qualification fixture: one explicitly selected container and filesystem.
+# Not a production exporter configuration or an Atraxis live-rule mapping.
+collects:
+- parity_cpu_percent:
+    type: gauge
+    documentation: Synthetic correspondence cpu_percent
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [?type(cpu_percent) == ''number'' && cpu_percent >= `0`] | [0].cpu_percent'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_memory_percent:
+    type: gauge
+    documentation: Synthetic correspondence memory_percent
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [?type(mem_percent) == ''number'' && mem_percent >= `0`] | [0].mem_percent'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_maintenance:
+    type: gauge
+    documentation: Synthetic correspondence maintenance
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [?type(maintenance_active) == ''boolean''] | [0].maintenance_active'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_restart_attempts:
+    type: gauge
+    documentation: Synthetic correspondence restart_attempts
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [?type(restart_attempts) == ''number'' && restart_attempts >= `0` && floor(restart_attempts)
+        == restart_attempts] | [0].restart_attempts'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_disk_percent:
+    type: gauge
+    documentation: Synthetic correspondence disk_percent
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    - name: group
+      value: data
+      static: true
+    - name: path
+      value: /var/lib/data
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [0].filesystems[?group == ''data'' && path == ''/var/lib/data''] | [@] | [?length(@)
+        == `1`] | [0] | [?type(disk_percent) == ''number'' && disk_percent >= `0`] | [0].disk_percent'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_inode_percent:
+    type: gauge
+    documentation: Synthetic correspondence inode_percent
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    - name: group
+      value: data
+      static: true
+    - name: path
+      value: /var/lib/data
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [0].filesystems[?group == ''data'' && path == ''/var/lib/data''] | [@] | [?length(@)
+        == `1`] | [0] | [?type(inode_percent) == ''number'' && inode_percent >= `0`] | [0].inode_percent'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_readable:
+    type: gauge
+    documentation: Synthetic correspondence readable
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    - name: group
+      value: data
+      static: true
+    - name: path
+      value: /var/lib/data
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [0].filesystems[?group == ''data'' && path == ''/var/lib/data''] | [@] | [?length(@)
+        == `1`] | [0] | [?type(fs_readable) == ''number'' && fs_readable >= `0` && (fs_readable == `0` || fs_readable == `1`)]
+        | [0].fs_readable'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_writable:
+    type: gauge
+    documentation: Synthetic correspondence writable
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    - name: group
+      value: data
+      static: true
+    - name: path
+      value: /var/lib/data
+      static: true
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [0].filesystems[?group == ''data'' && path == ''/var/lib/data''] | [@] | [?length(@)
+        == `1`] | [0] | [?type(fs_writable) == ''number'' && fs_writable >= `0` && (fs_writable == `0` || fs_writable == `1`)]
+        | [0].fs_writable'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_health_status:
+    type: gauge
+    documentation: Synthetic correspondence health_status
+    labels:
+    - name: id
+      value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      static: true
+    - name: health
+      label_tasks:
+      - '@filter': jmespath
+        expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+          | [@] | [?length(@) == `1`] | [0] | [?health == ''healthy'' || health == ''unhealthy''] | [0].health'
+    value_tasks:
+    - '@filter': jmespath
+      expression: '[@] | [?ready == `true` && last_cycle_success == `true`] | [0].containers[?id == ''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'']
+        | [@] | [?length(@) == `1`] | [0] | [?health == ''healthy'' || health == ''unhealthy''] | [0].{v: `1`}.v'
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_observed_at_seconds:
+    type: gauge
+    documentation: Synthetic origin observed_at_seconds
+    value_tasks:
+    - '@filter': jmespath
+      expression: last_success_at
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
+- parity_source_ready:
+    type: gauge
+    documentation: Synthetic origin source_ready
+    value_tasks:
+    - '@filter': jmespath
+      expression: length([@][?ready == `true` && last_cycle_success == `true`])
+    on_fail:
+      remove: true
+    on_noresult:
+      remove: true
