@@ -23,7 +23,7 @@ def verify_and_extract(root: Path, archive: Path, output: Path) -> Path:
             raise ValueError('duplicate_source_member')
         for member in members:
             path = PurePosixPath(member.name)
-            if (path.is_absolute() or '..' in path.parts or not path.parts
+            if (path.is_absolute() or str(path) != member.name or '..' in path.parts or not path.parts
                     or path.parts[0] != prefix or not (member.isfile() or member.isdir())):
                 raise ValueError('invalid_source_member')
         for name, content in expected.items():

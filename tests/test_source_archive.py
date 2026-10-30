@@ -64,7 +64,8 @@ class SourceArchiveTests(unittest.TestCase):
                 self.assertFalse(self.output.exists())
 
     def test_unsafe_or_duplicate_member_rejects_before_extraction(self):
-        for name in [f'{PREFIX}/../escape', '/absolute', 'other/file', f'{PREFIX}/pyproject.toml']:
+        for name in [f'{PREFIX}/../escape', '/absolute', 'other/file', f'{PREFIX}/pyproject.toml',
+                     f'{PREFIX}/./pyproject.toml', f'{PREFIX}//pyproject.toml']:
             with self.subTest(name=name):
                 self.write_archive(extra=tarfile.TarInfo(name))
                 with self.assertRaisesRegex(ValueError, '(invalid|duplicate)_source_member'):
