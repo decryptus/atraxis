@@ -71,6 +71,20 @@ class ConfigurationAdminTests(ConfigurationFixture):
         self.assertEqual(source.kind, 'prometheus')
         self.assertEqual(source.metric, metric)
 
+    def test_bundle_contract_is_host_approved_and_not_operator_overridable(self):
+        metric = dict(prefix='monitor_', match={'job':'monitor','instance':'exporter.example:9118'})
+        self.profile['connections']['bundle'] = dict(kind='prometheus_monit',
+            origin='https://prometheus.invalid', credentials_file='source.json', metric=metric)
+        self.write('administration.yml', self.profile)
+        request = dict(self.request, connection='bundle')
+        with self.assertRaises(AccountError):
+            self.prepare(dict(request, metric=dict(metric, prefix='other_')))
+        plan = self.prepare(request)
+        self.admin.commit(plan)
+        configured = load_config(self.path).sources[0]
+        self.assertEqual(configured.kind, 'prometheus_monit')
+        self.assertEqual(configured.metric, metric)
+
     def test_review_is_offline_and_commit_preserves_general_and_audits_atomically(self):
         before=self.path.read_bytes()
         with patch('socket.getaddrinfo',side_effect=AssertionError('No network during setup')):

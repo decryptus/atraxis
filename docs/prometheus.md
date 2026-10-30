@@ -11,6 +11,11 @@ provide time-series graphs, arbitrary PromQL, histogram objects, alert managemen
 or metric-driven interventions. Atropos observation bindings do not accept these
 metric resources as live intervention facts.
 
+To read source-timed container observations for rule inputs, use the separate
+[`prometheus_monit` contract](prometheus-monit.md). It requires readiness, origin
+timestamps and a coherent set of metrics; ordinary metric selections remain
+display-only.
+
 For metric-based notifications, configure the separate
 [Prometheus → Alertmanager path](prometheus-alerting.md). Atraxis does not edit
 those alert rules or deliver notifications itself.

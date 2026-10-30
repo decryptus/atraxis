@@ -6,7 +6,8 @@ import hashlib
 from urllib.parse import urlencode
 
 MAX_DISPLAY_ROWS = 200
-SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics'}
+SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics',
+                'prometheus_monit': 'Monit-Docker via Prometheus'}
 REASONS = {'no_visible_sources': 'No sources are available in your inventory scope','collectors_not_configured': 'No sources configured',
            'collector_stopped': 'Collection stopped',
            'sources_not_current': 'Some observations are not current'}
@@ -97,7 +98,7 @@ def source_panel(source):
                    'No selected resources are present in the retained snapshot. Current inventory is unknown.' if partial else
                    'The current snapshot contains no resources.' if current else 'The retained snapshot contained no resources. Current inventory is unknown.')
         return result + '<div class="empty">' + message + '</div></section>'
-    container = source['kind'] == 'monit_docker'
+    container = source['kind'] in ('monit_docker', 'prometheus_monit')
     metric = source['kind'] == 'prometheus'
     titles = (('Metric', 'Sample value', 'Sample time (UTC)', 'Labels') if metric else
               ('Container', 'Reported state', 'CPU', 'Memory') if container else ('Certificate', 'Reported state', 'Material', 'Expires'))

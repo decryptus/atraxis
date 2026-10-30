@@ -64,7 +64,9 @@ Read containers from monit-docker, certificates from CertLord and selected numer
 metrics from Prometheus, including metrics exported by Covenant. The
 [Covenant/Prometheus guide](docs/prometheus.md) explains configuration, retained
 values and sample timestamps. Metric history and alert evaluation remain in
-Prometheus; this adapter does not trigger interventions.
+Prometheus; this adapter does not trigger interventions. For container observations
+through Covenant, the [Monit-Docker metric contract](docs/prometheus-monit.md)
+checks source readiness and freshness and preserves the nine supported rule inputs.
 
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 

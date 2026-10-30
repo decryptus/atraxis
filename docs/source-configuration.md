@@ -33,10 +33,13 @@ characters or leading/trailing whitespace). It can contain a name or UUID and mu
 be unique in the file. Keep it when an installation's URL changes. Resource identity
 also includes source identity; identical native IDs on two sources stay distinct.
 
-Accepted kinds are `monit_docker`, `certlord` and `prometheus`. Their GET routes
-are fixed to `/v1/status`, `/api/certificates/observations` and `/api/v1/query`.
+Accepted kinds are `monit_docker`, `certlord`, `prometheus` and `prometheus_monit`.
+Their GET routes are fixed to `/v1/status`, `/api/certificates/observations` and
+`/api/v1/query` (both Prometheus kinds).
 Prometheus requires an explicit `metric` selection; see the
 [Covenant/Prometheus guide](prometheus.md) for configuration and sample semantics.
+For source-timed container observations, use the separate
+[Monit-Docker via Covenant contract](prometheus-monit.md).
 `origin` contains just the scheme,
 host and optional port, with an optional trailing slash. Userinfo, arbitrary paths,
 query strings, fragments, whitespace and percent escapes are rejected. Unicode DNS

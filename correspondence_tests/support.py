@@ -21,6 +21,8 @@ from prometheus_client.parser import text_string_to_metric_families
 
 sys.path.insert(0, str(Path(os.environ["COVENANT_SOURCE"]).resolve()))
 from covenant.classes.target import CovenantRegistry, CovenantTarget
+from covenant.plugins.http import CovenantHttpPlugin
+from covenant.classes.plugins import CovenantEPTObject
 from covenant.filters import fjmespath  # Registers real JMESPath filtering.
 
 from atraxis.client import validate_inventory
@@ -34,7 +36,7 @@ from atraxis.service import ReadService
 from atraxis.source_config import parse_sources
 from atraxis.transport import HTTPTransport, TransportResult
 
-FIXTURE = Path(__file__).with_name("covenant-monit.yml")
+FIXTURE = Path(__file__).resolve().parents[1] / "examples" / "covenant-monit.yml"
 CONTAINER = "a" * 64
 INPUTS = tuple(SCALAR_FIELDS) + tuple(FILESYSTEM_FIELDS)
 MAX_AGE = 15
@@ -86,21 +88,77 @@ def payload():
 
 
 class Chain:
-    def __init__(self):
+    def __init__(self, *, http_plugin=False):
+        self.http_plugin = http_plugin
+        self.source_server = None
+        self.source_available = True
+        self.source_calls = []
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.lock = threading.Lock()
+        self.plugin_lock = threading.Lock()
         self.raw = payload()
         self.registry = CovenantRegistry()
         self.target = CovenantTarget(
-            "parity", {}, yaml.safe_load(FIXTURE.read_text())["collects"], self.registry
+            "parity",
+            {},
+            yaml.safe_load(FIXTURE.read_text())["endpoints"]["monit"]["metrics"][0][
+                "collects"
+            ],
+            self.registry,
         )
         self.processes, self.logs, self.sources = [], [], {}
         self.exporter = None
+        self.available = True
         logging.getLogger("covenant.collect").setLevel(logging.CRITICAL)
 
     def start(self):
         chain = self
+        if self.http_plugin:
+
+            class SourceHandler(BaseHTTPRequestHandler):
+                def log_message(self, *args):
+                    pass
+
+                def do_GET(self):
+                    chain.source_calls.append((self.command, self.path))
+                    if self.path != "/v1/status" or not chain.source_available:
+                        self.send_error(503)
+                        return
+                    with chain.lock:
+                        data = json.dumps(chain.raw).encode()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+
+            self.source_server = ThreadingHTTPServer(("127.0.0.1", 0), SourceHandler)
+            self.source_thread = threading.Thread(
+                target=self.source_server.serve_forever, daemon=True
+            )
+            self.source_thread.start()
+            self.registry = CovenantRegistry()
+            self.target = CovenantTarget(
+                "parity",
+                dict(
+                    url="http://127.0.0.1:"
+                    + str(self.source_server.server_port)
+                    + "/v1/status",
+                    method="get",
+                    format="json",
+                    timeout=1,
+                    allow_redirects=False,
+                ),
+                yaml.safe_load(FIXTURE.read_text())["endpoints"]["monit"]["metrics"][0][
+                    "collects"
+                ],
+                self.registry,
+            )
+            self.plugin = CovenantHttpPlugin("correspondence")
+            self.plugin.targets = [self.target]
+            self.plugin.registry = self.registry
+            logging.getLogger("covenant.plugins.http").setLevel(logging.CRITICAL)
 
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, *args):
@@ -109,6 +167,9 @@ class Chain:
             def do_GET(self):
                 if self.path != "/metrics":
                     self.send_error(404)
+                    return
+                if not chain.available:
+                    self.send_error(503)
                     return
                 data = chain.exposition()
                 self.send_response(200)
@@ -212,6 +273,10 @@ class Chain:
             self.exporter.shutdown()
             self.exporter.server_close()
             self.thread.join(5)
+        if self.source_server is not None:
+            self.source_server.shutdown()
+            self.source_server.server_close()
+            self.source_thread.join(5)
         for log in self.logs:
             log.close()
         self.temp.cleanup()
@@ -222,6 +287,21 @@ class Chain:
         return time.time()
 
     def exposition(self):
+        if self.http_plugin:
+            # Covenant's endpoint worker serializes collection and exposition.
+            # A separate lock leaves the synthetic source HTTP handler free to read.
+            with self.plugin_lock:
+                return self.plugin.do_metrics(
+                    CovenantEPTObject(
+                        "correspondence",
+                        "synthetic",
+                        "correspondence",
+                        "metrics",
+                        {},
+                        {},
+                        lambda obj: None,
+                    )
+                )
         with self.lock:
             self.target(deepcopy(self.raw))
             return generate_latest(self.registry)
@@ -256,6 +336,38 @@ class Chain:
                     return status
             time.sleep(0.1)
         raise AssertionError("Expected sample not observed: " + field)
+
+    def bundle_source(self, site="east"):
+        return replace(
+            self.sources[site]["cpu_percent"],
+            source_id=site + ".bundle",
+            kind="prometheus_monit",
+            metric=dict(
+                prefix="parity_",
+                match={
+                    "job": "correspondence",
+                    "instance": "127.0.0.1:" + str(self.exporter.server_port),
+                },
+            ),
+        )
+
+    def bundle(self, after=0, site="east"):
+        source = self.bundle_source(site)
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            result = HTTPTransport().fetch(source)
+            if result.outcome == "success":
+                rows = result.payload["data"]["result"]
+                stamps = [
+                    r["values"][-1][0] for r in rows if r["metric"]["__name__"] == "up"
+                ]
+                if stamps and max(stamps) > after:
+                    service = ReadService([source])
+                    service.set_running(True)
+                    service.record(source.source_id, result)
+                    return validate_inventory(service.status())
+            time.sleep(0.1)
+        raise AssertionError("Expected bundle scrape not observed")
 
     def direct(self, raw):
         source = replace(
