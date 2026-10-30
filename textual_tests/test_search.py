@@ -50,3 +50,14 @@ class InventorySearchTextualTests(unittest.IsolatedAsyncioTestCase):
             self.app.screen.query_one('#field-1',Input).value='invalid'
             await pilot.click('#form-submit');await pilot.pause()
             self.assertIsNone(self.app.data);self.assertEqual(len(self.calls),1)
+
+    async def test_complete_certlord_observation_renders_domains_and_uuid(self):
+        uid='12345678-1234-4234-8234-123456789abc'
+        self.payload['sources']=[dict(source_id='certificates',kind='prometheus_certlord',current=True,
+            last_valid_snapshot=dict(resources=[dict(source_id='certificates',kind='certificate',native_id=uid,
+                fields=dict(domains=['example.test','*.example.test'],fingerprint_sha256='a'*64,status='deployed'))]))]
+        async with self.app.run_test(size=(100,30)) as pilot:
+            await pilot.pause()
+            self.assertEqual(self.app.data['total'],1)
+            self.assertIn(uid,repr(self.app._rows))
+            self.assertIn('example.test',str(next(iter(self.app._rows.values())).cells[1]))

@@ -6,7 +6,9 @@ import hashlib
 from urllib.parse import urlencode
 
 MAX_DISPLAY_ROWS = 200
-SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics'}
+SOURCE_NAMES = {'monit_docker': 'monit-docker', 'certlord': 'CertLord', 'prometheus': 'Prometheus metrics',
+                'prometheus_monit': 'Monit-Docker via Prometheus',
+                'prometheus_certlord': 'CertLord via Covenant / Prometheus'}
 REASONS = {'no_visible_sources': 'No sources are available in your inventory scope','collectors_not_configured': 'No sources configured',
            'collector_stopped': 'Collection stopped',
            'sources_not_current': 'Some observations are not current'}
@@ -97,14 +99,14 @@ def source_panel(source):
                    'No selected resources are present in the retained snapshot. Current inventory is unknown.' if partial else
                    'The current snapshot contains no resources.' if current else 'The retained snapshot contained no resources. Current inventory is unknown.')
         return result + '<div class="empty">' + message + '</div></section>'
-    container = source['kind'] == 'monit_docker'
+    container = source['kind'] in ('monit_docker', 'prometheus_monit')
     metric = source['kind'] == 'prometheus'
     titles = (('Metric', 'Sample value', 'Sample time (UTC)', 'Labels') if metric else
               ('Container', 'Reported state', 'CPU', 'Memory') if container else ('Certificate', 'Reported state', 'Material', 'Expires'))
     result += '<div class="table-wrap" role="region" aria-label="Resources for ' + text(source['source_id']) + '" tabindex="0"><table><thead><tr>' + ''.join('<th scope="col">' + title + '</th>' for title in titles) + '</tr></thead><tbody>'
     for resource in resources[:MAX_DISPLAY_ROWS]:
         fields = resource['fields']
-        name = fields['name'] if container or metric else ', '.join(fields['domains'])
+        name = fields['name'] if container or metric else (', '.join(fields.get('domains') or []) or resource['native_id'])
         if metric:
             labels = ', '.join(label['name'] + '=' + label['value'] for label in fields['labels'])
             result += '<tr><td class="name"><span class="resource-name">' + text(name) + '</span>' + details(resource) + '</td><td>' + value(fields['value']) + '</td><td>' + sample_time(fields['sampled_at']) + '</td><td class="name">' + text(labels) + '</td></tr>'

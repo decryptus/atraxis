@@ -60,13 +60,47 @@ A three-minute tour of Docker monitoring, cron and serve modes, and the web and 
 
 Experimental supervision and coordination software, licensed under GNU GPL version 3. Atraxis provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. This development version is not a general production-readiness claim.
 
-Read containers from monit-docker, certificates from CertLord and selected numeric
-metrics from Prometheus, including metrics exported by Covenant. The
-[Covenant/Prometheus guide](docs/prometheus.md) explains configuration, retained
-values and sample timestamps. Metric history and alert evaluation remain in
-Prometheus; this adapter does not trigger interventions.
-
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
+
+## Source adapters and dependencies
+
+**Use direct access by default:** `monit_docker` for containers and `certlord` for
+certificates. Neither requires Covenant nor Prometheus. Prometheus is optional
+for Atraxis inventory collection; each configured `kind` selects its read path.
+
+| Adapter (`kind`) | Data path | Result | When to choose it |
+| --- | --- | --- | --- |
+| [`monit_docker`](docs/source-configuration.md#choose-an-adapter) | Monit-Docker → Atraxis | Native container and filesystem inventory | Default when Atraxis can reach the source API |
+| [`certlord`](docs/source-configuration.md#choose-an-adapter) | CertLord → Atraxis | Native certificate inventory, including domains and fingerprints | Default when Atraxis can reach the source API |
+| [`prometheus`](docs/prometheus.md) | Any configured exporter → Prometheus → Atraxis | Explicitly selected numeric metric series | Display metrics; Covenant is one possible exporter |
+| [`prometheus_monit`](docs/prometheus-monit.md) | Monit-Docker → Covenant → Prometheus → Atraxis | Complete native container inventory and metadata | Centralized collection when direct source access is unavailable or intentionally restricted |
+| [`prometheus_certlord`](docs/prometheus-certlord.md) | CertLord → Covenant → Prometheus → Atraxis | Complete native certificate inventory and metadata | Centralized collection when direct source access is unavailable or intentionally restricted |
+
+Both complete inventory adapters through Prometheus require Covenant's dedicated
+observation plugins. Prometheus and Covenant become required dependencies of those
+configured sources. They preserve native identities and freshness rules, with
+additional scrape/transport checks and delay. The generic `prometheus` adapter
+provides metric resources; it does not reconstruct container or certificate inventories.
+
+**Resources are discovered automatically within each source API's inventory.**
+Configure one connection per upstream instance, not one per container or domain.
+Covenant's observation plugins export every returned resource; additions, changes
+and removals appear after collection, scraping and Atraxis polling. Numeric metric
+selection with `prometheus` remains explicit. Inventory permissions and collection
+limits still apply.
+
+Direct inventory access can coexist with a separate Covenant/Prometheus path for
+metric history and alerting. Choose one inventory route per upstream instance:
+configuring both under different source IDs creates separate inventories, not
+automatic deduplication or failover. A failed source retains historical data and
+cannot supply current observations. Full observation transport also has
+[explicit size and Prometheus storage costs](docs/prometheus-monit.md#capacity-and-operation).
+
+A direct Covenant JSON relay into Atraxis is **not implemented**. The supported
+Covenant observation path currently passes through Prometheus. See
+[source configuration](docs/source-configuration.md) for credentials, limits and
+adapter selection, and [metric alerting](docs/prometheus-alerting.md) for the
+optional Prometheus → Alertmanager path.
 
 ## Responsibilities
 

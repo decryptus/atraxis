@@ -4,7 +4,7 @@ import math
 import time
 from dataclasses import dataclass
 
-from atraxis.client import validate_inventory
+from atraxis.client import CONTAINER_SOURCES, validate_inventory
 
 SCALAR_FIELDS = {'cpu_percent': 'cpu_percent', 'memory_percent': 'mem_percent',
                  'maintenance': 'maintenance_active', 'health_status': 'health',
@@ -44,7 +44,7 @@ class ObservedInventory:
             raise ObservationError('observation_source_missing')
         source = sources[0]
         snapshot = source['last_valid_snapshot']
-        if (source['kind'] != 'monit_docker' or not source['current'] or snapshot is None
+        if (source['kind'] not in CONTAINER_SOURCES or not source['current'] or snapshot is None
                 or snapshot['freshness'] != 'fresh' or snapshot['age_seconds'] is None):
             raise ObservationError('observation_not_current')
         age = snapshot['age_seconds'] + now - self.received

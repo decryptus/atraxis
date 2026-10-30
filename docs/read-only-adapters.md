@@ -56,7 +56,7 @@ is not supported. Action admission and execution are unchanged.
 
 A transport/observation result contains:
 - source_id: stable configured identity for one installation, independent of its mutable URL or display name.
-- source_kind: monit_docker, certlord or prometheus.
+- source_kind: monit_docker, certlord, prometheus, prometheus_monit or prometheus_certlord.
 - attempted_at and received_at: UTC timestamps measured by Atraxis.
 - outcome: success, timeout, transport_error, authentication_error, forbidden, endpoint_unavailable, source_error, invalid_payload or response_too_large.
 - freshness: fresh, stale or unknown; separate from transport outcome and resource health.
@@ -121,3 +121,7 @@ Use unittest and verify discovery before execution:
 ## Remaining work
 
 The first projection, bounded transport, polling, authenticated inventory and explicit CLI reads are implemented and covered by synthetic tests. The milestone review and synthetic Docker runtime acceptance are recorded in [validation guide](contributing.md). Live-source acceptance requires explicit authorization and must record deployed versions and ingress permissions. Select durable storage and additional UI only after the contract is exercised. No live credentials, deployment changes or container actions were used for this work.
+
+The `prometheus_monit` adapter projects the explicit coherent metric contract into
+container observations with native IDs. See the [correspondence qualification](source-correspondence.md)
+and [user contract](prometheus-monit.md) for supported facts and acceptance limits.

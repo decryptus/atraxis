@@ -11,12 +11,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0
+      - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0 cryptography==50.0.2
       - uses: actions/checkout@v4
         with:
           repository: decryptus/covenant
-          ref: 3b7e446e494847065ac9890e089da0fa75ff590f
+          ref: 331e56367ef92ff24a5f3931b650d9301a298bed
           path: fixture-covenant
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/certlord
+          ref: 908834f3d3b89d579a908391ce435cc5b419451f
+          path: fixture-certlord
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/monit-docker
+          ref: 4927c336611fda1f46d7e01c709cafc0026909c5
+          path: fixture-monit
           persist-credentials: false
       - name: Download and verify Prometheus 3.5.0
         run: |
@@ -25,3 +37,12 @@ jobs:
           tar -xzf "$RUNNER_TEMP/prometheus.tar.gz" -C "$RUNNER_TEMP" prometheus-3.5.0.linux-amd64/prometheus
       - name: Check retained values, configured fallback and recovery
         run: python scripts/check_prometheus_chain.py --prometheus "$RUNNER_TEMP/prometheus-3.5.0.linux-amd64/prometheus" --covenant-source fixture-covenant
+      - name: Qualify direct and Covenant metric correspondence
+        env:
+          COVENANT_SOURCE: ${{ github.workspace }}/fixture-covenant
+          MONIT_SOURCE: ${{ github.workspace }}/fixture-monit
+          CERTLORD_SOURCE: ${{ github.workspace }}/fixture-certlord
+          PROMETHEUS_BINARY: ${{ runner.temp }}/prometheus-3.5.0.linux-amd64/prometheus
+        run: |
+          python scripts/check-test-collection.py --runner unittest correspondence_tests
+          python -m unittest discover -s correspondence_tests -v
