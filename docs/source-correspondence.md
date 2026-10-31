@@ -67,3 +67,5 @@ issuance, deployment, rule activation or notification occurs.
 Bounds reject oversize snapshots explicitly. These tests do not establish production
 capacity, remote TLS setup, synchronized deployment clocks or deployment acceptance.
 See the user guides for transport delay, budgets and storage cardinality.
+The separate [observation capacity experiment](observation-capacity.md) measures
+query expansion, bounded refusal/recovery and short-run label churn.

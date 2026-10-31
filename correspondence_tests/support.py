@@ -88,6 +88,8 @@ def payload():
 
 
 class Chain:
+    SCRAPE_INTERVAL = "250ms"
+    SCRAPE_TIMEOUT = "200ms"
     def __init__(self, *, http_plugin=False):
         self.http_plugin = http_plugin
         self.source_server = None
@@ -193,7 +195,10 @@ class Chain:
                 sock.bind(("127.0.0.1", 0))
                 port = sock.getsockname()[1]
             config = {
-                "global": {"scrape_interval": "250ms", "scrape_timeout": "200ms"},
+                "global": {
+                    "scrape_interval": self.SCRAPE_INTERVAL,
+                    "scrape_timeout": self.SCRAPE_TIMEOUT,
+                },
                 "scrape_configs": [
                     {
                         "job_name": "correspondence",
