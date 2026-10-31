@@ -38,8 +38,9 @@ activate it. Execution requires an approved binding and current permissions.
 Atraxis 1.0 closes the scope, operational cold-recovery and explicitly authorized
 integration gates for the [documented reference configuration](docs/v1.0.md).
 The [delivery baseline](docs/v1-delivery.md) and contributor evidence index retain
-what was tested and what remains outside this release. Package publication stays
-a separate operation on the reviewed sources and exact CI artifacts.
+what was tested and what remains outside this release.
+[Atraxis 1.0.0](https://github.com/decryptus/atraxis/releases/tag/v1.0.0) publishes
+the exact qualified CI archives with their source and validation provenance.
 
 The operational reference uses a current direct Monit observation, one approved
 non-destructive HTTPS diagnostic through Auton, and the existing local Alertmanager
@@ -70,11 +71,13 @@ resume after action revocation must cancel the queued synthetic run without an
 effect. A synthetic HTTP receipt accepted before a lost response also retains its
 uncertain state and target lock across the transfer. Guarded workers do not replay
 it; explicit reconciliation checks current rights and the reviewed state, records
-an attestation and releases the lock without executing later steps. This advances
-recovery qualification for SQLite with the storage-backed queue. Recovery of a
-live site, current external authority, installed live inventory sources and reconciliation
-against surviving real external systems remain open; see the
-[separate-host scope](docs/contributing.md#recovery-on-a-separate-host).
+an attestation and releases the lock without executing later steps. These synthetic checks qualify SQLite with the storage-backed queue;
+see the
+[separate-host scope](docs/contributing.md#recovery-on-a-separate-host). The separate
+operational recovery described in the [1.0 support matrix](docs/v1.0.md) verifies
+the existing pilot state, installed inventory sources and current authority on a
+distinct host. Reconciliation against arbitrary surviving external systems remains
+outside that bounded operational reference.
 
 The restored inventory profile initially reports its absent source as unavailable.
 Reconnecting a disposable HTTPS source must produce fresh source and receipt
@@ -94,6 +97,7 @@ Remote account authority, additional account storage adapters, inventory catalog
 editing and global cross-section search remain future work. High availability
 and hot backup are outside the initial stable-release scope.
 
-Current configuration, API and storage formats are experimental. Unsupported
-formats must be rejected explicitly; stored data must not be silently converted
-or deleted.
+The 1.0 support matrix names the qualified versioned configuration, API and storage
+contracts. Unsupported formats are rejected explicitly; stored data is not silently
+converted or deleted. Prototype compatibility and arbitrary component combinations
+are not promised.
