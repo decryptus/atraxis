@@ -1,8 +1,8 @@
 # First stable release: scope and delivery gates
 
-Scope baseline: 29 October 2026. This is the bounded delivery plan for Atraxis
-1.0 and its matching Atropos client/service. It does not change package versions,
-declare current experimental formats stable, or authorize a release/deployment.
+Scope baseline: 29 October 2026; final reference published 31 October 2026.
+This is the bounded delivery plan for Atraxis 1.0 and its matching Atropos
+client/service. The plan itself does not authorize a release or deployment.
 The matching [Atropos scope](https://github.com/decryptus/atropos/blob/main/docs/contributor/v1-delivery.md)
 owns engine, workflow and storage decisions. Site evidence stays in private
 operational records; this document contains no deployment credentials or results.
@@ -65,8 +65,11 @@ of code or a successful synthetic test is not by itself operational qualificatio
 G1–G3 are closed for the [bounded 1.0 reference](v1.0.md). The exact
 reviewed gate manifest is `docs/releases/1.0.0-qualification.json`. Private
 operational evidence remains private; historical synthetic evidence retains its
-original inputs and limits. G4 requires successful final CI and a separate
-[stable publication](release-stable.md) of those exact qualified archives.
+original inputs and limits. G4 closed with all eight required final PR workflows
+and the [published 1.0.0 release](https://github.com/decryptus/atraxis/releases/tag/v1.0.0).
+Its attached provenance identifies the exact qualified archives, source tree and
+successful checks. The [stable publication procedure](release-stable.md) remains
+separate from package tests and service deployment.
 
 The earlier `1.0.0rc1` checkpoint remains a prerelease. Its historical limitations
 are retained in the [candidate matrix](v1-candidate.md); they do not describe the
