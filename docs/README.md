@@ -1,10 +1,10 @@
 # Atraxis user guide
 
-Atraxis is experimental GPLv3 software. It collects observations in read-only
+Atraxis is GPLv3 software. It collects observations in read-only
 mode and exposes authorized inventory through its API, CLI, web and Textual
 interfaces. Atropos is the independent service for rule lifecycle and workflows.
 
-[Release candidate scope and limitations](v1-candidate.md).
+[1.0 supported configurations, limits and upgrades](v1.0.md).
 
 ## Install and configure
 

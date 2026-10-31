@@ -1,5 +1,7 @@
 # Atraxis 1.0 release candidate
 
+Historical RC scope. For the stable package, see [Atraxis 1.0](v1.0.md).
+
 Version `1.0.0rc1` is a prerelease for evaluation. It is not a stable-production
 release, a live-site recovery qualification or a guarantee about external effects.
 

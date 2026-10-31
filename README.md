@@ -31,15 +31,16 @@ contains only selected numeric measurements and timestamps; private pilot pages
 and APIs remain authenticated. Install Atraxis for the actual service-backed
 inventory and rule-management interfaces.
 
-## Release candidate
+## Release 1.0
 
-`1.0.0rc1` is the first prerelease checkpoint on the path to 1.0. It retains the
-existing interfaces and integrations; it is not a stable-production declaration.
-See the [candidate scope and limitations](docs/v1-candidate.md) before adoption.
+`1.0.0` is the first stable Atraxis package for the documented reference profile.
+See [supported configurations, limits and upgrades](docs/v1.0.md). Optional
+Atropos engine/client versions remain independent alpha dependencies. Direct
+Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
 
 ## Install from source
 
-Requires Python 3.11 or later. Start in a dedicated virtual environment:
+Requires Python 3.11 or 3.12. Start in a dedicated virtual environment:
 
 ```sh
 git clone https://github.com/decryptus/atraxis.git

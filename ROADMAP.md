@@ -1,8 +1,8 @@
 # Atraxis roadmap
 
-Updated 30 October 2026. Atraxis is an experimental coordination application.
-This roadmap distinguishes implemented behavior from work still required for a
-stable release. Priorities may change; no release date is promised.
+Updated 31 October 2026. Atraxis 1.0 has a bounded reference configuration.
+This roadmap distinguishes implemented behavior from later work and broader
+qualification. Future priorities may change; no future release date is promised.
 
 ## Available today
 
@@ -33,38 +33,23 @@ stable release. Priorities may change; no release date is promised.
 Collection never authorizes an intervention. Saving or testing a rule does not
 activate it. Execution requires an approved binding and current permissions.
 
-## Four steps to the first stable release
+## First stable reference
 
-The [1.0 scope and delivery gates](docs/v1-delivery.md) fix the functional baseline
-to implemented capabilities, define concrete exit criteria and separate later
-features. Existing qualification is reused within its proven scope.
+Atraxis 1.0 closes the scope, operational cold-recovery and explicitly authorized
+integration gates for the [documented reference configuration](docs/v1.0.md).
+The [delivery baseline](docs/v1-delivery.md) and contributor evidence index retain
+what was tested and what remains outside this release. Package publication stays
+a separate operation on the reviewed sources and exact CI artifacts.
 
-1. **G1 — scope and contracts:** record the exact supported configurations and
-   matching contracts. The version-1 YAML models and ZEN 2.1.2 are explicitly
-   selected; the [candidate matrix](docs/v1-candidate.md) bounds initial support.
-2. **G2 — installation and complete recovery:** qualify a fresh operational site
-   and recovery on another host, including identity, certificates, configuration,
-   persistent state, audit, revocation and uncertain work.
-3. **G3 — final integration and endurance:** qualify installed sources, approved
-   Auton targets, actual notification destinations and representative retained-history
-   workloads for the configurations claimed as supported.
-4. **G4 — release candidate:** finalize packages, documentation and the evidence
-   index after the preceding gates pass. Publication is a separate action.
+The operational reference uses a current direct Monit observation, one approved
+non-destructive HTTPS diagnostic through Auton, and the existing local Alertmanager
+receiver. Actual firing/resolution and duplicate refusal are verified. This does
+not enable automatic remediation or qualify email/SMS/chat or human receipt.
+The public demonstration remains read-only.
 
-The first distribution checkpoint is `1.0.0rc1`, explicitly a prerelease.
-Its reference profile is Linux amd64 with SQLite and the integrated queue.
-G2–G4 remain open for the stable release. New features do not automatically join
-this baseline; relevant
-defects are corrected without reopening unrelated completed checks. No new campaign
-or external notification is authorized merely by this roadmap.
-
-A restricted read-only pilot is running. It does not qualify live intervention
-execution, downstream notifications or general production readiness.
-
-The public demonstration includes Covenant metrics and a separate Prometheus →
-Alertmanager path with a local webhook receiver. A bounded synthetic signal checks
-actual firing and resolved delivery without acting on supervised services. Local
-receiver acceptance does not qualify email/SMS/chat delivery or human receipt.
+The earlier four-hour synthetic SQLite/Redis campaign is retained at its original
+inputs; it is not an integrated-queue or live throughput benchmark. Future scope
+and broader operational promises require their own evidence.
 
 ## Qualification and limits
 
