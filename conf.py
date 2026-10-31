@@ -17,5 +17,6 @@ templates_path = ['_templates']
 html_context = {'contributor_index': 'docs/contributors', 'contributor_pages':
     ['docs/contributors', 'docs/contributing', 'docs/v1-delivery', 'docs/read-only-adapters',
      'docs/prometheus-acceptance', 'docs/source-correspondence', 'docs/certlord-correspondence',
+     'docs/observation-capacity',
      'docs/release-candidate', 'docs/releases/1.0.0rc1', 'docs-core', 'ROADMAP']}
 html_sidebars = {'**': ['about.html', 'documentation-tracks.html', 'localtoc.html', 'searchbox.html']}

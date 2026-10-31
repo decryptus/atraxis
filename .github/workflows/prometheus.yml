@@ -5,7 +5,7 @@ permissions:
 jobs:
   sample-semantics:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,3 +46,16 @@ jobs:
         run: |
           python scripts/check-test-collection.py --runner unittest correspondence_tests
           python -m unittest discover -s correspondence_tests -v
+      - name: Check observation size, label churn, overflow and recovery
+        env:
+          COVENANT_SOURCE: ${{ github.workspace }}/fixture-covenant
+          CERTLORD_SOURCE: ${{ github.workspace }}/fixture-certlord
+          PROMETHEUS_BINARY: ${{ runner.temp }}/prometheus-3.5.0.linux-amd64/prometheus
+        run: python scripts/check-observation-capacity.py --generations 2 --output observation-capacity.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: observation-capacity
+          path: observation-capacity.json
+          if-no-files-found: ignore
+          retention-days: 14

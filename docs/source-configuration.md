@@ -7,6 +7,18 @@ explicit host operations.
 
 ## Choose an adapter
 
+> **Recommended default:** use `monit_docker` and `certlord` for inventory.
+> Atraxis reads the source API directly, without an exporter or scrape cycle in
+> between, keeping the collection path simpler.
+>
+> **Optional Covenant example:** when centralized collection or network boundaries
+> require it, follow the [Monit-Docker walkthrough](prometheus-monit.md#configure-the-chain):
+> Monit-Docker API → Covenant → Prometheus → Atraxis (`prometheus_monit`).
+> It includes the exporter, Prometheus target and Atraxis configuration. Check
+> [response size, scrape duration and retained series](prometheus-monit.md#capacity-and-operation)
+> before adopting this route. Direct inventory can also coexist with optional
+> Covenant/Prometheus metric history.
+
 The `kind` field selects an explicit read path. For container and certificate
 inventory, prefer `monit_docker` and `certlord` when Atraxis can reach the source
 APIs. These direct adapters require neither Covenant nor Prometheus. The YAML

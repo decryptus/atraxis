@@ -16,5 +16,6 @@ For installation and operation, return to :doc:`/index`.
    /docs/prometheus-acceptance
    /docs/source-correspondence
    /docs/certlord-correspondence
+   /docs/observation-capacity
    /docs-core
    /ROADMAP

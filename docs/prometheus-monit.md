@@ -96,6 +96,12 @@ Detection still occurs on the next scrape/poll, not synchronously with a source 
 The closed transport accepts at most 10,000 typed field rows and 4 MiB per source
 response/export; Atraxis also applies its configured resource/response limits.
 Exceeding a limit rejects the whole observation, never a truncated inventory.
+The Prometheus query response has its own byte budget (`max_response_bytes`,
+4 MiB in the example). It includes labels and a second row carrying the scrape
+clock for each value. It can exceed that budget even when the native JSON and
+Covenant export are both small enough and the typed-row count is below 10,000.
+The resource limit is therefore not a supported inventory-size guarantee.
+Filesystems, domains, populated nested objects and text lengths affect capacity.
 Strings are bounded to 4,096 characters. Large integers use exact decimal text;
 other numeric facts remain gauge values. No arbitrary JSON blob is placed in a label.
 
@@ -103,6 +109,13 @@ Text fields, including timestamps and the digest, create label generations when
 changed. Size Prometheus retention and cardinality for the inventory and scrape
 rate; qualify production capacity before switching. Instant queries avoid returning
 historical label generations, but those generations still consume storage.
+Even numeric-only changes produce a new digest series; changed text timestamps
+also create new series for each affected field. An unchanged source snapshot does
+not create those generations simply because it is scraped again.
+Keep direct `monit_docker` / `certlord` collection as the default. Before selecting
+an indirect route, check the complete query response size, scrape duration and
+retained series with representative inventory sizes and source update patterns.
+Reducing the scrape frequency does not make an oversized snapshot fit.
 Do not drop or transform these families with metric relabeling. Protect their
 read access like the native inventory. Keep exporter/Prometheus/Atraxis clocks
 synchronized within `max_clock_skew`; clock uncertainty invalidates the current view.
