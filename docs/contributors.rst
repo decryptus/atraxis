@@ -10,6 +10,8 @@ For installation and operation, return to :doc:`/index`.
 
    /docs/contributing
    /docs/v1-delivery
+   /docs/release-stable
+   /docs/releases/1.0.0
    /docs/release-candidate
    /docs/releases/1.0.0rc1
    /docs/read-only-adapters

@@ -62,30 +62,16 @@ of code or a successful synthetic test is not by itself operational qualificatio
 | G3 — final integration and endurance | The supported source → rule → explicitly authorized action → notification path, plus representative retained-history/load evidence | Approved sources/targets/destinations and configured identities work; test markers, unknown outcomes and duplicate handling are preserved; bounded workload evidence states duration, limits, failures and scope |
 | G4 — release candidate | Installable candidate packages, user/contributor documentation and one evidence index | Matching source/package identities, license/version/dependency checks and required CI pass; G1–G3 have no unresolved blocker for the claimed support matrix |
 
-G1's functional baseline and language decision are recorded. The
-[candidate support matrix](v1-candidate.md) fixes the initial deployment target.
-G2–G4 remain open operational/stable-release gates. Existing operator and
-separate-host synthetic acceptance, package tests
-and measured workloads remain valid evidence within their stated scope; see
-[development and validation](contributing.md). They are not reset by this plan.
+G1–G3 are closed for the [bounded 1.0 reference](v1.0.md). The exact
+reviewed gate manifest is `docs/releases/1.0.0-qualification.json`. Private
+operational evidence remains private; historical synthetic evidence retains its
+original inputs and limits. G4 requires successful final CI and a separate
+[stable publication](release-stable.md) of those exact qualified archives.
 
-Notification destinations not yet selected stay an explicit open prerequisite
-for their operational check, not a reason to stop unrelated development. Do not
-invent destinations, send test messages or trigger actions implicitly.
-
-## Candidate publication and stopping rule
-
-The first distribution checkpoint is `1.0.0rc1`,
-explicitly a prerelease. It can be published after required package/integration
-checks pass, without claiming that G2/G3 operational prerequisites are complete.
-This is not G4 closure or a stable-production claim. Publication remains a
-separate manual action on the reviewed source and exact qualified artifacts.
-
-The reference operational target is Linux amd64, Python 3.11/3.12 packages and
-Python 3.12 operator Compose with SQLite accounts, SQLite engine storage and
-integrated queue. Existing optional backends/features are retained; their own
-limits remain documented and they do not expand the first qualification matrix.
-See the [candidate matrix and remaining exit work](v1-candidate.md).
+The earlier `1.0.0rc1` checkpoint remains a prerelease. Its historical limitations
+are retained in the [candidate matrix](v1-candidate.md); they do not describe the
+completed final reference qualification. Unselected external notification
+channels and unqualified capacity claims remain outside the final matrix.
 
 ## Evidence reuse and change control
 

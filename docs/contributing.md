@@ -9,8 +9,9 @@ For installation and operation, use the [user guide](../index.rst).
 The [public roadmap](../ROADMAP.md) distinguishes existing behavior from planned scope.
 The [1.0 delivery baseline](v1-delivery.md) fixes included/deferred functionality,
 the four exit gates and when existing evidence needs to be repeated.
-The [manual candidate release procedure](release-candidate.md) publishes exact
-qualified package artifacts without claiming operational gate closure.
+The [stable release procedure](release-stable.md) binds reviewed operational
+gates to exact qualified package artifacts. The historical candidate procedure
+remains available separately.
 
 The [source adapter contract](read-only-adapters.md) describes the common collection
 interface, separate built-in modules and the remaining live-rule mapping limits.
@@ -255,7 +256,7 @@ independent CI hosts, including an uncertain synthetic HTTP receipt and an activ
 synthetic inventory profile. It does not qualify reconciliation against a surviving
 real external system, an installed live inventory source, newer revocations held by an external identity
 authority, a site certificate issuer, live Auton/notification destinations or
-recovery of the deployed pilot. Those operational gates remain open.
+recovery of the deployed pilot. The separate operational closure is recorded for the bounded [1.0 reference](v1.0.md); it does not expand these synthetic fixtures.
 
 ## Local administration CLI validation
 
@@ -288,4 +289,5 @@ general; memory failing to decrease alone does not prove a leak. Do not lower
 assertions, deadlines or resource limits to obtain a passing run.
 
 Tests use synthetic endpoints and credentials. Never point them at production
-by default. No workflow in this repository publishes packages or deploys services.
+by default. Test workflows do not publish packages or deploy services. The separate explicit
+release workflows publish qualified GitHub assets without deployment.

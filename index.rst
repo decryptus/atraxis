@@ -3,13 +3,14 @@ atraxis user documentation
 
 Installation, configuration, operation and troubleshooting.
 
-Experimental GPLv3 software. Evaluate the documented limits before deploying.
+GPLv3 software. Evaluate the supported reference profile and documented limits.
 
 .. toctree::
    :maxdepth: 1
    :caption: User guide
 
    docs/README
+   docs/v1.0
    docs/v1-candidate
    docs/operator-journey
    docs/setup
