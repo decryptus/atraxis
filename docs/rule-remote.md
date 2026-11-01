@@ -7,9 +7,21 @@ The original `atraxis serve` inventory daemon remains read-only and independent.
 
 ## Install the optional client
 
-The public [Atropos repository](https://github.com/decryptus/atropos) contains a separate `client/` Python package.
-Atraxis 1.0.0 pins client **0.1.0a10**. Install that source directory or wheel,
-then install Atraxis with its `rules` extra:
+This development checkout (`1.0.1.dev0`) installs the published
+`atropos-client[observations]==1.0.0` from PyPI with its optional `rules` extra:
+
+```sh
+python -m pip install '.[rules]'
+python -m pip check
+```
+
+This installs the client without the `atraxis-atropos` engine or its ZEN runtime.
+Install and start the engine separately in its own environment; see the
+[Atropos service guide](https://github.com/decryptus/atropos/blob/main/docs/user/rule-service.md).
+Use the matched engine/client 1.0.0 pair for this checkout.
+
+The already published Atraxis **1.0.0** still pins client **0.1.0a10**. When using
+that release tag, retain its original source installation:
 
 ```sh
 git clone https://github.com/decryptus/atropos.git ../atropos
@@ -18,12 +30,8 @@ python -m pip install '../atropos/client[observations]'
 python -m pip install '.[rules]'
 ```
 
-This installs the client, not the `atraxis-atropos` engine or its Redis/ZEN
-requirements. The engine is installed and started separately on its own host;
-see the [Atropos service guide](https://github.com/decryptus/atropos/blob/main/docs/user/rule-service.md).
-The newer independent client and engine 1.0.0 are available on PyPI. Keep the
-consumer pin above for Atraxis 1.0.0 and install the engine in a separate
-environment; see [current version matching](v1.0.md#current-atropos-publication).
+Do not override the dependency of an installed Atraxis 1.0.0 package. See
+[current version matching](v1.0.md#current-atropos-publication).
 
 ## Gateway profile: version 2
 

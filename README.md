@@ -70,8 +70,9 @@ inventory and rule-management interfaces.
 See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engine and client **1.0.0** are now independently published on PyPI as
 [`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.0/) and
 [`atropos-client`](https://pypi.org/project/atropos-client/1.0.0/). Atraxis 1.0.0
-still pins client **0.1.0a10** for its optional `rules` extra. Keep that consumer
-pin; the engine is installed in its own environment. See the
+still pins client **0.1.0a10** for its optional `rules` extra. This `main` checkout
+is **1.0.1.dev0** and pins the published client **1.0.0**. The engine is installed
+in its own environment. See the
 [component compatibility note](docs/v1.0.md#current-atropos-publication). Direct
 Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
 

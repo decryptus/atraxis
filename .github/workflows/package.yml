@@ -69,6 +69,33 @@ jobs:
         run: |
           "$RUNNER_TEMP/atraxis-installed/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/installed_tests" 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/collection.log"
           "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/installed_tests" -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/installed-tests.log"
+      - name: Install the rules extra from the built wheel and published client
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: |
+          wheels=("$GITHUB_WORKSPACE"/dist/*.whl)
+          test "${#wheels[@]}" -eq 1
+          python -m venv "$RUNNER_TEMP/atraxis-rules"
+          "$RUNNER_TEMP/atraxis-rules/bin/python" -m pip install "${wheels[0]}[rules]"
+          "$RUNNER_TEMP/atraxis-rules/bin/python" -m pip check 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/rules-pip-check.log"
+          "$RUNNER_TEMP/atraxis-rules/bin/python" -m pip freeze --all > "$GITHUB_WORKSPACE/package-evidence/rules-dependencies.txt"
+          "$RUNNER_TEMP/atraxis-rules/bin/python" - <<'PY'
+          import importlib.metadata
+          import importlib.util
+          from pathlib import Path
+          import sysconfig
+          import atraxis
+          import atropos_client
+          installed = Path(sysconfig.get_path('purelib')).resolve()
+          for module in (atraxis, atropos_client):
+              assert Path(module.__file__).resolve().is_relative_to(installed)
+          assert importlib.metadata.version('atropos-client') == atropos_client.__version__ == '1.0.0'
+          for name in ('atropos', 'zen'):
+              assert importlib.util.find_spec(name) is None, name
+          print('Published client 1.0.0 installed without the engine or ZEN')
+          PY
+          "$RUNNER_TEMP/atraxis-rules/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/client_tests" 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/rules-collection.log"
+          "$RUNNER_TEMP/atraxis-rules/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/client_tests" -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/rules-tests.log"
       - name: Verify source archive completeness and run its core tests
         shell: bash
         run: |
