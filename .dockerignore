@@ -10,3 +10,6 @@
 !deploy/compose/locks/**
 **/__pycache__
 **/*.pyc
+
+!deploy/docker/
+!deploy/docker/**

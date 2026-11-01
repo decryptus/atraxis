@@ -14,6 +14,7 @@ GPLv3 software. Evaluate the supported reference profile and documented limits.
    docs/v1-candidate
    docs/operator-journey
    docs/setup
+   docs/docker-image
    docs/docker-compose
    docs/web-configuration
    docs/local-administration

@@ -76,6 +76,12 @@ in its own environment. See the
 [component compatibility note](docs/v1.0.md#current-atropos-publication). Direct
 Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
 
+## Container image
+
+See the [Docker image guide](docs/docker-image.md) for image availability,
+configuration, persistent state and TLS. The initial stable image target is 1.0.1;
+this development checkout builds/tests it without publishing a stable tag.
+
 ## Install from source
 
 Requires Python 3.11 or 3.12. Start in a dedicated virtual environment:
