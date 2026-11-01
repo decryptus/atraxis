@@ -1,10 +1,9 @@
 # Run the Atraxis Docker image
 
 The Docker Hub target is [decryptus/atraxis](https://hub.docker.com/r/decryptus/atraxis).
-The first intended stable image is **1.0.1**, paired with Atropos 1.0.0. This
-checkout is still `1.0.1.dev0`: image builds are tested, but stable publication
-requires the finalized package and its source tag. Check available Docker Hub
-tags before pulling; an empty repository does not contain a runnable image.
+The first stable image version is **1.0.1**, paired with Atropos 1.0.0.
+Check the available Docker Hub tags before pulling; the image becomes available
+only after the reviewed publication completes.
 
 The Linux amd64 image contains Atraxis and `atropos-client[observations]==1.0.0`.
 It provides the inventory/API/web service and CLI commands. The engine, ZEN,

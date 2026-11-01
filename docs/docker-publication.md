@@ -16,8 +16,8 @@ This does not extend operational or endurance claims to arbitrary deployments.
 
 ## Publish
 
-Finalize the stable package and source tag before publishing. The development
-version `1.0.1.dev0` cannot be published as `1.0.1`. Configure repository secret
+Finalize the stable package and source tag before publishing. Development
+versions cannot be published under stable tags. Configure repository secret
 **DOCKERHUB_TOKEN** for Docker Hub user `decryptus`, with write access to
 `decryptus/atraxis`. Use **Docker Hub image → Run workflow**, branch `main`, with
 `publish` selected, or explicitly create/update `release/dockerhub` at the

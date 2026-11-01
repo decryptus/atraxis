@@ -12,6 +12,7 @@ For installation and operation, return to :doc:`/index`.
    /docs/docker-publication
    /docs/v1-delivery
    /docs/release-stable
+   /docs/releases/1.0.1
    /docs/releases/1.0.0
    /docs/release-candidate
    /docs/releases/1.0.0rc1

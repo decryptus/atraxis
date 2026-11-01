@@ -52,14 +52,14 @@ The earlier four-hour synthetic SQLite/Redis campaign is retained at its origina
 inputs; it is not an integrated-queue or live throughput benchmark. Future scope
 and broader operational promises require their own evidence.
 
-## Next patch preparation
+## Patch 1.0.1
 
-The development checkout is `1.0.1.dev0`. It selects the published Atropos client
+Patch `1.0.1` selects the stable client and adds the Docker image. It selects the published Atropos client
 1.0.0 and aligns Compose/integration inputs with the matching Atropos 1.0.0 tag.
 Fresh optional-client installation and the existing integration/recovery checks
 must pass on the exact change. The published Atraxis 1.0.0 archives and their
-original qualification remain unchanged. No new package release, deployment or
-extended endurance claim follows automatically from this dependency update.
+original qualification remain unchanged. Package and image publication remain explicit; no deployment or extended
+endurance claim follows automatically from this dependency update.
 
 ## Qualification and limits
 

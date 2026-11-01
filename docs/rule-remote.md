@@ -7,7 +7,7 @@ The original `atraxis serve` inventory daemon remains read-only and independent.
 
 ## Install the optional client
 
-This development checkout (`1.0.1.dev0`) installs the published
+Atraxis 1.0.1 installs the published
 `atropos-client[observations]==1.0.0` from PyPI with its optional `rules` extra:
 
 ```sh

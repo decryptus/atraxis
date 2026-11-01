@@ -113,6 +113,39 @@ class StableReleaseTests(unittest.TestCase):
             _MODULE.prepare(self.root)
         self.assertFalse((self.root/'stable-assets').exists())
 
+    def patch_release(self):
+        (self.root / 'pyproject.toml').write_text('[project]\nname="atraxis"\nversion="1.0.1"\n')
+        original = self.root / 'docs/releases/1.0.0-qualification.json'
+        qualification = json.loads(original.read_bytes())
+        qualification['version'] = '1.0.1'
+        qualification['baseline_qualification_sha256'] = hashlib.sha256(original.read_bytes()).hexdigest()
+        (self.root / 'docs/releases/1.0.1-qualification.json').write_text(json.dumps(qualification))
+        self.manifest['version'] = '1.0.1'
+        renamed = {}
+        for name, identity in self.manifest['files'].items():
+            target = name.replace('1.0.0', '1.0.1')
+            (self.download / name).rename(self.download / target)
+            renamed[target] = identity
+        self.manifest['files'] = renamed
+        self.save_manifest()
+
+    def test_patch_uses_its_own_manifest_and_preserves_baseline(self):
+        self.patch_release()
+        original = (self.root / 'docs/releases/1.0.0-qualification.json').read_bytes()
+        _MODULE.prepare(self.root)
+        result = json.loads((self.root / 'stable-assets/release-provenance.json').read_text())
+        self.assertEqual(result['version'], '1.0.1')
+        self.assertEqual((self.root / 'docs/releases/1.0.0-qualification.json').read_bytes(), original)
+        self.assertTrue((self.root / 'stable-assets/atraxis-1.0.1-py3-none-any.whl').is_file())
+
+    def test_patch_cannot_reuse_a_modified_baseline(self):
+        self.patch_release()
+        path = self.root / 'docs/releases/1.0.0-qualification.json'
+        path.write_text(path.read_text() + '\n')
+        with self.assertRaisesRegex(ValueError, 'patch_baseline_identity'):
+            _MODULE.prepare(self.root)
+        self.assertFalse((self.root / 'stable-assets').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

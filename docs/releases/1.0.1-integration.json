@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "prior_atropos_source": "dedb114217c3df5fe0ab79d7acc53cd5636ebee0",
+  "stable_atropos_source": "613856430e87cd5abac0ea346d8d60a63b73cc57",
+  "runtime_changes": [
+    "atropos/__init__.py: version constant only",
+    "client/atropos_client/__init__.py: version constant only"
+  ],
+  "atraxis_runtime": "unchanged from original 1.0.0 qualification",
+  "transition_pr": "https://github.com/decryptus/atraxis/pull/24",
+  "transition_source": "25179576772b7fdb7d9aa4b8764bd57b615f89de",
+  "passed_workflows": [
+    41361447864,
+    41361447750,
+    41361447844,
+    41361447787,
+    41361447748,
+    41361447798,
+    41361447699,
+    41361447743
+  ],
+  "release_gate": "All nine workflows, including Docker image acceptance, must pass on the final PR head before publication.",
+  "scope": "Synthetic CI and fresh-installation evidence; original operational/endurance limitations retained."
+}
