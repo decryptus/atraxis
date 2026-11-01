@@ -15,24 +15,20 @@ sources instead of treating unknown values as zero.
 
 ## How it fits together
 
-```mermaid
-flowchart TD
-    Monit["monit-docker: containers"] -->|"Direct inventory API"| Atraxis["Atraxis: inventory and operator console"]
-    Cert["CertLord: certificates"] -->|"Direct inventory API"| Atraxis
-    Monit -.->|"Optional export"| Covenant["Covenant"]
-    Cert -.->|"Optional export"| Covenant
-    Covenant --> Prometheus["Prometheus"]
-    Prometheus -->|"Configured metrics or inventory adapters"| Atraxis
-    Atraxis -->|"Independent API client"| Atropos["Atropos: rules and workflows"]
-    Atropos -->|"Explicit approved execution"| Auton["Auton"]
-    Atropos -->|"Configured outcomes"| Alertmanager["Alertmanager"]
-    Prometheus -->|"Metric alerts"| Alertmanager
-```
+![Atraxis architecture: arrows point from the caller to the service it queries or calls. Direct inventory collection and the optional Covenant/Prometheus route are shown separately.](assets/diagrams/atraxis-architecture.svg)
+
+**Arrows show who calls whom.** Atraxis reads the configured Monit-Docker and
+CertLord APIs directly. Alternatively, Atraxis queries Prometheus; Prometheus
+scrapes Covenant's metrics endpoint, and Covenant reads its configured source
+APIs. Query responses return in the opposite direction: Prometheus does not push
+inventory observations into Atraxis.
 
 **Start with the direct adapters.** Neither Covenant nor Prometheus is required
 for container or certificate inventory. Add Atropos when you need rule management;
-add execution and notification integrations explicitly. These arrows describe
-configured data paths, not automatic permission to execute an action.
+Atraxis calls its authenticated API through `atropos-client`. Atropos can submit
+explicitly authorized jobs to Auton and send configured notifications to
+Alertmanager. Prometheus can also send metric alerts to Alertmanager separately.
+Saving, testing or activating a rule never starts a workflow automatically.
 
 ## What you can do
 
