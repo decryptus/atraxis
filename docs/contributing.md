@@ -58,6 +58,14 @@ wheel into a fresh base environment and runs the collection guard and existing
 installed tests outside the source checkout. Dependency checks and piped test
 commands must succeed; retaining a log never turns a failed command into a pass.
 
+A second fresh environment installs the built wheel with its `rules` extra,
+resolving the published Atropos client 1.0.0 from PyPI. It checks dependencies,
+installed import paths, client runtime identity and absence of the engine/ZEN,
+then collects and runs the existing client transport/application suite outside
+the checkout. This exercises the distributed optional dependency, rather than
+satisfying it with a local client source tree. Its dependency inventory and test
+logs are retained alongside the base-package evidence.
+
 Each `installed-package-<python>` artifact is retained for 14 days and contains:
 
 - The wheel and source archive actually built by that job.

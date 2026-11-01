@@ -27,12 +27,12 @@ independent `client/` source. Build contexts must be clean source checkouts with
 credentials or site data. Put all site files outside both checkouts. Record both
 commit IDs before building; no branch is fetched or merged by Compose.
 
-The public Atropos source revision qualified with this export is
-`dedb114217c3df5fe0ab79d7acc53cd5636ebee0`:
+This development checkout uses the Atropos 1.0.0 source revision
+`613856430e87cd5abac0ea346d8d60a63b73cc57`:
 
 ```sh
 git clone https://github.com/decryptus/atropos.git ../atropos
-git -C ../atropos checkout dedb114217c3df5fe0ab79d7acc53cd5636ebee0
+git -C ../atropos checkout 613856430e87cd5abac0ea346d8d60a63b73cc57
 ```
 
 Copy `deploy/compose/site.env.example` to a private operator-owned file outside

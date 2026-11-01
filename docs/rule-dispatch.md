@@ -173,8 +173,8 @@ it needs no observation-signing profile because it does not admit executable wor
 Atropos must grant the admitting subject current revision read access and the
 separate `reconcile` permission for the target and every stored workflow action.
 Test-mode reconciliation additionally requires current test rights. Existing
-execute rights alone do not authorize this operation. Use client 0.1.0a10 and
-engine 0.1.0a20 together.
+execute rights alone do not authorize this operation. Use the matched client and
+engine 1.0.0 packages together.
 
 Independently verify the external outcome first. Choose succeeded or failed and
 enter a concise verification reference or note (at most 2048 UTF-8 bytes, no
