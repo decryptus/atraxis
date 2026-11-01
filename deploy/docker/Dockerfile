@@ -4,7 +4,7 @@ COPY deploy/compose/locks/debian.sources /etc/apt/sources.list.d/debian.sources
 RUN apt-get update && apt-get install --no-install-recommends -y libmagic1 \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 10001 --no-create-home service \
-    && install -d -o 10001 -g 10001 /var/lib/atraxis
+    && install -d -m 0700 -o 10001 -g 10001 /var/lib/atraxis
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 10001:10001
 
