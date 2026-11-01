@@ -2,10 +2,47 @@
 
 ![Atraxis](assets/brand/svg/atraxis-logo-horizontal.svg)
 
-Coordination layer for the Atraxis observability and automation ecosystem.
+**One console to inspect containers, certificates and metrics, then prepare and
+test automation rules through the independent Atropos service.**
+
+Atraxis **1.0.0** runs on your own infrastructure. It provides authenticated web,
+command-line and Textual interfaces, with access scoped to your organizations and
+resources. It distinguishes fresh observations, retained history and unavailable
+sources instead of treating unknown values as zero.
 
 [Website (EN)](https://atraxis.io/) · [Site (FR)](https://atraxis.io/fr.html) ·
 [User guide](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md)
+
+## How it fits together
+
+```mermaid
+flowchart TD
+    Monit["monit-docker: containers"] -->|"Direct inventory API"| Atraxis["Atraxis: inventory and operator console"]
+    Cert["CertLord: certificates"] -->|"Direct inventory API"| Atraxis
+    Monit -.->|"Optional export"| Covenant["Covenant"]
+    Cert -.->|"Optional export"| Covenant
+    Covenant --> Prometheus["Prometheus"]
+    Prometheus -->|"Configured metrics or inventory adapters"| Atraxis
+    Atraxis -->|"Independent API client"| Atropos["Atropos: rules and workflows"]
+    Atropos -->|"Explicit approved execution"| Auton["Auton"]
+    Atropos -->|"Configured outcomes"| Alertmanager["Alertmanager"]
+    Prometheus -->|"Metric alerts"| Alertmanager
+```
+
+**Start with the direct adapters.** Neither Covenant nor Prometheus is required
+for container or certificate inventory. Add Atropos when you need rule management;
+add execution and notification integrations explicitly. These arrows describe
+configured data paths, not automatic permission to execute an action.
+
+## What you can do
+
+- Inspect container, certificate and selected metric observations in one inventory.
+- Search the resources you are authorized to read, with explicit freshness and
+  source availability rather than an invented global health score.
+- Create rule drafts, test exact revisions and review activation through Atropos.
+  Saving, testing and activating a rule never dispatch an intervention by themselves.
+- Manage access and configuration through reviewed, authorized operator flows.
+- Use each underlying tool independently; Atraxis preserves its own local controls.
 
 ## Try the public demo
 
@@ -34,8 +71,12 @@ inventory and rule-management interfaces.
 ## Release 1.0
 
 `1.0.0` is the first stable Atraxis package for the documented reference profile.
-See [supported configurations, limits and upgrades](docs/v1.0.md). Optional
-Atropos engine/client versions remain independent alpha dependencies. Direct
+See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engine and client **1.0.0** are now independently published on PyPI as
+[`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.0/) and
+[`atropos-client`](https://pypi.org/project/atropos-client/1.0.0/). Atraxis 1.0.0
+still pins client **0.1.0a10** for its optional `rules` extra. Keep that consumer
+pin; the engine is installed in its own environment. See the
+[component compatibility note](docs/v1.0.md#current-atropos-publication). Direct
 Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
 
 ## Install from source
@@ -45,6 +86,7 @@ Requires Python 3.11 or 3.12. Start in a dedicated virtual environment:
 ```sh
 git clone https://github.com/decryptus/atraxis.git
 cd atraxis
+git checkout v1.0.0
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install .
@@ -65,7 +107,7 @@ A three-minute tour of Docker monitoring, cron and serve modes, and the web and 
 
 ## Status
 
-Experimental supervision and coordination software, licensed under GNU GPL version 3. Atraxis provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. This development version is not a general production-readiness claim.
+Atraxis 1.0.0 is stable for its documented reference profile, under GNU GPL version 3. It provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. The public demo remains experimental and read-only; the stable package does not imply a hosted production service, arbitrary deployment qualification or high availability.
 
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 
@@ -109,20 +151,25 @@ Covenant observation path currently passes through Prometheus. See
 adapter selection, and [metric alerting](docs/prometheus-alerting.md) for the
 optional Prometheus → Alertmanager path.
 
-## Responsibilities
+## Related software
 
-| Component | Responsibility |
-| --- | --- |
-| Atraxis | Read-only collection, authorized inventory and web/CLI/Textual operator interfaces |
-| [Atropos](https://github.com/decryptus/atropos) | Rule lifecycle, scoped authorization, persistence and guarded workflow execution |
-| Covenant | Collection, transformation and exposition of metrics as an exporter |
-| Prometheus | Metrics storage and alert rule evaluation |
-| Alertmanager | Notification routing, grouping and delivery |
-| Auton | Execution of explicitly authorized jobs |
-| monit-docker | Docker container monitoring and local automated actions |
-| CertLord | TLS certificate issuance, renewal and deployment |
+| Software | Role | When you need it |
+| --- | --- | --- |
+| **Atraxis** | Authorized inventory, web/CLI/Textual interfaces and rule-authoring gateway | The console installed here |
+| [monit-docker](https://github.com/decryptus/monit-docker) · [Website](https://www.monit-docker.com/) | Container monitoring and autonomous local actions | To observe Docker resources |
+| [CertLord](https://github.com/decryptus/certlord) · [Website](https://atraxis.io/certlord.html) | TLS certificate issuance, renewal and deployment | To observe managed certificates |
+| [Atropos](https://github.com/decryptus/atropos) · [Engine package](https://pypi.org/project/atraxis-atropos/1.0.0/) | Rule lifecycle, permissions, persistence and guarded workflows | For the optional rule features; separate service |
+| [atropos-client](https://github.com/decryptus/atropos/tree/main/client) · [Package](https://pypi.org/project/atropos-client/1.0.0/) | Python transport to the Atropos API | For rule consumers; respect each application's version pin |
+| [Covenant](https://github.com/decryptus/covenant) | Export observations and numeric metrics | Optional; required for the two complete inventory adapters through Prometheus |
+| [Prometheus](https://prometheus.io/) | Collect/store metrics and evaluate alert rules | Optional; required when choosing a Prometheus source adapter |
+| [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) | Group, route and deliver notifications | Optional metric/workflow notification path |
+| [Auton](https://github.com/decryptus/auton) | Execute explicitly authorized jobs | Optional approved executor behind Atropos |
+| [AnySQL](https://github.com/decryptus/anysql) | Database connection abstraction | Used by optional SQL account/storage adapters |
 
-Each tool retains its own configuration and safety checks. Coordination by Atraxis must preserve those checks and the tool’s ability to operate independently.
+Each tool keeps its own configuration, credentials and protections. Atraxis does
+not replace a source's monitoring, a metrics database, or Atropos's authoritative
+rule storage. DWho, HTTPdis and Sonicprobe provide shared implementation libraries;
+normal installation resolves the declared Python dependencies.
 
 ## Name
 
