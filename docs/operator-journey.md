@@ -40,7 +40,7 @@ in command arguments, URLs, terminal recordings or Git. Directory mode `0700` an
 file mode `0600` are the starting permissions. The reading service must own or be
 able to read each file: the Compose service UID/GID is `10001:10001`; a root-owned
 `0600` file is not readable by that UID. Keep CA bundles and private TLS keys in
-their designated component directories. See the [Compose file layout](docker-compose.md#prepare-sources-and-a-private-site-directory).
+their designated component directories. See the [Compose file layout](docker-compose.md#prepare-the-compose-files-and-a-private-site-directory).
 
 ## Give a reader one inventory source
 
