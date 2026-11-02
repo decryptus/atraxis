@@ -5,7 +5,7 @@
 **One console to inspect containers, certificates and metrics, then prepare and
 test automation rules through the independent Atropos service.**
 
-Atraxis **1.0.0** runs on your own infrastructure. It provides authenticated web,
+Atraxis **1.0.1** runs on your own infrastructure. It provides authenticated web,
 command-line and Textual interfaces, with access scoped to your organizations and
 resources. It distinguishes fresh observations, retained history and unavailable
 sources instead of treating unknown values as zero.
@@ -71,10 +71,16 @@ See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engin
 [`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.0/) and
 [`atropos-client`](https://pypi.org/project/atropos-client/1.0.0/). Atraxis 1.0.0
 still pins client **0.1.0a10** for its optional `rules` extra. This `main` checkout
-is **1.0.1.dev0** and pins the published client **1.0.0**. The engine is installed
+is **1.0.1** and pins the published client **1.0.0**. The engine is installed
 in its own environment. See the
 [component compatibility note](docs/v1.0.md#current-atropos-publication). Direct
 Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
+
+## Container image
+
+See the [Docker image guide](docs/docker-image.md) for image availability,
+configuration, persistent state and TLS. The initial stable image target is 1.0.1;
+the publication workflow checks its stable source tag before pushing.
 
 ## Install from source
 
@@ -83,7 +89,7 @@ Requires Python 3.11 or 3.12. Start in a dedicated virtual environment:
 ```sh
 git clone https://github.com/decryptus/atraxis.git
 cd atraxis
-git checkout v1.0.0
+git checkout v1.0.1
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install .
@@ -104,7 +110,7 @@ A three-minute tour of Docker monitoring, cron and serve modes, and the web and 
 
 ## Status
 
-Atraxis 1.0.0 is stable for its documented reference profile, under GNU GPL version 3. It provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. The public demo remains experimental and read-only; the stable package does not imply a hosted production service, arbitrary deployment qualification or high availability.
+Atraxis 1.0.1 is stable for its documented reference profile, under GNU GPL version 3. It provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. The public demo remains experimental and read-only; the stable package does not imply a hosted production service, arbitrary deployment qualification or high availability.
 
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 

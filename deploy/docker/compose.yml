@@ -1,0 +1,24 @@
+name: atraxis-image
+services:
+  atraxis:
+    image: decryptus/atraxis:${ATRAXIS_VERSION:?Set ATRAXIS_VERSION to an available stable tag}
+    user: "10001:10001"
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 2
+    tmpfs: ["/tmp:rw,nosuid,nodev,size=128m,uid=10001,gid=10001,mode=0700"]
+    restart: "no"
+    stop_grace_period: 30s
+    volumes:
+      - type: bind
+        source: ${ATRAXIS_CONFIG_DIR:?Set ATRAXIS_CONFIG_DIR to a prepared private directory}
+        target: /etc/atraxis
+        read_only: true
+        bind: {create_host_path: false}
+      - state:/var/lib/atraxis
+volumes:
+  state:

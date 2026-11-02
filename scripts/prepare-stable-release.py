@@ -10,9 +10,9 @@ import tomllib
 def prepare(root: Path) -> None:
     metadata = tomllib.loads((root / 'pyproject.toml').read_text())['project']
     version = metadata['version']
-    if metadata['name'] != 'atraxis' or version != '1.0.0':
+    if metadata['name'] != 'atraxis' or not re.fullmatch(r'1\.0\.(0|[1-9][0-9]*)', version):
         raise ValueError('stable_version_required')
-    qualification = json.loads((root / 'docs/releases/1.0.0-qualification.json').read_text())
+    qualification = json.loads((root / f'docs/releases/{version}-qualification.json').read_text())
     if (qualification.get('version') != version or qualification.get('schema') != 1
             or qualification.get('gates') != {'G1': 'closed', 'G2': 'closed', 'G3': 'closed'}
             or not qualification.get('support_matrix')
@@ -20,6 +20,13 @@ def prepare(root: Path) -> None:
             or any(not re.fullmatch('[0-9a-f]{64}', value)
                    for value in qualification['evidence_sha256'].values())):
         raise ValueError('reviewed_operational_gates_required')
+    if 'baseline_qualification_sha256' in qualification:
+        baseline_path = root / 'docs/releases/1.0.0-qualification.json'
+        baseline_bytes = baseline_path.read_bytes()
+        baseline = json.loads(baseline_bytes)
+        if (hashlib.sha256(baseline_bytes).hexdigest() != qualification['baseline_qualification_sha256']
+                or baseline['runtime_files_sha256'] != qualification['runtime_files_sha256']):
+            raise ValueError('patch_baseline_identity_mismatch')
     paths = sorted((root / 'atraxis').rglob('*.py'))
     if any(p.is_symlink() for p in paths):
         raise ValueError('operational_runtime_identity_mismatch')
