@@ -96,7 +96,7 @@ class InstallationTests(unittest.TestCase):
                 compose('up', '-d', '--no-build', 'web-tls', 'engine-tls')
                 # Explicit, narrowly scoped initialization of new disposable volumes.
                 for role in ('web', 'engine'):
-                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--entrypoint', 'sh', role,
+                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER', '--entrypoint', 'sh', role,
                         '-c', 'chmod 700 /var/lib/' + ('atraxis' if role == 'web' else 'atropos') +
                         ' && chown 10001:10001 /var/lib/' + ('atraxis' if role == 'web' else 'atropos'))
                 accounts = '''from atraxis.accounts import Directory, default_directory
@@ -241,7 +241,7 @@ finally:
                 compose('up', '-d', '--no-build', 'web-tls', 'engine-tls')
                 for role in ('web', 'engine'):
                     directory = '/var/lib/' + ('atraxis' if role == 'web' else 'atropos')
-                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN',
+                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER',
                         '--entrypoint', 'sh', role, '-c', 'chmod 700 ' + directory +
                         ' && chown 10001:10001 ' + directory)
                     self.assertEqual(volume('fingerprint', restored_project, role), {})

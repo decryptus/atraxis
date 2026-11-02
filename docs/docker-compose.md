@@ -69,14 +69,14 @@ docker compose --env-file /private/site.env -f deploy/compose/compose.yml --prof
 
 For a **new, empty installation only**, initialize the named data-volume roots.
 These explicit one-off commands run as root only to set ownership of the two
-mount points (with CHOWN on those one-off helpers); long-running services use
+mount points (with CHOWN and FOWNER on those one-off helpers); long-running services use
 UID 10001. Start the two proxies first: even an offline one-off application
 command needs its configured network namespace. The applications are not yet running:
 
 ```sh
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml up -d --no-build web-tls engine-tls
-docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --entrypoint sh web -c 'chmod 700 /var/lib/atraxis && chown 10001:10001 /var/lib/atraxis'
-docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --entrypoint sh engine -c 'chmod 700 /var/lib/atropos && chown 10001:10001 /var/lib/atropos'
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --cap-add FOWNER --entrypoint sh web -c 'chmod 700 /var/lib/atraxis && chown 10001:10001 /var/lib/atraxis'
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --cap-add FOWNER --entrypoint sh engine -c 'chmod 700 /var/lib/atropos && chown 10001:10001 /var/lib/atropos'
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps web check-config --config /etc/atraxis/atraxis.yml
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml up -d --no-build
 ```

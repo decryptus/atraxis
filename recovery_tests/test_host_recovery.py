@@ -161,7 +161,7 @@ class HostRecoveryTests(unittest.TestCase):
                 compose('config', '--quiet')
                 compose('up', '-d', '--no-build', '--pull', 'never', 'web-tls', 'engine-tls')
                 for role, directory in (('web', '/var/lib/atraxis'), ('engine', '/var/lib/atropos')):
-                    compose('run', '--rm', '--no-deps', '--pull', 'never', '--user', '0:0', '--cap-add', 'CHOWN',
+                    compose('run', '--rm', '--no-deps', '--pull', 'never', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER',
                         '--entrypoint', 'sh', role, '-c', 'chmod 700 ' + directory + ' && chown 10001:10001 ' + directory)
                     self.assertEqual(volume('fingerprint', role), {})
                     self.assertEqual(volume('restore', role, manifest['files'][role + '.tar']['sha256']),
