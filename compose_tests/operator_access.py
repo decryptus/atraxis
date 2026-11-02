@@ -12,6 +12,7 @@ import time
 import urllib.error
 
 import yaml
+from recovery_transfer import WEB_IMAGE
 
 ROOT = Path(__file__).resolve().parents[1]
 READ_LIMIT = 65536
@@ -95,7 +96,7 @@ def exercise_operator_access(case, compose, site, authority, network, request, p
             '--cpus', '0.25', '--pids-limit', '32', '--log-driver', 'none',
             '--tmpfs', '/tmp:rw,nosuid,nodev,size=8m,uid=10001,gid=10001,mode=0700',
             '--mount', 'type=bind,source=' + str(source) + ',target=/fixtures,readonly',
-            '--entrypoint', 'python', 'atraxis-install-web:local', '/fixtures/fixture.py', 'source'],
+            '--entrypoint', 'python', WEB_IMAGE, '/fixtures/fixture.py', 'source'],
             check=True, capture_output=True, text=True, timeout=30)
         started = True
         reader_password = secrets.token_urlsafe(32)

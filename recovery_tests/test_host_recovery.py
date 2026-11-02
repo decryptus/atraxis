@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'compose_tests'))
 from cold_volume import restore
 from operator_access import ACCOUNT_SNAPSHOT, CLIENT as READ_RULE, private
-from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify
+from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify, compose_files
 from worker_profiles import CLIENT, INSPECT, assert_restored_workers
 import uncertain_recovery
 import inventory_recovery
@@ -97,7 +97,7 @@ class HostRecoveryTests(unittest.TestCase):
             self.assertEqual(restore(site, TRANSFER / 'site.tar',
                 manifest['files']['site.tar']['sha256']), manifest['fingerprints']['site'])
             project = 'recovery-test-' + uuid.uuid4().hex[:12]
-            prefix = ['docker', 'compose', '-p', project, '-f', str(ROOT / 'deploy/compose/compose.yml')]
+            prefix = ['docker', 'compose', '-p', project, *compose_files()]
             env = dict(os.environ, ATROPOS_SOURCE=str(ROOT), ATRAXIS_SITE_DIR=str(site),
                 ATRAXIS_BIND_ADDRESS='127.0.0.1', ATRAXIS_HTTPS_PORT='0')
 
@@ -161,7 +161,7 @@ class HostRecoveryTests(unittest.TestCase):
                 compose('config', '--quiet')
                 compose('up', '-d', '--no-build', '--pull', 'never', 'web-tls', 'engine-tls')
                 for role, directory in (('web', '/var/lib/atraxis'), ('engine', '/var/lib/atropos')):
-                    compose('run', '--rm', '--no-deps', '--pull', 'never', '--user', '0:0', '--cap-add', 'CHOWN',
+                    compose('run', '--rm', '--no-deps', '--pull', 'never', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER',
                         '--entrypoint', 'sh', role, '-c', 'chmod 700 ' + directory + ' && chown 10001:10001 ' + directory)
                     self.assertEqual(volume('fingerprint', role), {})
                     self.assertEqual(volume('restore', role, manifest['files'][role + '.tar']['sha256']),

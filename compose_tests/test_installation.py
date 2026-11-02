@@ -19,7 +19,7 @@ import yaml
 from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
-from recovery_transfer import capture
+from recovery_transfer import capture, compose_files, prepare_images, WEB_IMAGE
 import inventory_recovery
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +83,7 @@ class InstallationTests(unittest.TestCase):
                 ATRAXIS_SITE_DIR=str(site), ATRAXIS_BIND_ADDRESS='127.0.0.1', ATRAXIS_HTTPS_PORT='0')
             project = 'compose-test-' + uuid.uuid4().hex[:12]
             restored_project = project + '-restored'
-            prefix = ['docker', 'compose', '-p', project, '-f', str(ROOT / 'deploy/compose/compose.yml')]
+            prefix = ['docker', 'compose', '-p', project, *compose_files()]
             def compose(*args, timeout=120, check=True):
                 result = subprocess.run(prefix + list(args), env=env, capture_output=True,
                     text=True, timeout=timeout)
@@ -92,11 +92,11 @@ class InstallationTests(unittest.TestCase):
                 return result
             try:
                 compose('config', '--quiet')
-                compose('build', timeout=900)
+                prepare_images(compose)
                 compose('up', '-d', '--no-build', 'web-tls', 'engine-tls')
                 # Explicit, narrowly scoped initialization of new disposable volumes.
                 for role in ('web', 'engine'):
-                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--entrypoint', 'sh', role,
+                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER', '--entrypoint', 'sh', role,
                         '-c', 'chmod 700 /var/lib/' + ('atraxis' if role == 'web' else 'atropos') +
                         ' && chown 10001:10001 /var/lib/' + ('atraxis' if role == 'web' else 'atropos'))
                 accounts = '''from atraxis.accounts import Directory, default_directory
@@ -221,7 +221,7 @@ finally:
                             (',readonly' if operation != 'restore' else ''),
                         '--mount', 'type=bind,source=' + str(backup) + ',target=/backup' +
                             (',readonly' if operation != 'pack' else ''),
-                        '--entrypoint', 'python', 'atraxis-install-web:local', '-', operation, role]
+                        '--entrypoint', 'python', WEB_IMAGE, '-', operation, role]
                     if digest is not None:
                         args.append(digest)
                     result = subprocess.run(args, input=archive_script, capture_output=True,
@@ -241,7 +241,7 @@ finally:
                 compose('up', '-d', '--no-build', 'web-tls', 'engine-tls')
                 for role in ('web', 'engine'):
                     directory = '/var/lib/' + ('atraxis' if role == 'web' else 'atropos')
-                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN',
+                    compose('run', '--rm', '--no-deps', '--user', '0:0', '--cap-add', 'CHOWN', '--cap-add', 'FOWNER',
                         '--entrypoint', 'sh', role, '-c', 'chmod 700 ' + directory +
                         ' && chown 10001:10001 ' + directory)
                     self.assertEqual(volume('fingerprint', restored_project, role), {})

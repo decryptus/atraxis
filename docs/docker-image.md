@@ -42,7 +42,7 @@ listener. Put a TLS reverse proxy on the same host for remote access, with the
 correct origin configuration for rule forms. Do not expose unencrypted Basic
 authentication on a public interface. The [operator Compose guide](docker-compose.md)
 provides the alternative shared-network-namespace proxy layout and coordinated
-Atraxis/Atropos recovery, using builds from pinned source checkouts.
+Atraxis/Atropos recovery, using the published application images and a versioned NGINX image.
 
 The same image can run local account/source administration by overriding the
 command. Review and apply operations remain separate, and privileges come from

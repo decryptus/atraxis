@@ -4,39 +4,27 @@ Use the [operator journey](operator-journey.md) alongside this guide to provisio
 identities, add scoped inventory access before opening the service, and plan
 credential/certificate renewal and recovery.
 
-This single-host starter runs Atraxis and Atropos behind separate TLS
-proxies. It builds local images from separate source checkouts; it publishes no
-image. Use Docker Compose 2.24 or newer with BuildKit. This is not a release or
-permission to deploy a particular site.
+This single-host starter downloads Atraxis **1.0.1**, Atropos **1.0.0** and
+NGINX **1.30.6** from Docker Hub. It runs the two applications behind separate
+TLS proxies without building images or checking out the engine source.
+Use Docker Compose 2.24 or newer. The supported platform is **Linux amd64**.
 
-This Compose profile fixes its Python base image, Debian package snapshot and
-Python dependency archives. The qualified platform is Linux amd64 with Python
-3.12.16; other architectures need their own acceptance. Builds fail if locked
-inputs are unavailable or do not match. Updating security fixes requires a reviewed
-lock update and rebuilding the images; restarting a container does not update them.
+The application images contain Python 3.12.16 and locked dependencies. The
+versioned image names and validated manifest/config digests are recorded in
+`deploy/compose/images.json`. All services, including NGINX, run as UID/GID
+10001 with read-only roots. Updating an image is an explicit software change:
+back up state and record the current image IDs first, then validate the new version.
 
 The default is SQLite storage and its durable storage-backed queue. No Redis,
 Auton, execution worker, action binding, automatic activation or intervention is
 started. Optional profiles below start guarded workers after explicit configuration.
 Do not replace a deployed Redis queue with this starter's storage queue.
 
-## Prepare sources and a private site directory
+## Prepare the Compose files and a private site directory
 
-Use matching, reviewed Atraxis and Atropos revisions. Atropos must include its
-independent `client/` source. Build contexts must be clean source checkouts without
-credentials or site data. Put all site files outside both checkouts. Record both
-commit IDs before building; no branch is fetched or merged by Compose.
-
-This development checkout uses the Atropos 1.0.0 source revision
-`613856430e87cd5abac0ea346d8d60a63b73cc57`:
-
-```sh
-git clone https://github.com/decryptus/atropos.git ../atropos
-git -C ../atropos checkout 613856430e87cd5abac0ea346d8d60a63b73cc57
-```
-
-Copy `deploy/compose/site.env.example` to a private operator-owned file outside
-the repository. Set absolute `ATROPOS_SOURCE` and `ATRAXIS_SITE_DIR` paths.
+Use the current reviewed `deploy/compose/` directory from the Atraxis repository.
+Copy `site.env.example` to a private operator-owned file outside the repository
+and set the absolute `ATRAXIS_SITE_DIR` path. No `ATROPOS_SOURCE` is required.
 The example exposure is **127.0.0.1:8443**. Bind a different interface only after
 reviewing site firewall, DNS, certificate trust and permitted clients.
 
@@ -69,26 +57,26 @@ Keep proxy configuration files from this checkout readable. Bind mounts reject
 missing paths rather than silently creating directories. Rootless/user-remapped
 Docker requires the corresponding host ownership mapping and site acceptance.
 
-## Build, initialize and start
+## Download, initialize and start
 
 Run from the Atraxis checkout. In the commands below replace
 `/private/site.env` with your protected operator file:
 
 ```sh
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml config --quiet
-docker compose --env-file /private/site.env -f deploy/compose/compose.yml build
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml --profile '*' pull
 ```
 
 For a **new, empty installation only**, initialize the named data-volume roots.
 These explicit one-off commands run as root only to set ownership of the two
-mount points (with CHOWN on those one-off helpers); long-running services use
+mount points (with CHOWN and FOWNER on those one-off helpers); long-running services use
 UID 10001. Start the two proxies first: even an offline one-off application
 command needs its configured network namespace. The applications are not yet running:
 
 ```sh
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml up -d --no-build web-tls engine-tls
-docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --entrypoint sh web -c 'chmod 700 /var/lib/atraxis && chown 10001:10001 /var/lib/atraxis'
-docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --entrypoint sh engine -c 'chmod 700 /var/lib/atropos && chown 10001:10001 /var/lib/atropos'
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --cap-add FOWNER --entrypoint sh web -c 'chmod 700 /var/lib/atraxis && chown 10001:10001 /var/lib/atraxis'
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps --user 0:0 --cap-add CHOWN --cap-add FOWNER --entrypoint sh engine -c 'chmod 700 /var/lib/atropos && chown 10001:10001 /var/lib/atropos'
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml run --rm --no-deps web check-config --config /etc/atraxis/atraxis.yml
 docker compose --env-file /private/site.env -f deploy/compose/compose.yml up -d --no-build
 ```
@@ -194,7 +182,7 @@ uncertain work before the explicit reconciled resume.
 
 This starter offers a **cold** operator backup, not automatic or hot backup.
 Stop the whole project, including both optional worker profiles, and confirm no service or other process writes either
-volume. Record source commits/image IDs, project name, volume names and the
+volume. Record image versions/digests/IDs, project name, volume names and the
 configuration revision. Securely back up both complete named volumes, including
 any SQLite WAL/SHM companions, plus the four private site directories and your
 operator environment file. TLS keys and credentials require protected storage.
@@ -218,7 +206,7 @@ A later collection failure retains the last valid snapshot as historical data;
 it must not be treated as current or as permission to execute an action.
 
 When replacing the host, retain the exact application and proxy images as well as
-their IDs and source revisions. Transfer the complete cold backup and its recorded
+their IDs and release versions. Transfer the complete cold backup and its recorded
 hashes through your protected backup channel; check every file before loading an
 image or populating a destination. Prepare Docker, empty volumes and private site
 directories on the replacement, and restore the required ownership and modes.
