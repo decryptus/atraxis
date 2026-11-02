@@ -13,7 +13,7 @@ TRANSFER = ROOT / 'acceptance-transfer'
 MANIFEST = 'manifest.json'
 FILES = frozenset({'web.tar', 'engine.tar', 'site.tar', 'context.json', 'images.tar'})
 REGISTRY = os.environ.get('ATRAXIS_COMPOSE_REGISTRY') == '1'
-IMAGE_LOCK = json.loads((ROOT / 'deploy/compose/images.json').read_text())
+IMAGE_LOCK = json.loads((ROOT / 'deploy/compose/images.json').read_text()) if REGISTRY else None
 IMAGES = tuple(IMAGE_LOCK['images'][role]['name'] for role in ('web', 'engine', 'proxy')) if REGISTRY else (
     'atraxis-install-web:local', 'atraxis-install-engine:local', 'atraxis-install-proxy:local')
 WEB_IMAGE = IMAGES[0]
