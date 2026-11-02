@@ -299,3 +299,25 @@ assertions, deadlines or resource limits to obtain a passing run.
 Tests use synthetic endpoints and credentials. Never point them at production
 by default. Test workflows do not publish packages or deploy services. The separate explicit
 release workflows publish qualified GitHub assets without deployment.
+
+## Source builds and published Compose images
+
+The user-facing `deploy/compose/compose.yml` downloads the released applications
+and NGINX from Docker Hub. `images.json` records each reviewed manifest/config ID.
+`operator-registry.yml` pulls those exact manifests, verifies their config IDs,
+and exercises the full operator and separate-host cold-restoration scenarios.
+Its application modules are compared with their immutable release sources;
+its proxy is the published NGINX image, with an explicit unprivileged entrypoint.
+
+Candidate source changes keep separate acceptance through `operator-compose.yml`
+and the chain workflow. These use the explicit contributor override:
+
+```sh
+export ATROPOS_SOURCE=/absolute/clean/atropos-source
+docker compose --env-file /private/site.env -f deploy/compose/compose.yml -f deploy/compose/compose.source.yml build
+```
+
+Use both `-f` arguments for subsequent source-mode commands. The override builds
+local candidate images; it is not used for the Docker Hub acceptance. Both modes
+retain the exact image IDs and transfer saved images to the recovery host without
+pulling or rebuilding. Do not replace release locks with a candidate's version.

@@ -12,7 +12,32 @@ ROOT = Path(__file__).resolve().parents[1]
 TRANSFER = ROOT / 'acceptance-transfer'
 MANIFEST = 'manifest.json'
 FILES = frozenset({'web.tar', 'engine.tar', 'site.tar', 'context.json', 'images.tar'})
-IMAGES = ('atraxis-install-web:local', 'atraxis-install-engine:local', 'atraxis-install-proxy:local')
+REGISTRY = os.environ.get('ATRAXIS_COMPOSE_REGISTRY') == '1'
+IMAGE_LOCK = json.loads((ROOT / 'deploy/compose/images.json').read_text())
+IMAGES = tuple(IMAGE_LOCK['images'][role]['name'] for role in ('web', 'engine', 'proxy')) if REGISTRY else (
+    'atraxis-install-web:local', 'atraxis-install-engine:local', 'atraxis-install-proxy:local')
+WEB_IMAGE = IMAGES[0]
+
+
+def compose_files():
+    paths = [ROOT / 'deploy/compose/compose.yml']
+    if not REGISTRY:
+        paths.append(ROOT / 'deploy/compose/compose.source.yml')
+    return [argument for path in paths for argument in ('-f', str(path))]
+
+
+def prepare_images(compose):
+    if not REGISTRY:
+        compose('build', timeout=900)
+        return
+    # Pull the recorded registry content, then retain version tags for offline recovery.
+    for row in IMAGE_LOCK['images'].values():
+        pinned = row['name'] + '@' + row['digest']
+        command('docker', 'pull', '--platform', IMAGE_LOCK['platform'], pinned, timeout=300)
+        if command('docker', 'image', 'inspect', '--format', '{{.Id}}', pinned) != row['id']:
+            raise ValueError('registry_image_identity_mismatch')
+        command('docker', 'tag', pinned, row['name'])
+
 MAX_IMAGE_BYTES = 1024 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 33 * 1024 * 1024
 MAX_CONTEXT_BYTES = 2 * 1024 * 1024

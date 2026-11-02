@@ -1,0 +1,25 @@
+# Contributor-only override: build candidates from separate source checkouts.
+x-build: &build
+  context: ../..
+  dockerfile: deploy/compose/Dockerfile
+  additional_contexts:
+    engine_source: ${ATROPOS_SOURCE:?Set ATROPOS_SOURCE to a clean Atropos source directory}
+services:
+  web:
+    image: atraxis-install-web:local
+    build: {<<: *build, target: web}
+  engine:
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+  worker:
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+  test-worker:
+    image: atraxis-install-engine:local
+    build: {<<: *build, target: engine}
+  web-tls:
+    image: atraxis-install-proxy:local
+    build: {<<: *build, target: proxy}
+  engine-tls:
+    image: atraxis-install-proxy:local
+    build: {<<: *build, target: proxy}

@@ -1,0 +1,179 @@
+name: Docker Hub Compose acceptance
+on: [push, pull_request, workflow_dispatch]
+env:
+  ATRAXIS_COMPOSE_REGISTRY: "1"
+permissions:
+  contents: read
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      transfer_sha256: ${{ steps.transfer.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atropos
+          ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
+          path: .acceptance/engine
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/auton
+          ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
+          path: .auton-source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atraxis
+          ref: 663336b3226913b84e845ecc4098a7a2eeeae2b3
+          path: .acceptance/released-web
+          persist-credentials: false
+      - name: Verify public inputs and prepare the bounded Auton fixture
+        run: python scripts/chain/prepare-public-inputs.py
+      - name: Collect operator Compose acceptance
+        run: python scripts/check-test-collection.py --runner unittest compose_tests
+      - name: Pull published images and verify worker profiles, recreation and cold restoration
+        shell: bash
+        run: sudo env ATRAXIS_COMPOSE_REGISTRY=1 ATRAXIS_EXPORT_RECOVERY=1 "$(command -v python)" -m unittest discover -s compose_tests -v 2>&1 | tee acceptance-artifacts/compose.log
+      - name: Verify installed packages match both source candidates
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import subprocess
+          source = Path('.acceptance/engine')
+          expected = {str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in sorted((source / 'atropos').rglob('*.py'))}
+          expected.update({str(p.relative_to(source / 'client')): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in sorted((source / 'client/atropos_client').rglob('*.py'))})
+          web_source = Path('.acceptance/released-web')
+          web_files = {str(p.relative_to(web_source)): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in sorted((web_source / 'atraxis').rglob('*.py'))}
+          web_files.update({name: digest for name, digest in expected.items() if name.startswith('atropos_client/')})
+          verifier = '''import hashlib, importlib.util, json
+          from importlib.metadata import version
+          from pathlib import Path
+          project, release = json.loads(%r)
+          assert version(project) == release
+          assert version('sonicprobe') == '0.3.62'
+          assert version('atropos-client') == '1.0.0'
+          if project == 'atraxis-atropos':
+              from atropos import __version__ as engine_version
+              assert engine_version == release, 'engine_runtime_version_mismatch'
+          for name, digest in json.loads(%r).items():
+              package, relative = name.split('/', 1)
+              spec = importlib.util.find_spec(package)
+              path = Path(spec.origin).parent / relative
+              assert str(path).startswith('/usr/local/lib/python3.12/site-packages/')
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, name
+          print('Installed package bytes verified:', project)
+          '''
+          images = {}
+          for image, project, release, files in (
+                  ('decryptus/atropos:1.0.0', 'atraxis-atropos', '1.0.0', expected),
+                  ('decryptus/atraxis:1.0.1', 'atraxis', '1.0.1', web_files)):
+              subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
+                  '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
+                  '--cpus', '2', '--pids-limit', '128', '--entrypoint', 'python', image, '-'],
+                  input=verifier % (json.dumps([project, release]), json.dumps(files)),
+                  text=True, check=True, timeout=60)
+              images[image] = dict(files=files, image=subprocess.check_output(
+                  ['docker', 'image', 'inspect', '--format', '{{.Id}}', image], text=True).strip())
+          Path('acceptance-artifacts/installed-packages.json').write_text(json.dumps(images, indent=2) + '\n')
+          PY
+      - name: Retain the locked Python and native environments
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          specification = json.loads(Path('deploy/compose/locks/versions.json').read_text())
+          environments = {}
+          for profile in ('web', 'engine'):
+              image = {'web': 'decryptus/atraxis:1.0.1', 'engine': 'decryptus/atropos:1.0.0'}[profile]
+              output = subprocess.check_output(['docker', 'run', '--rm', '--network', 'none',
+                  '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
+                  '--memory', '128m', '--cpus', '1', '--pids-limit', '32', '--entrypoint', 'cat',
+                  image, '/usr/local/share/atraxis/environment.json'], timeout=30)
+              assert len(output) <= 1024 * 1024
+              environment = json.loads(output)
+              assert environment['profile'] == profile
+              assert environment['base_image'] == specification['base_image']
+              assert environment['python'] == specification['python']
+              environments[profile] = dict(environment=environment, image_id=subprocess.check_output(
+                  ['docker', 'image', 'inspect', '--format', '{{.Id}}', image],
+                  text=True, timeout=30).strip())
+          Path('acceptance-artifacts/locked-environments.json').write_text(
+              json.dumps(environments, indent=2) + '\n')
+          PY
+      - name: Bind transferred images and manifest to the verified source job
+        id: transfer
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, 'compose_tests')
+          from recovery_transfer import TRANSFER, MANIFEST, MAX_MANIFEST_BYTES, confirm_images, digest
+          confirm_images(json.loads((TRANSFER / MANIFEST).read_text()))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('sha256=' + digest(TRANSFER / MANIFEST, MAX_MANIFEST_BYTES) + '\n')
+          PY
+      - name: Transfer disposable recovery fixture to a separate runner
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-recovery-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: acceptance-transfer/*
+          retention-days: 1
+          compression-level: 1
+          if-no-files-found: error
+      - name: Retain synthetic acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-compose-evidence
+          path: acceptance-artifacts/*
+          retention-days: 30
+          if-no-files-found: error
+  recover:
+    needs: compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install PyYAML==6.0.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: operator-recovery-transfer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: acceptance-transfer
+      - name: Collect separate-host recovery acceptance
+        run: python scripts/check-test-collection.py --runner unittest recovery_tests
+      - name: Restore verified archives on a fresh host without rebuilding
+        shell: bash
+        env:
+          TRANSFER_SHA256: ${{ needs.compose.outputs.transfer_sha256 }}
+        run: |
+          mkdir -p acceptance-artifacts
+          sudo env ATRAXIS_COMPOSE_REGISTRY=1 ATRAXIS_TRANSFER_SHA256="$TRANSFER_SHA256" "$(command -v python)" -m unittest discover -s recovery_tests -v 2>&1 | tee acceptance-artifacts/recovery.log
+      - name: Retain recovery results without fixture credentials or keys
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-host-recovery-evidence
+          path: acceptance-artifacts/*
+          retention-days: 30
+          if-no-files-found: error

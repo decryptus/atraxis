@@ -6,6 +6,7 @@ import secrets
 import subprocess
 
 import yaml
+from recovery_transfer import WEB_IMAGE
 
 from operator_access import ACCOUNT_SNAPSHOT, await_read, login_line, private
 
@@ -21,7 +22,7 @@ STATUS_PATH = '/v1/status?organization=default'
 READY_PATH = '/readyz?organization=default'
 MAX_LOG_BYTES = 65536
 SOURCE_PASSWORD = 'synthetic-source-password'
-FIXTURE_IMAGE = 'atraxis-install-web:local'
+FIXTURE_IMAGE = WEB_IMAGE
 FIXTURE_MODES = frozenset({'ok', 'silent', 'redirect'})
 UNAVAILABLE = frozenset({'timeout', 'transport_error'})
 

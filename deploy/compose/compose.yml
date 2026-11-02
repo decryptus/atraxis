@@ -1,5 +1,6 @@
 name: atraxis
 x-runtime: &runtime
+  platform: linux/amd64
   user: "10001:10001"
   read_only: true
   cap_drop: [ALL]
@@ -13,16 +14,12 @@ x-runtime: &runtime
   logging:
     driver: json-file
     options: {max-size: 10m, max-file: "3"}
-x-build: &build
-  context: ../..
-  dockerfile: deploy/compose/Dockerfile
-  additional_contexts:
-    engine_source: ${ATROPOS_SOURCE:?Set ATROPOS_SOURCE to a clean Atropos source directory}
 services:
   web-tls:
     <<: *runtime
-    image: atraxis-install-proxy:local
-    build: {<<: *build, target: proxy}
+    image: nginx:1.30.6
+    entrypoint: [nginx]
+    command: [-c, /etc/nginx/nginx.conf, -g, "daemon off;"]
     networks: [control]
     ports:
       - "${ATRAXIS_BIND_ADDRESS:-127.0.0.1}:${ATRAXIS_HTTPS_PORT:-8443}:8443"
@@ -39,8 +36,7 @@ services:
         bind: {create_host_path: false}
   web:
     <<: *runtime
-    image: atraxis-install-web:local
-    build: {<<: *build, target: web}
+    image: decryptus/atraxis:1.0.1
     network_mode: service:web-tls
     depends_on: [web-tls, engine]
     volumes:
@@ -52,8 +48,9 @@ services:
       - web-data:/var/lib/atraxis
   engine-tls:
     <<: *runtime
-    image: atraxis-install-proxy:local
-    build: {<<: *build, target: proxy}
+    image: nginx:1.30.6
+    entrypoint: [nginx]
+    command: [-c, /etc/nginx/nginx.conf, -g, "daemon off;"]
     networks: [control]
     volumes:
       - type: bind
@@ -68,8 +65,7 @@ services:
         bind: {create_host_path: false}
   engine:
     <<: *runtime
-    image: atraxis-install-engine:local
-    build: {<<: *build, target: engine}
+    image: decryptus/atropos:1.0.0
     network_mode: service:engine-tls
     depends_on: [engine-tls]
     volumes:
@@ -82,8 +78,7 @@ services:
   worker:
     <<: *runtime
     profiles: [execution]
-    image: atraxis-install-engine:local
-    build: {<<: *build, target: engine}
+    image: decryptus/atropos:1.0.0
     command: [rules-worker, --config, /etc/atropos/engine.yml]
     networks: [control]
     volumes: &worker-volumes
@@ -96,8 +91,7 @@ services:
   test-worker:
     <<: *runtime
     profiles: [simulation]
-    image: atraxis-install-engine:local
-    build: {<<: *build, target: engine}
+    image: decryptus/atropos:1.0.0
     command: [rules-worker, --config, /etc/atropos/engine.yml, --test]
     networks: [control]
     volumes: *worker-volumes

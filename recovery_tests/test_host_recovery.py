@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'compose_tests'))
 from cold_volume import restore
 from operator_access import ACCOUNT_SNAPSHOT, CLIENT as READ_RULE, private
-from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify
+from recovery_transfer import TRANSFER, IMAGES, command, confirm_images, identity, verify, compose_files
 from worker_profiles import CLIENT, INSPECT, assert_restored_workers
 import uncertain_recovery
 import inventory_recovery
@@ -97,7 +97,7 @@ class HostRecoveryTests(unittest.TestCase):
             self.assertEqual(restore(site, TRANSFER / 'site.tar',
                 manifest['files']['site.tar']['sha256']), manifest['fingerprints']['site'])
             project = 'recovery-test-' + uuid.uuid4().hex[:12]
-            prefix = ['docker', 'compose', '-p', project, '-f', str(ROOT / 'deploy/compose/compose.yml')]
+            prefix = ['docker', 'compose', '-p', project, *compose_files()]
             env = dict(os.environ, ATROPOS_SOURCE=str(ROOT), ATRAXIS_SITE_DIR=str(site),
                 ATRAXIS_BIND_ADDRESS='127.0.0.1', ATRAXIS_HTTPS_PORT='0')
 

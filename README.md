@@ -81,6 +81,8 @@ Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
 See the [Docker image guide](docs/docker-image.md) for image availability,
 configuration, persistent state and TLS. The initial stable image target is 1.0.1;
 the publication workflow checks its stable source tag before pushing.
+The [full Compose installation](docs/docker-compose.md) downloads Atraxis, Atropos
+and NGINX images, including the optional execution/simulation worker profiles.
 
 ## Install from source
 

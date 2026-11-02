@@ -1,0 +1,20 @@
+{
+  "platform": "linux/amd64",
+  "images": {
+    "web": {
+      "name": "decryptus/atraxis:1.0.1",
+      "digest": "sha256:4eb418f8417a12b1867a03b2784e0edf302522ddfb7e62c780dd47c9ce89e108",
+      "id": "sha256:640816602b922c382b06ab343088d0ac295211081b26e9fce0aab64e3b166a00"
+    },
+    "engine": {
+      "name": "decryptus/atropos:1.0.0",
+      "digest": "sha256:b00a92261b7330f136a9c757b3d2e8512782b4d781f6c6f68cdc22596febcd82",
+      "id": "sha256:997a60816031a140643e47595aabaa9a6d2cb2bac09d0ef20f8661fd723789ea"
+    },
+    "proxy": {
+      "name": "nginx:1.30.6",
+      "digest": "sha256:b565a9579cdabe43de09a5a278dc95ceee721dae1cacf85247effc4f6630d511",
+      "id": "sha256:303efa6fbe0d78a747e4b4a8713ee57810ef4d0066bb1b556187fcf2e3e5f396"
+    }
+  }
+}
