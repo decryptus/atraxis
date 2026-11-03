@@ -173,3 +173,12 @@ hashes. Atraxis's account/rule audit records business changes; replacement of an
 external credential file does not itself append an integrated credential-rotation
 event. There is no password-reset API, self-service password screen, automatic
 cross-replica invalidation or distributed cutoff of already authorized work.
+
+## Guided installation status
+
+The multi-step installation wizard is not available yet. The existing `setup`
+command remains an operator-controlled configuration starter; it does not install
+services or constrain an operator's chosen output directory. Continue to use the
+[Docker Compose guide](docker-compose.md) for the supported installation flow.
+The new preparation engine is an internal development stage and does not change
+this command or the published images.
