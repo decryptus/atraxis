@@ -3,9 +3,8 @@ import hashlib
 import json
 import socket
 
-from atraxis.installation import probe
+from atraxis.installation import material, probe
 from atraxis.installation.filesystem import open_root
-from atraxis.installation.tls import validate_tls
 from atraxis.installation.validation import InstallError, credentials, decode, parse, require
 
 
@@ -40,8 +39,7 @@ class Engine:
         secrets = {key: credentials(value) for key, value in source_credentials.items()}
         cas = dict(source_cas)
         login = credentials(login, login=True)
-        validate_tls(certificate, private_key, plan.server_name)
-        for ca in cas.values(): probe.context(ca)
+        material.check(certificate, private_key, plan.server_name, tuple(cas.values()))
         files = {'plan.json': serialize(plan.document()), 'login.json': serialize(login),
                  'server.crt': certificate, 'server.key': private_key}
         for source in plan.sources:

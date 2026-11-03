@@ -23,13 +23,17 @@ from cryptography.x509.oid import NameOID
 
 from atraxis.installation.engine import Engine, serialize
 from atraxis.installation.filesystem import Root, DIRECTORY_FLAGS, open_root
-from atraxis.installation import probe
+from atraxis.installation import material as material_check, probe
 from atraxis.installation.tls import validate_tls
 from atraxis.installation.validation import Authority, InstallError, decode, parse, origin, credentials
 from test_observations import monit, certlord, NOW
 
 SECRET = "synthetic-'\"; DROP TABLE accounts; $(touch forbidden)"
 LOGIN = {'username': 'operator', 'password': SECRET}
+
+
+def stalled_material_worker(_pipe, *_args):
+    time.sleep(30)  # Disposable worker must be killed well before this returns.
 
 
 def material(*, name='127.0.0.1', expired=False):
@@ -75,6 +79,9 @@ class ValidationTests(unittest.TestCase):
             for value in values:
                 with self.subTest(key=key, value=value), self.assertRaises(InstallError):
                     item = plan(); item[key] = value; parse(item)
+        with self.assertRaises(InstallError) as raised:
+            parse(dict(plan(), server_name='bad host'))
+        self.assertEqual(raised.exception.field, 'server_name')
         for key in ('root', 'command', 'sql', 'advanced', 'ca_file', 'environment'):
             with self.subTest(key=key), self.assertRaises(InstallError):
                 parse(dict(plan(), **{key: '/root'}))
@@ -203,6 +210,15 @@ class FilesystemTests(unittest.TestCase):
 
 
 class TLSTests(unittest.TestCase):
+    def test_material_worker_sanitizes_parser_errors_and_rejects_unbounded_input(self):
+        pipe = unittest.mock.Mock()
+        with patch('atraxis.installation.material.validate_tls', side_effect=RuntimeError(SECRET)):
+            material_check._worker(pipe, b'', b'', 'example.test', ())
+        pipe.send_bytes.assert_called_once_with(b'invalid_tls')
+        with patch('atraxis.installation.material.run') as spawn:
+            with self.assertRaises(InstallError): material_check.check(b'x' * 131073, b'key', 'example.test', (b'ca',))
+            spawn.assert_not_called()
+
     def test_key_hostname_expiry_and_extra_material(self):
         cert, key, ca = material()
         validate_tls(cert + ca, key, '127.0.0.1')
@@ -239,7 +255,7 @@ class ProbeTests(unittest.TestCase):
         pipe = unittest.mock.Mock()
         with patch('atraxis.installation.probe._request', side_effect=RuntimeError(SECRET)):
             probe._worker(pipe, None, None, None, None)
-        pipe.send.assert_called_once_with('probe_failed')
+        pipe.send_bytes.assert_called_once_with(b'probe_failed')
 
 
 class PreparationTests(unittest.TestCase):
@@ -287,6 +303,16 @@ class PreparationTests(unittest.TestCase):
             with self.assertRaisesRegex(InstallError, 'port_unavailable'): engine.prepare(serialize(self.document), **self.inputs)
             check.assert_not_called()
         self.assertEqual(list(self.path.iterdir()), [])
+
+    def test_material_timeout_precedes_network_and_filesystem_effects(self):
+        import multiprocessing
+        before = {p.pid for p in multiprocessing.active_children()}
+        with patch('atraxis.installation.material.WORKER_TIMEOUT', 0.2), patch('atraxis.installation.material._worker', stalled_material_worker), patch('atraxis.installation.engine.probe.check') as network:
+            with self.assertRaisesRegex(InstallError, 'validation_timeout'):
+                Engine(policy(), self.root).prepare(serialize(self.document), **self.inputs)
+            network.assert_not_called()
+        self.assertEqual(list(self.path.iterdir()), [])
+        self.assertEqual({p.pid for p in multiprocessing.active_children()}, before)
 
     def test_probe_failure_writes_nothing_and_releases_port(self):
         with patch('atraxis.installation.engine.probe.check', side_effect=InstallError('authentication_failed')):

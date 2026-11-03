@@ -82,6 +82,9 @@ leaf constraints, optional server-auth EKU and supplied issuer signatures are
 checked. Wildcards and legacy key encodings are intentionally unsupported in this
 first stage. The supplied server chain is not proof of public/browser trust or
 revocation status. Such deployment checks still belong to later qualification.
+Expensive server-key and CA parsing runs in a disposable worker with a five-second
+deadline (`validation_timeout` on expiry), before port reservation, source access
+or bundle creation. Byte/count limits are enforced before spawning.
 Each source requires explicit PEM trust bytes; ambient client credentials and
 environment-selected CA paths are not used.
 
@@ -143,7 +146,7 @@ capability refusal, traversal/symlink/hard-link refusal, a symlink swap, concurr
 creation, permission rechecks, partial/uncertain writes, port occupation and
 release, certificate/key/name/expiry mismatch, mixed DNS answers and pinned
 connections. Disposable HTTPS servers exercise both native adapters, real TLS
-and Basic authentication, timeout cleanup, redirects, stale/invalid/oversized
+and Basic authentication, TLS-validation/request timeout cleanup, redirects, stale/invalid/oversized
 responses and full preparation success/failure. No production source is contacted.
 
 Run the declaration guard and normal suite with the same interpreter:

@@ -16,7 +16,7 @@ KINDS = ('monit_docker', 'certlord')
 PLAN_FIELDS = frozenset(('version', 'name', 'listen_address', 'listen_port', 'server_name', 'sources'))
 SOURCE_FIELDS = frozenset(('source_id', 'kind', 'origin'))
 ERROR_CODES = frozenset(('invalid_plan', 'invalid_name', 'invalid_port', 'invalid_address',
-    'invalid_origin', 'invalid_secret', 'invalid_tls', 'destination_denied', 'unsafe_root',
+    'invalid_origin', 'invalid_secret', 'invalid_tls', 'validation_timeout', 'destination_denied', 'unsafe_root',
     'invalid_bundle', 'destination_exists', 'write_failed', 'publication_uncertain',
     'port_unavailable', 'probe_failed', 'probe_timeout', 'source_unready', 'redirect_refused',
     'authentication_failed', 'tls_failed', 'invalid_response', 'invalid_authority'))
@@ -149,7 +149,10 @@ def parse(document):
         bind = address(document['listen_address'])
         require(bind.version == 4, 'invalid_address', 'listen_address')
         number = port(document['listen_port'])
-        host = hostname(document['server_name'])
+        try:
+            host = hostname(document['server_name'])
+        except InstallError:
+            raise InstallError('invalid_name', 'server_name') from None
         rows = document['sources']
         require(type(rows) is list and 1 <= len(rows) <= MAX_SOURCES)
         sources = []

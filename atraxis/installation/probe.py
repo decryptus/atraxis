@@ -2,7 +2,6 @@
 import base64
 import http.client
 import json
-import multiprocessing
 import socket
 import ssl
 import time
@@ -10,6 +9,7 @@ from urllib.parse import urlsplit
 
 from atraxis.installation.validation import (InstallError, MAX_TLS_BYTES, credentials,
     origin, require, unique, reject_constant, KINDS)
+from atraxis.installation.worker import run
 from atraxis.models import Freshness
 from atraxis.source_adapters import DecodeContext, get_adapter
 
@@ -113,7 +113,7 @@ def _worker(pipe, source, secret, ca, authority):
         # No exception text, HTTP body, URL or credential leaves this process.
         outcome = 'probe_failed'
     try:
-        pipe.send(outcome)
+        pipe.send_bytes(outcome.encode('ascii'))
     finally:
         pipe.close()
 
@@ -124,24 +124,5 @@ def check(source, secret, ca, authority):
     Spawn avoids inheriting the install-directory capability and listener socket.
     No retries, proxy discovery, redirects or source mutations.
     """
-    ctx = multiprocessing.get_context('spawn')
-    receive, send = ctx.Pipe(duplex=False)
-    process = ctx.Process(target=_worker, args=(send, source, secret, ca, authority), daemon=True)
-    started = False
-    try:
-        process.start(); started = True
-        send.close()
-        require(receive.poll(PROBE_TIMEOUT), 'probe_timeout', 'sources')
-        outcome = receive.recv()
-        require(outcome == 'ok', outcome if type(outcome) is str else 'probe_failed', 'sources')
-    except InstallError:
-        raise
-    except Exception:
-        raise InstallError('probe_failed', 'sources') from None
-    finally:
-        receive.close(); send.close()
-        if started:
-            process.join(0.1)
-            if process.is_alive():
-                process.kill(); process.join(1)
-            process.close()
+    run(_worker, (source, secret, ca, authority), field='sources',
+        timeout_code='probe_timeout', failure_code='probe_failed', timeout=PROBE_TIMEOUT)
