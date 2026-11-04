@@ -1,8 +1,8 @@
 # Installation preparation core
 
 This implementation candidate is the first stage of guided Atraxis installation.
-The preparation API backs the [Textual preparation wizard](setup.md#guided-preparation-in-the-terminal). Existing `setup`/Compose behavior is unchanged.
-Do not consume its bundle as an Atraxis daemon configuration.
+The engine backs the [Textual preparation wizard](setup.md#guided-preparation-in-the-terminal). The explicit host-authorized deployment methods are described in the operator guide. Existing `setup`/Compose behavior is unchanged.
+The preparation-only bundle is not a daemon configuration. Deployment produces a separate runnable configuration in the new site directory.
 
 ## Scope and dependencies
 
@@ -10,16 +10,15 @@ Do not consume its bundle as an Atraxis daemon configuration.
 host-owned authority. The simple and advanced screens and any future batch frontend call this
 same engine. Preview validates the plan offline and reports `unverified`.
 `prepare` validates everything again, probes the sources, then creates a fresh
-private input bundle and reports `prepared`, with `services_started: false`.
+private input bundle and reports `prepared`, with `services_started: false`, in preparation-only mode. A host-authorized deployment reports `ready` only after its local manager starts the service and authenticated HTTPS readiness succeeds.
 
 Development installation: `python -m pip install ".[installer]"`. The extra pins
 Cryptography for certificate inspection; it does not add Textual, an engine,
 Docker access, a privileged helper or a new entry point. Callers of the spawned
 probe must use Python's normal `if __name__ == '__main__':` entry guard.
 
-No account or grant is created, no SQL is executed, no schema is changed, no
-shell command is assembled, and no service is started. Atropos provisioning,
-certificate issuance and Nginx configuration remain outside this stage.
+Preparation alone creates no running service. Optional deployment creates an HTTP login hash, generates local inventory configuration and invokes a fixed manager command after final review. Atropos provisioning,
+certificate issuance and host Nginx configuration remain outside this stage. Compose uses its own isolated TLS proxy.
 
 ## Trust boundaries
 
@@ -136,7 +135,7 @@ as `publication_uncertain`; the engine never retries, deletes or reuses it.
 A future bundle consumer must parse the completion manifest, verify every file
 and its protection, and revalidate current policy/material/network state. Mere
 marker existence, a digest, or a previous successful preview must never grant
-installation authority. No bundle consumer is implemented here.
+installation authority. Installation generates runnable files from the freshly revalidated inputs within the same operation. It does not import a previously prepared bundle.
 
 ## Qualification and next stages
 
@@ -160,8 +159,7 @@ The CI core suite installs the explicit extra on Python 3.11 and 3.12. Package C
 also installs it from the built wheel before the source-archive suite. Existing
 installed-CLI checks still exercise the default wheel separately.
 
-Remaining work includes service configuration generation, account bootstrap, a batch frontend, privileged installation where needed,
-startup/rollback, and disposable deployment recovery acceptance. Keep the
+Guided deployment covers local rootful Compose or a native systemd user service for read-only inventory. Disposable CI jobs verify both managers. Remaining work includes rule-engine deployment, batch operation, upgrades and recovery. Keep the
 roadmap, operator docs, package/image publication, websites and demos aligned when
 those stages become qualified releases. This candidate requires review before
 merge and does not publish or deploy anything.

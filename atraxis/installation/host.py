@@ -30,8 +30,8 @@ def session():
     root = None
     try:
         data = decode(_read(directory, 'policy.json', MAX_PLAN_BYTES))
-        require(type(data) is dict and set(data) in (
-            {'listeners', 'networks', 'sources'}, {'listeners', 'networks', 'sources', 'root_link'}),
+        require(type(data) is dict and {'listeners', 'networks', 'sources'} <= set(data)
+                <= {'listeners', 'networks', 'sources', 'root_link', 'deployments'},
             'invalid_authority')
         require(type(data['listeners']) is list and data['listeners']
                 and type(data['networks']) is list, 'invalid_authority')
@@ -45,12 +45,15 @@ def session():
         require(type(link) is dict and ('root_link' not in data or
                 (set(link) == {'alias', 'target'} and all(type(v) is str for v in link.values()))),
                 'invalid_authority')
+        modes = data.get('deployments', [])
+        require(type(modes) is list and len(modes) <= 2 and all(m in ('compose', 'systemd') for m in modes)
+                and len(set(modes)) == len(modes), 'invalid_authority')
         root = open_root(**link)
         cert = _read(directory, 'server.crt', MAX_TLS_BYTES)
         key = _read(directory, 'server.key', MAX_TLS_BYTES)
         cas = {s.source_id: _read(directory, f'source-{s.source_id}.ca.pem', MAX_TLS_BYTES)
                for s in plan.sources}
-        yield Engine(authority, root), plan, cert, key, cas
+        yield Engine(authority, root, deployment_modes=tuple(modes)), plan, cert, key, cas
     finally:
         os.close(directory)
         if root is not None:

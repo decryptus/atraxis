@@ -68,9 +68,8 @@ strict plans, host-owned filesystem/network capabilities, real source HTTPS and
 adapter checks, certificate/key matching and create-only private bundles. See the
 [contributor design and limits](docs/installation-core.md).
 
-The Textual preparation wizard now provides simple/advanced inputs, source selection, credential entry, review and explicit preparation. The host supplies fixed TLS materials and may declare one physical storage alias. The operator guide includes captures of the actual screens. Service deployment remains separate.
-Remaining stages: service configuration generation and account bootstrap; assisted host policy provisioning; batch entry point; deployment review;
-explicit service installation/startup and failure recovery acceptance. Each stage
+The Textual preparation wizard now provides simple/advanced inputs, source selection, credential entry, review and explicit preparation. The host supplies fixed TLS materials and may declare one physical storage alias. The operator guide includes captures of the actual screens. Optional host-authorized deployment now generates and starts either a two-container Compose site or a native systemd user service. Both check authenticated HTTPS readiness.
+Remaining stages include Atropos rule-engine integration, assisted policy provisioning, a batch entry point and upgrade/recovery acceptance. Each stage
 must reuse the engine checks instead of adding frontend-only validation.
 
 PyPI/Docker Hub releases, Compose, public websites and demonstrations remain on
