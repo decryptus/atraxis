@@ -1,14 +1,13 @@
 # Installation preparation core
 
 This implementation candidate is the first stage of guided Atraxis installation.
-It is an internal Python API, not a new CLI, a Textual wizard, a service installer
-or a released deployment format. Existing `setup`/Compose behavior is unchanged.
+The preparation API backs the [Textual preparation wizard](setup.md#guided-preparation-in-the-terminal). Existing `setup`/Compose behavior is unchanged.
 Do not consume its bundle as an Atraxis daemon configuration.
 
 ## Scope and dependencies
 
 `atraxis.installation.engine.Engine` separates untrusted installation data from
-host-owned authority. Future simple, advanced and batch frontends must call this
+host-owned authority. The simple and advanced screens and any future batch frontend call this
 same engine. Preview validates the plan offline and reports `unverified`.
 `prepare` validates everything again, probes the sources, then creates a fresh
 private input bundle and reports `prepared`, with `services_started: false`.
@@ -33,7 +32,7 @@ The host must separately provision:
 
 - A private installation root at `/var/lib/atraxis/installations`, owned by the
   installer effective UID, mode `0700`. All ancestors must be owned by root or
-  that UID, without group/other write access, and must not be symlinks.
+  that UID, without group/other write access, and must be physical directories except for one explicitly declared alias.
 - An immutable `Authority`: exact allowed HTTPS origins including ports,
   explicit IP networks and exact allowed IPv4 listener addresses. The form cannot
   supply or extend this policy. Broad default routes are refused. Loopback and
@@ -41,7 +40,7 @@ The host must separately provision:
   multicast and ambiguous/mapped addresses are refused.
 - Credential and TLS material acquired securely by the embedding application.
   The engine accepts values/bytes, never caller-selected material file paths.
-  A confined file importer and host-policy bootstrap remain separate work.
+  The terminal entry point imports only fixed, bounded regular files from a trusted directory.
 
 An advanced-mode switch cannot alter any of these capabilities. `Root(fd)` is a
 trusted internal directory capability, used with disposable test directories;
@@ -119,7 +118,7 @@ tracebacks. This API does not promise to erase Python secret objects from RAM.
 
 ## Storage and failure semantics
 
-The writer walks the fixed root with directory FDs and `O_NOFOLLOW` at every
+The writer verifies a declared alias with FD-relative readlink, then opens the independently approved physical path. Only an exact absolute target or its direct relative spelling is accepted. A swapped alias is never used for writing. The writer walks the physical root with directory FDs and `O_NOFOLLOW` at every
 component, checks ownership/modes, and uses only a validated child slug. An
 existing destination is always refused, including directories, files, hard links
 and symlinks. It never overwrites or cleans up an existing installation.
@@ -161,9 +160,7 @@ The CI core suite installs the explicit extra on Python 3.11 and 3.12. Package C
 also installs it from the built wheel before the source-archive suite. Existing
 installed-CLI checks still exercise the default wheel separately.
 
-Remaining work: confined import and authority provisioning, actual service
-configuration generation, account bootstrap, shared review/apply flow, Textual
-state/navigation and batch frontend, privileged installation where needed,
+Remaining work includes service configuration generation, account bootstrap, a batch frontend, privileged installation where needed,
 startup/rollback, and disposable deployment recovery acceptance. Keep the
 roadmap, operator docs, package/image publication, websites and demos aligned when
 those stages become qualified releases. This candidate requires review before

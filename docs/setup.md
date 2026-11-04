@@ -174,11 +174,68 @@ external credential file does not itself append an integrated credential-rotatio
 event. There is no password-reset API, self-service password screen, automatic
 cross-replica invalidation or distributed cutoff of already authorized work.
 
-## Guided installation status
+## Guided preparation in the terminal
 
-The multi-step installation wizard is not available yet. The existing `setup`
-command remains an operator-controlled configuration starter; it does not install
-services or constrain an operator's chosen output directory. Continue to use the
-[Docker Compose guide](docker-compose.md) for the supported installation flow.
-The new preparation engine is an internal development stage and does not change
-this command or the published images.
+From a checkout containing the wizard, install the terminal and TLS dependencies
+in your virtual environment, then launch the assistant under the installer account:
+
+```sh
+python -m pip install '.[textual,installer]'
+atraxis install-wizard
+```
+
+### Prepare the host once
+
+The administrator provisions the physical directory
+`/var/lib/atraxis/installations` with mode `0700` and ownership matching the
+installer account. For a separate data disk, the example below assumes that
+`/var/lib/atraxis` is a symlink to `/srv/data/atraxis`, and that the administrator
+created `/srv/data/atraxis/installations` with those permissions. For a direct
+installation directory, omit the entire `root_link` entry. In both layouts the
+physical ancestors must be owned by root or the installer and have no group or
+other write access. Once opened, the destination stays fixed for the session.
+
+Provision `/etc/atraxis/installer/` with the same trusted ancestry. Store these
+regular files with mode `0600`, owned by root or the installer and readable by
+the installer. Links are refused here.
+
+| File | Contents |
+| --- | --- |
+| `policy.json` | Allowed sources, source networks, listeners and optional storage alias |
+| `server.crt`, `server.key` | Server certificate chain and matching unencrypted PKCS#8 key |
+| `source-monit.ca.pem` | Trusted source CA for the ID `monit`. Provide one CA file per configured ID. |
+
+Example policy using documentation-only addresses. Replace the source name,
+network and TLS material with the values for your site.
+
+```json
+{
+  "listeners": ["127.0.0.1"],
+  "networks": ["192.0.2.40/32"],
+  "sources": [
+    {"source_id": "monit", "kind": "monit_docker", "origin": "https://monit.example.test"}
+  ],
+  "root_link": {"alias": "/var/lib/atraxis", "target": "/srv/data/atraxis"}
+}
+```
+
+### Walk through the screens
+
+1. Enter a new installation name and the hostname on the server certificate.
+   Advanced network settings expose the listener address and port. The default
+   port is 8443. Tab moves between controls. Space toggles a checkbox.
+2. Select the authorized sources to include and enter the installation login and
+   per-source credentials. Password fields are masked. Back preserves your entries.
+3. Check the listener, server name and sources. Choose **Prepare** to verify TLS,
+   reserve the port, authenticate to the sources and write the private bundle.
+4. The result confirms preparation. The installation login is staged input.
+   Use the [Docker Compose installation guide](docker-compose.md) to provision
+   accounts, configure and start services. Compose does not consume this bundle.
+
+![Installation wizard with site name and server access fields](images/installation-access.png)
+
+![Review screen listing the listener and selected source before preparation](images/installation-review.png)
+
+If a check fails, use the field and error code to correct the input or the host
+policy. Restart after a policy change. For a failed or uncertain write, inspect
+the private destination before retrying. An existing directory is never reused.

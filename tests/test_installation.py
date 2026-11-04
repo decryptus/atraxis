@@ -198,6 +198,48 @@ class FilesystemTests(unittest.TestCase):
         with patch('atraxis.installation.filesystem.INSTALLATION_ROOT', str(self.path / 'alias')):
             with self.assertRaisesRegex(InstallError, 'unsafe_root'): open_root()
 
+    def test_declared_root_alias_pins_the_approved_directory(self):
+        parent = self.path / 'var/lib'
+        parent.mkdir(parents=True)
+        target = self.path / 'srv/data'
+        (target / 'installations').mkdir(parents=True, mode=0o700)
+        alias = parent / 'atraxis'
+        alias.symlink_to('/srv/data')
+        original = os.open
+
+        def sandbox_open(name, flags, *args, **kwargs):
+            return original(self.path if name == '/' else name, flags, *args, **kwargs)
+
+        with patch('atraxis.installation.filesystem.os.open', side_effect=sandbox_open):
+            root = open_root(alias='/var/lib/atraxis', target='/srv/data')
+            self.addCleanup(root.close)
+            alias.unlink()
+            alias.symlink_to('/other')
+            with self.assertRaisesRegex(InstallError, 'unsafe_root'):
+                open_root(alias='/var/lib/atraxis', target='/srv/data')
+            root.create('pilot', {'complete.json': b'{}'})
+            self.assertTrue((target / 'installations/pilot/complete.json').exists())
+            alias.unlink()
+            alias.symlink_to('../../srv/data')
+            os.chmod(target, 0o777)
+            with self.assertRaisesRegex(InstallError, 'unsafe_root'):
+                open_root(alias='/var/lib/atraxis', target='/srv/data')
+
+    def test_host_material_refuses_links_special_files_and_public_modes(self):
+        from atraxis.installation.host import _read
+        private = self.path / 'private'
+        private.write_bytes(b'private')
+        private.chmod(0o600)
+        self.assertEqual(_read(self.root.fd, 'private', 32), b'private')
+        (self.path / 'alias').symlink_to(private)
+        os.mkfifo(self.path / 'fifo', mode=0o600)
+        for name in ('alias', 'fifo'):
+            with self.assertRaises((OSError, InstallError)):
+                _read(self.root.fd, name, 32)
+        private.chmod(0o644)
+        with self.assertRaises(InstallError):
+            _read(self.root.fd, 'private', 32)
+
     def test_concurrent_prepare_has_only_one_winner(self):
         outcomes = []
         def attempt():

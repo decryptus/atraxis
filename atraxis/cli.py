@@ -12,6 +12,7 @@ def main(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     from atraxis.setup import add_parser as add_setup
     from atraxis.doctor import add_parser as add_doctor
+    commands.add_parser('install-wizard', help='prepare a new installation interactively')
     add_setup(commands)
     add_doctor(commands)
     from atraxis.retention import add_parser as add_retention
@@ -41,6 +42,21 @@ def main(argv=None):
     from atraxis.configuration_commands import add_parser as add_sources_admin
     add_sources_admin(commands)
     options = parser.parse_args(argv)
+    if options.command == 'install-wizard':
+        from atraxis.installation.validation import InstallError
+        try:
+            from atraxis.installation.host import session
+            from atraxis.installation.wizard import InstallWizard
+        except ImportError:
+            print('Install Atraxis with the installer and textual extras.', file=sys.stderr)
+            return 2
+        try:
+            with session() as inputs:
+                return 0 if InstallWizard(*inputs).run() else 1
+        except (InstallError, OSError) as error:
+            code = error.code if isinstance(error, InstallError) else 'host_files_unavailable'
+            print(f'Cannot prepare installation: {code}. Check the host policy and permissions.', file=sys.stderr)
+            return 2
     if options.command == 'sources-admin':
         from atraxis.configuration_commands import main as sources_admin_main
         return sources_admin_main(options)

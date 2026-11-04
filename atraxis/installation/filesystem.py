@@ -12,20 +12,51 @@ MAX_BUNDLE_FILES = 54
 DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 
 
-def open_root():
-    """Open the fixed, pre-provisioned root, refusing symlinks at every component."""
+def trusted_directory(path):
+    """Open a physical host-owned directory, checking every component."""
+    parts = PurePosixPath(path).parts
+    require(parts and parts[0] == '/' and '..' not in parts, 'unsafe_root', 'destination')
     fd = os.open('/', DIRECTORY_FLAGS)
     try:
-        for part in PurePosixPath(INSTALLATION_ROOT).parts[1:]:
+        for part in parts[1:]:
             child = os.open(part, DIRECTORY_FLAGS, dir_fd=fd)
-            os.close(fd); fd = child
+            os.close(fd)
+            fd = child
             info = os.fstat(fd)
-            require(info.st_uid in (0, os.geteuid()) and not stat.S_IMODE(info.st_mode) & 0o022,
+            require(info.st_uid in (0, os.geteuid()) and not info.st_mode & 0o022,
                     'unsafe_root', 'destination')
-        return Root(fd)
+        return fd
     except Exception:
         os.close(fd)
         raise InstallError('unsafe_root', 'destination') from None
+
+
+def open_root(*, alias=None, target=None):
+    """Accept one host-declared alias on the logical path; write via the physical FD."""
+    logical = PurePosixPath(INSTALLATION_ROOT)
+    physical = logical
+    if alias is not None or target is not None:
+        require(type(alias) is str and type(target) is str, 'unsafe_root', 'destination')
+        link, expected = PurePosixPath(alias), PurePosixPath(target)
+        require(link.is_absolute() and link.name and logical.is_relative_to(link)
+                and expected.is_absolute() and expected.name and '..' not in expected.parts,
+                'unsafe_root', 'destination')
+        parent = trusted_directory(link.parent)
+        try:
+            value = os.readlink(link.name, dir_fd=parent)
+            require(value in (str(expected), os.path.relpath(expected, link.parent)),
+                    'unsafe_root', 'destination')
+        except OSError:
+            raise InstallError('unsafe_root', 'destination') from None
+        finally:
+            os.close(parent)
+        physical = expected / logical.relative_to(link)
+    fd = trusted_directory(physical)
+    try:
+        return Root(fd)
+    except Exception:
+        os.close(fd)
+        raise
 
 
 class Root:
