@@ -182,6 +182,8 @@ Adrien selected the name Atraxis on 4 October 2026. It is inspired by the Atraxi
 
 ## HTTP daemon and YAML
 
+For guided inventory deployment, the [terminal wizard](docs/setup.md#guided-preparation-in-the-terminal) can prepare files, start Docker Compose, or install a native systemd user service.
+
 Start with the [setup and diagnostic guide](docs/setup.md): `atraxis setup`
 previews a validated starter configuration, and `atraxis doctor` explains local
 configuration problems and optionally checks current source observations.

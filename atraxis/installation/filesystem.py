@@ -83,7 +83,8 @@ class Root:
     def create(self, name, files):
         identifier(name)
         self._check()  # Recheck mode/ownership immediately at the write boundary.
-        allowed = {'plan.json', 'login.json', 'server.crt', 'server.key', 'complete.json'}
+        allowed = {'plan.json', 'login.json', 'server.crt', 'server.key', 'complete.json',
+                   'users.htpasswd', 'atraxis.yml', 'compose.yaml', 'nginx.conf', f'atraxis-{name}.service'}
         require(type(files) is dict and 1 <= len(files) <= MAX_BUNDLE_FILES
                 and 'complete.json' in files, 'invalid_bundle')
         files = dict(files)

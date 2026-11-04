@@ -210,6 +210,7 @@ network and TLS material with the values for your site.
 
 ```json
 {
+  "deployments": ["compose", "systemd"],
   "listeners": ["127.0.0.1"],
   "networks": ["192.0.2.40/32"],
   "sources": [
@@ -221,16 +222,43 @@ network and TLS material with the values for your site.
 
 ### Walk through the screens
 
-1. Enter a new installation name and the hostname on the server certificate.
+1. Select a host-authorized deployment method or keep **Prepare files only**. Enter a new installation name and the hostname on the server certificate.
    Advanced network settings expose the listener address and port. The default
    port is 8443. Tab moves between controls. Space toggles a checkbox.
 2. Select the authorized sources to include and enter the installation login and
    per-source credentials. Password fields are masked. Back preserves your entries.
-3. Check the listener, server name and sources. Choose **Prepare** to verify TLS,
-   reserve the port, authenticate to the sources and write the private bundle.
-4. The result confirms preparation. The installation login is staged input.
-   Use the [Docker Compose installation guide](docker-compose.md) to provision
-   accounts, configure and start services. Compose does not consume this bundle.
+3. Review the deployment method, listener, server name and selected sources.
+   **Prepare** stages a private bundle only. **Install and start** writes the
+   runnable configuration, starts the selected services and tests the HTTPS API.
+4. A ready result requires the expected server certificate, refusal of anonymous
+   access and authenticated readiness with current source inventory. Open
+   `https://<server-name>:<port>/ui` using the login you supplied.
+
+### Choose a deployment method
+
+Run the wizard as a dedicated non-root installation account. The optional host
+policy key `deployments` enables the listed methods. Omitting it leaves only
+preparation available. Both methods deploy read-only inventory with one login;
+the operator provisions DNS, certificate trust and source permissions in advance.
+
+| Method | Host prerequisites | What starts |
+| --- | --- | --- |
+| Docker Compose | Linux amd64, a local rootful Docker Engine without user namespace remapping, Docker Compose 2.24+ and existing access to the local socket | Two digest-pinned containers, Atraxis and its HTTPS proxy. The host account UID/GID reads private bind mounts. The web container must be able to reach every source. A host loopback URL resolves inside its own network namespace. |
+| Native systemd | Debian/Linux with Python 3.11 or 3.12, Atraxis installed in the wizard's persistent Python environment, and an active systemd user manager | One enabled user service runs Atraxis directly with TLS. No Docker or Nginx is required. For unattended boot the administrator enables lingering for the dedicated account. |
+
+The wizard writes a salted login hash for both deployment methods. Source
+credentials remain private files. Use a fresh installation name. Deployment paths
+and the native interpreter path must contain only ASCII letters, digits,
+slashes, dots, underscores and hyphens. A conflicting manager project or unit is refused.
+
+For an installation named `site`, inspect a native deployment with
+`systemctl --user status atraxis-site.service`. Stop and disable it with
+`systemctl --user disable --now atraxis-site.service`. For Compose, run
+`docker compose ps` or `docker compose down` in its private installation folder.
+A startup/readiness failure can leave files and running services. Inspect the
+manager before further action. The wizard never automatically deletes the site.
+Use the [existing Compose guide](docker-compose.md) for installations including
+Atropos and the rule engine.
 
 ![Installation wizard with site name and server access fields](images/installation-access.png)
 

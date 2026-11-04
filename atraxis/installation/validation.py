@@ -18,6 +18,7 @@ SOURCE_FIELDS = frozenset(('source_id', 'kind', 'origin'))
 ERROR_CODES = frozenset(('invalid_plan', 'invalid_name', 'invalid_port', 'invalid_address',
     'invalid_origin', 'invalid_secret', 'invalid_tls', 'validation_timeout', 'destination_denied', 'unsafe_root',
     'invalid_bundle', 'destination_exists', 'write_failed', 'publication_uncertain',
+    'deployment_denied', 'manager_unavailable', 'deployment_failed', 'startup_uncertain',
     'port_unavailable', 'probe_failed', 'probe_timeout', 'source_unready', 'redirect_refused',
     'authentication_failed', 'tls_failed', 'invalid_response', 'invalid_authority'))
 FIELDS = frozenset(('plan', 'name', 'listen_address', 'listen_port', 'server_name', 'sources',

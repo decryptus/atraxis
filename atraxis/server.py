@@ -281,7 +281,28 @@ def serve(config):
     run_context(build_context(config), _Handler)
 
 
-def run_context(context, handler):
+def serve_tls(config, certificate, private_key):
+    import ssl
+    from sonicprobe.libs.threading_tcp_server import KillableThreadingHTTPServer
+
+    tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    tls.minimum_version = ssl.TLSVersion.TLSv1_2
+    tls.load_cert_chain(certificate, private_key, password=lambda: b'')
+
+    class TLSServer(KillableThreadingHTTPServer):
+        def get_request(self):
+            sock, peer = super().get_request()
+            try:
+                # Handshake on the worker's first read, under the handler timeout.
+                return tls.wrap_socket(sock, server_side=True, do_handshake_on_connect=False), peer
+            except BaseException:
+                sock.close()
+                raise
+
+    run_context(build_context(config), _Handler, http_server_class=TLSServer)
+
+
+def run_context(context, handler, **server_options):
     previous = {}
     shutdown = threading.Event()
     cleanup_errors = []
@@ -300,7 +321,7 @@ def run_context(context, handler):
     try:
         for signum in (signal.SIGINT, signal.SIGTERM):
             previous[signum] = signal.signal(signum, lambda signum, frame: shutdown.set())
-        context.run(http_req_handler=handler)
+        context.run(http_req_handler=handler, **server_options)
     finally:
         shutdown.set()
         watcher.join()

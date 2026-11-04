@@ -144,9 +144,12 @@ async def capture(output, png=False):
     plan = parse(dict(version=1, name='site', server_name='atraxis.example.test',
                       listen_address='127.0.0.1', listen_port=8443,
                       sources=[dict(source_id='monit', kind='monit_docker', origin=origin)]))
-    engine = Engine(Authority((origin,), ('192.0.2.0/24',)))
+    engine = Engine(Authority((origin,), ('192.0.2.0/24',)), deployment_modes=('compose', 'systemd'))
     wizard = InstallWizard(engine, plan, b'', b'', {'monit': b''})
     async with wizard.run_test(size=(92, 28)) as pilot:
+        await pilot.pause()
+        from textual.widgets import Select
+        wizard.query_one('#deployment', Select).value = 'systemd'
         await pilot.pause()
         save(wizard, output, 'installation-access', artifacts, png)
         await pilot.click('#next')

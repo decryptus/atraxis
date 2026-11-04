@@ -4,7 +4,7 @@ from multiprocessing import resource_tracker
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, VerticalScroll, Vertical
-from textual.widgets import Button, Checkbox, Input, Label, Static
+from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 
 from atraxis.installation.engine import serialize
 from atraxis.installation.validation import InstallError, credentials, require
@@ -38,6 +38,12 @@ class InstallWizard(App):
         yield Label(id='heading')
         with VerticalScroll():
             with Vertical(id='page0'):
+                if self.engine.deployment_modes:
+                    yield Label('Deployment method')
+                    names = {'compose': 'Docker Compose', 'systemd': 'Native Linux · systemd user service'}
+                    choices = [('Prepare files only', 'prepare')] + [
+                        (names[m], m) for m in self.engine.deployment_modes]
+                    yield Select(choices, value='prepare', allow_blank=False, id='deployment')
                 yield Label('Installation name')
                 yield Input(self.template.name, id='name', max_length=48)
                 yield Label('Server name on the TLS certificate')
@@ -77,6 +83,8 @@ class InstallWizard(App):
         self.query_one('#heading', Label).update(f'ATRAXIS   {self.step + 1}/4   {self.steps[self.step]}')
         self.query_one('#back').display = self.step in (1, 2)
         self.query_one('#next', Button).label = ('Next', 'Review', 'Prepare', 'Close')[self.step]
+        if self.step == 2 and self.deployment():
+            self.query_one('#next', Button).label = 'Install and start'
         self.query_one('#error', Static).update('')
         self.query_one(('#name', '#login', '#back', '#next')[self.step]).focus()
 
@@ -87,6 +95,13 @@ class InstallWizard(App):
             index = event.checkbox.id.split('-')[1]
             for prefix in ('user', 'secret'):
                 self.query_one(f'#{prefix}-{index}').display = event.value
+
+    def deployment(self):
+        if self.engine.deployment_modes:
+            choice = self.query_one('#deployment', Select).value
+            if choice != 'prepare':
+                return choice
+        return None
 
     def value(self, field):
         return self.query_one('#' + field, Input).value
@@ -132,25 +147,32 @@ class InstallWizard(App):
                     self.query_one('#review', Static).update('\n'.join([
                         f"Installation   {plan['name']}", f"Server   {plan['server_name']}",
                         f"Listener   {plan['listen_address']}:{plan['listen_port']}", '', *rows, '',
-                        'Prepare verifies TLS and source logins, then writes a new private bundle.',
-                        'Services are started separately with Docker Compose.']))
+                        ('Prepare checks TLS and source logins, then writes a private bundle.' if not self.deployment()
+                         else f'Install and start via {self.deployment()}. HTTPS readiness will be checked.'),
+                        'Inventory only · no rule engine or execution worker.']))
                 else:
                     self.busy = True
                     self.query_one('#actions').disabled = True
-                    self.query_one('#error', Static).update('Checking TLS, listener and sources…')
+                    self.query_one('#error', Static).update(
+                        'Checking sources, starting services and verifying HTTPS…' if self.deployment()
+                        else 'Checking TLS, listener and sources…')
                     try:
-                        await asyncio.to_thread(self.engine.prepare, self.plan_bytes(), **self.inputs())
+                        result = await asyncio.to_thread(self.engine.prepare, self.plan_bytes(),
+                                                         deployment=self.deployment(), **self.inputs())
                         self.prepared = True
-                        self.query_one('#result', Static).update('Bundle prepared. Services have not been started.')
+                        self.query_one('#result', Static).update(
+                            f"Installation ready via {result['deployment']}. Authenticated HTTPS readiness passed."
+                            if result['services_started'] else 'Bundle prepared. Services have not been started.')
                     finally:
                         self.busy = False
                         self.query_one('#actions').disabled = False
             except InstallError as exc:
                 self.query_one('#error', Static).update(f'{exc.field}: {exc.code.replace("_", " ")}')
-                if exc.code in ('write_failed', 'publication_uncertain'):
+                if exc.code in ('write_failed', 'publication_uncertain', 'deployment_failed', 'startup_uncertain'):
                     self.step = 3
                     self.show_step()
-                    self.query_one('#result', Static).update('Inspect the destination before retrying. ' + exc.code)
+                    self.query_one('#result', Static).update(
+                        'Inspect the installation and manager status before retrying. ' + exc.code)
                 return
             self.step += 1
         self.show_step()

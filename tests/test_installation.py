@@ -364,7 +364,7 @@ class PreparationTests(unittest.TestCase):
 
 
 @contextmanager
-def https_fixture(*, status=200, payload=None, require_auth=True, delay=0, name='127.0.0.1'):
+def https_fixture(*, status=200, payload=None, require_auth=True, delay=0, name='127.0.0.1', bind='127.0.0.1'):
     cert, key, ca = material(name=name)
     seen = []
     class Handler(BaseHTTPRequestHandler):
@@ -384,11 +384,11 @@ def https_fixture(*, status=200, payload=None, require_auth=True, delay=0, name=
         def log_message(self, *_args): pass
     with tempfile.TemporaryDirectory() as folder:
         pem = Path(folder) / 'server.pem'; pem.write_bytes(cert + key)
-        server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+        server = ThreadingHTTPServer((bind, 0), Handler)
         tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); tls.load_cert_chain(pem)
         server.socket = tls.wrap_socket(server.socket, server_side=True)
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
-        try: yield 'https://127.0.0.1:' + str(server.server_port), ca, seen
+        try: yield f'https://{bind}:{server.server_port}', ca, seen
         finally: server.shutdown(); server.server_close(); thread.join()
 
 

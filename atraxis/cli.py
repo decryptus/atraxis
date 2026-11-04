@@ -20,6 +20,9 @@ def main(argv=None):
     for name in ('check-config', 'serve'):
         command = commands.add_parser(name)
         command.add_argument('--config', default=DEFAULT_CONFIG)
+        if name == 'serve':
+            command.add_argument('--tls-cert', help='PEM certificate chain for native HTTPS')
+            command.add_argument('--tls-key', help='matching PEM private key for native HTTPS')
     control = commands.add_parser('rules-serve', help='separate loopback rule control service')
     control.add_argument('--config', required=True)
     control.add_argument('--port', type=int, default=8081)
@@ -131,7 +134,13 @@ def main(argv=None):
             print('Configuration valid')
         else:
             from atraxis.server import serve
-            serve(config)
+            if bool(options.tls_cert) != bool(options.tls_key):
+                raise ConfigurationError('incomplete_server_tls')
+            if options.tls_cert:
+                from atraxis.server import serve_tls
+                serve_tls(config, options.tls_cert, options.tls_key)
+            else:
+                serve(config)
         return 0
     except (ConfigurationError, OSError, ValueError):
         print('Configuration or server startup failed', file=sys.stderr)

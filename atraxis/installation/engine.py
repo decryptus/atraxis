@@ -18,20 +18,24 @@ class Engine:
     Input materials are bytes, not arbitrary paths. An embedding application is
     responsible for securely acquiring them and must not log input objects.
     """
-    def __init__(self, authority, root=None):
+    def __init__(self, authority, root=None, *, deployment_modes=()):
         authority.validate()
         self._authority = authority
         self._root = root
+        require(type(deployment_modes) is tuple and all(m in ('compose', 'systemd') for m in deployment_modes),
+                'invalid_authority')
+        self.deployment_modes = deployment_modes
 
     def preview(self, raw):
         plan = parse(decode(raw))
         self._authority.check(plan)
         return {'status': 'unverified', 'plan': plan.document(), 'services_started': False}
 
-    def prepare(self, raw, *, login, source_credentials, certificate, private_key, source_cas):
+    def prepare(self, raw, *, login, source_credentials, certificate, private_key, source_cas, deployment=None):
         # Preview is never a ticket to bypass checks. Reparse at the effect boundary.
         plan = parse(decode(raw))
         self._authority.check(plan)
+        require(deployment is None or deployment in self.deployment_modes, 'deployment_denied', 'destination')
         ids = {source.source_id for source in plan.sources}
         require(type(source_credentials) is dict and set(source_credentials) == ids,
                 'invalid_secret', 'credentials')
@@ -45,8 +49,6 @@ class Engine:
         for source in plan.sources:
             files['source-' + source.source_id + '.json'] = serialize(secrets[source.source_id])
             files['source-' + source.source_id + '.ca.pem'] = cas[source.source_id]
-        files['complete.json'] = serialize({'version': 1, 'state': 'prepared',
-            'sha256': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}})
         # Bind without SO_REUSEADDR/PORT and hold until publication; no listener is started.
         reservation = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         root = None
@@ -59,7 +61,26 @@ class Engine:
             root._check()
             for source in plan.sources:
                 probe.check(source, secrets[source.source_id], cas[source.source_id], self._authority)
-            return root.create(plan.name, files)
+            if deployment is not None:
+                from atraxis.installation import deployment as manager
+                directory = manager.host_directory(root, plan.name)
+                manager.preflight(deployment, plan, directory.parent)
+                del files['login.json']
+                files.update(manager.render(deployment, plan, login, directory))
+            files['complete.json'] = serialize({'version': 1, 'state': 'prepared',
+                'sha256': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}})
+            result = root.create(plan.name, files)
+            if deployment is None:
+                return result
+            from atraxis.config import ConfigurationError, load_config
+            try:
+                load_config(directory / 'atraxis.yml')
+            except ConfigurationError:
+                raise InstallError('deployment_failed', 'destination') from None
+            reservation.close()
+            manager.start(deployment, plan, directory)
+            manager.verify(plan, certificate, login)
+            return dict(status='ready', name=plan.name, services_started=True, deployment=deployment)
         finally:
             reservation.close()
             if root is not None and self._root is None: root.close()
