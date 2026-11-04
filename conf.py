@@ -15,7 +15,7 @@ include_patterns = ["index.rst", "docs/**", "docs-core.md", "docs-runtime.md", "
 # Keep user and contributor navigation separate.
 templates_path = ['_templates']
 html_context = {'contributor_index': 'docs/contributors', 'contributor_pages':
-    ['docs/contributors', 'docs/contributing', 'docs/docker-publication', 'docs/v1-delivery', 'docs/read-only-adapters',
+    ['docs/contributors', 'docs/contributing', 'docs/installation-core', 'docs/docker-publication', 'docs/v1-delivery', 'docs/read-only-adapters',
      'docs/prometheus-acceptance', 'docs/source-correspondence', 'docs/certlord-correspondence',
      'docs/observation-capacity',
      'docs/release-stable', 'docs/releases/1.0.0', 'docs/releases/1.0.1', 'docs/release-candidate', 'docs/releases/1.0.0rc1', 'docs-core', 'ROADMAP']}

@@ -9,6 +9,7 @@ For installation and operation, return to :doc:`/index`.
    :caption: Contributors
 
    /docs/contributing
+   /docs/installation-core
    /docs/docker-publication
    /docs/v1-delivery
    /docs/release-stable

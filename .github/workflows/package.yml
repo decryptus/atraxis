@@ -96,6 +96,13 @@ jobs:
           PY
           "$RUNNER_TEMP/atraxis-rules/bin/python" "$GITHUB_WORKSPACE/scripts/check-test-collection.py" --runner unittest "$GITHUB_WORKSPACE/client_tests" 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/rules-collection.log"
           "$RUNNER_TEMP/atraxis-rules/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/client_tests" -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/rules-tests.log"
+      - name: Install preparation-core extra from the same built wheel
+        shell: bash
+        run: |
+          wheels=(dist/*.whl)
+          test "${#wheels[@]}" -eq 1
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip install "${wheels[0]}[installer]"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip check
       - name: Verify source archive completeness and run its core tests
         shell: bash
         run: |

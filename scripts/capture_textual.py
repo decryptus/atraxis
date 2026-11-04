@@ -136,6 +136,29 @@ async def capture(output, png=False):
     async with interventions.run_test(size=(140,38)) as pilot:
         await pilot.pause();save(interventions,output,'textual-intervention-search',artifacts,png)
 
+    from atraxis.installation.engine import Engine
+    from atraxis.installation.validation import Authority, parse
+    from atraxis.installation.wizard import InstallWizard
+    from textual.widgets import Input
+    origin = 'https://monit.example.test'
+    plan = parse(dict(version=1, name='site', server_name='atraxis.example.test',
+                      listen_address='127.0.0.1', listen_port=8443,
+                      sources=[dict(source_id='monit', kind='monit_docker', origin=origin)]))
+    engine = Engine(Authority((origin,), ('192.0.2.0/24',)))
+    wizard = InstallWizard(engine, plan, b'', b'', {'monit': b''})
+    async with wizard.run_test(size=(92, 28)) as pilot:
+        await pilot.pause()
+        save(wizard, output, 'installation-access', artifacts, png)
+        await pilot.click('#next')
+        for field in ('login', 'user-0'):
+            wizard.query_one('#' + field, Input).value = 'operator'
+        for field in ('password', 'secret-0'):
+            wizard.query_one('#' + field, Input).value = 'synthetic-for-preview'
+        await pilot.pause(0.4)
+        await pilot.click('#next')
+        assert wizard.step == 2
+        save(wizard, output, 'installation-review', artifacts, png)
+
     sources = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
                for path in (ROOT / 'atraxis').rglob('*.py')}
     try:

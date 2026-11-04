@@ -13,6 +13,7 @@ requires-python = ">=3.11,<3.13"
 dependencies = ["dwho==0.3.66", "httpdis==0.6.34", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
 
 [project.optional-dependencies]
+installer = ["cryptography==50.0.2"]
 textual = ["dwho[textual]==0.3.66"]
 rules = ["atropos-client[observations]==1.0.0"]
 
