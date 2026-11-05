@@ -32,8 +32,10 @@ def parent_private(path):
 
 def sync_directory(path):
     fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
-    try: os.fsync(fd)
-    finally: os.close(fd)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def summary(payload):
@@ -58,7 +60,8 @@ def read_backup(path):
 
 
 def decode_backup(raw):
-    if len(raw) > MAX_BYTES: raise AccountError('account_backup_limit_exceeded')
+    if len(raw) > MAX_BYTES:
+        raise AccountError('account_backup_limit_exceeded')
     outer = json.loads(raw)
     if (type(outer) is not dict or set(outer) != {'sha256', 'payload'}
             or outer['sha256'] != hashlib.sha256(canonical(outer['payload'])).hexdigest()):
@@ -68,7 +71,8 @@ def decode_backup(raw):
 
 def sqlite_adapter(config):
     config = storage_config(config)
-    if config['backend'] != 'sqlite': raise AccountError('unsupported_account_backup_backend')
+    if config['backend'] != 'sqlite':
+        raise AccountError('unsupported_account_backup_backend')
     return open_storage(config)
 
 
@@ -76,18 +80,23 @@ def backup(config, output):
     adapter = sqlite_adapter(config)
     # One read snapshot includes directory, all audit and the membership projection.
     with adapter._connect() as connection:
-        connection.execute('BEGIN'); adapter._schema(connection, False)
+        connection.execute('BEGIN')
+        adapter._schema(connection, False)
         if connection.execute('SELECT COUNT(*) FROM account_audit').fetchone()[0] > MAX_AUDIT_ROWS:
             raise AccountError('account_backup_limit_exceeded')
         snapshot = AccountStore._decode(SQLiteTransaction(connection).read())
     payload = checked(dict(version=FORMAT, backend='sqlite', snapshot=snapshot))
     raw = canonical(dict(payload=payload, sha256=hashlib.sha256(canonical(payload)).hexdigest()))
-    if len(raw) > MAX_BYTES: raise AccountError('account_backup_limit_exceeded')
-    path = Path(output); parent_private(path)
+    if len(raw) > MAX_BYTES:
+        raise AccountError('account_backup_limit_exceeded')
+    path = Path(output)
+    parent_private(path)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     try:
         with os.fdopen(fd, 'wb') as stream:
-            stream.write(raw); stream.flush(); os.fsync(stream.fileno())
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
     except BaseException:
         path.unlink()
         raise
@@ -96,10 +105,12 @@ def backup(config, output):
 
 
 def restore(config, archive, *, services_stopped=False):
-    if services_stopped is not True: raise AccountError('services_stop_confirmation_required')
+    if services_stopped is not True:
+        raise AccountError('services_stop_confirmation_required')
     adapter = sqlite_adapter(config)
     payload = read_backup(archive)
-    path = adapter.path; parent_private(path)
+    path = adapter.path
+    parent_private(path)
     with private_lock(path):
         if any(os.path.lexists(str(path) + suffix) for suffix in ('', '-wal', '-shm', '-journal')):
             raise AccountError('account_restore_requires_new_database')
@@ -110,19 +121,22 @@ def restore(config, archive, *, services_stopped=False):
             target = sqlite_adapter(str(temporary))
             data = payload['snapshot']
             with target.transaction(initialize=True) as transaction:
-                for event in data['audit'][:-1]: transaction.append_audit(event)
+                for event in data['audit'][:-1]:
+                    transaction.append_audit(event)
                 transaction.write(data)
                 if AccountStore._decode(transaction.read()) != data:
                     raise AccountError('account_restore_validation_failed')
                 if transaction.connection.execute('PRAGMA foreign_key_check').fetchone() is not None:
                     raise AccountError('account_restore_validation_failed')
             # Publish only a complete, closed database; never overwrite a destination.
-            with temporary.open('rb') as stream: os.fsync(stream.fileno())
+            with temporary.open('rb') as stream:
+                os.fsync(stream.fileno())
             os.link(temporary, path)
             temporary.unlink()
             sync_directory(path)
         finally:
             for suffix in ('', '.lock', '-wal', '-shm', '-journal'):
                 candidate = Path(str(temporary) + suffix)
-                if candidate.exists(): candidate.unlink()
+                if candidate.exists():
+                    candidate.unlink()
     return summary(payload)

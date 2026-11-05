@@ -186,11 +186,13 @@ class Authority:
             require(type(self.origins) is tuple and 1 <= len(self.origins) <= MAX_SOURCES)
             require(type(self.networks) is tuple and 1 <= len(self.networks) <= MAX_SOURCES)
             require(type(self.listeners) is tuple and 1 <= len(self.listeners) <= MAX_SOURCES)
-            for value in self.origins: origin(value)
+            for value in self.origins:
+                origin(value)
             for value in self.networks:
                 net = ip_network(value, strict=True)
                 require(str(net) == value and net.prefixlen >= (8 if net.version == 4 else 32))
-            for value in self.listeners: require(address(value).version == 4)
+            for value in self.listeners:
+                require(address(value).version == 4)
         except (ValueError, TypeError):
             raise InstallError('invalid_authority') from None
 

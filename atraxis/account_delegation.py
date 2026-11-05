@@ -8,8 +8,8 @@ MAX_DELEGATIONS = 1024
 MAX_DELEGATION_DEPTH = 8
 MEMBERSHIP_OPERATIONS = frozenset({'membership.add', 'membership.remove'})
 OPERATIONS = MEMBERSHIP_OPERATIONS | {'delegation.create', 'delegation.revoke'}
-GRANT_FIELDS = frozenset({'id','subject','organization','groups','operations',
-                         'organization_membership','delegable','enabled','parent'})
+GRANT_FIELDS = frozenset({'id', 'subject', 'organization', 'groups', 'operations',
+                         'organization_membership', 'delegable', 'enabled', 'parent'})
 
 
 def validate_delegations(directory, entries):
@@ -26,7 +26,7 @@ def validate_delegations(directory, entries):
         require(type(item['operations']) is list and all(type(o) is str for o in item['operations']))
         require(bool(item['operations']) and set(item['operations']) <= MEMBERSHIP_OPERATIONS
                 and len(set(item['operations'])) == len(item['operations']))
-        require(all(type(item[k]) is bool for k in ('organization_membership','delegable','enabled')))
+        require(all(type(item[k]) is bool for k in ('organization_membership', 'delegable', 'enabled')))
         require(item['organization_membership'] or bool(item['groups']))
         require(item['parent'] is None or identifier(item['parent']))
         grants[item['id']] = item
@@ -34,7 +34,8 @@ def validate_delegations(directory, entries):
         seen, subjects, current = set(), set(), grant
         while current is not None:
             require(current['id'] not in seen and current['subject'] not in subjects and len(seen) < MAX_DELEGATION_DEPTH)
-            seen.add(current['id']); subjects.add(current['subject'])
+            seen.add(current['id'])
+            subjects.add(current['subject'])
             parent_id = current['parent']
             if parent_id is None:
                 break
@@ -58,7 +59,7 @@ def active(directory, grant):
 
 
 def owned(directory, subject):
-    return [g for g in directory.delegations.values() if g['subject'] == subject and active(directory,g)]
+    return [g for g in directory.delegations.values() if g['subject'] == subject and active(directory, g)]
 
 
 def checked_request(request):
@@ -68,9 +69,9 @@ def checked_request(request):
     if type(request) is not dict or request.get('operation') not in OPERATIONS:
         raise AccountError('invalid_account_operation')
     operation = request['operation']
-    fields = ({'operation','organization','subject','group'} if operation in MEMBERSHIP_OPERATIONS else
-              {'operation','parent','subject','groups','operations','organization_membership','delegable'}
-              if operation == 'delegation.create' else {'operation','grant'})
+    fields = ({'operation', 'organization', 'subject', 'group'} if operation in MEMBERSHIP_OPERATIONS else
+              {'operation', 'parent', 'subject', 'groups', 'operations', 'organization_membership', 'delegable'}
+              if operation == 'delegation.create' else {'operation', 'grant'})
     require(set(request) == fields)
     if operation in MEMBERSHIP_OPERATIONS:
         require(identifier(request['organization']) and identifier(request['subject']))
@@ -101,14 +102,14 @@ def propose(directory, subject, request, *, new_id=None):
     if operation in MEMBERSHIP_OPERATIONS:
         org, target, group = request['organization'], request['subject'], request['group']
         from atraxis.account_entities import membership_grants
-        grants = grants + membership_grants(directory,subject,org)
+        grants = grants + membership_grants(directory, subject, org)
         if target == subject or target not in directory.users:
             raise PermissionError('account_administration_denied')
         if group is not None and (group not in directory.groups or directory.groups[group]['organization'] != org):
             raise PermissionError('account_administration_denied')
-        if group is not None and (target,org,None) not in directory.memberships:
+        if group is not None and (target, org, None) not in directory.memberships:
             raise PermissionError('account_administration_denied')
-        row = {'user':target,'organization':org,'group':group}
+        row = {'user': target, 'organization': org, 'group': group}
         adding = operation == 'membership.add'
         exists = row in candidate['memberships']
         if exists == adding:
@@ -118,8 +119,8 @@ def propose(directory, subject, request, *, new_id=None):
         else:
             candidate['memberships'].remove(row)
         updated = Directory(candidate)
-        before = set(directory.effective_groups(target,org))
-        after = set(updated.effective_groups(target,org))
+        before = set(directory.effective_groups(target, org))
+        after = set(updated.effective_groups(target, org))
         # An explicit parent membership can affect inherited descendants. Bound all effects.
         affected = before ^ after
         if group is not None:
@@ -129,12 +130,12 @@ def propose(directory, subject, request, *, new_id=None):
             raise PermissionError('account_administration_denied')
         # Membership changes must not indirectly reactivate another administrator's chain.
         if (any(g['subject'] == target and g['organization'] == org for g in directory.delegations.values())
-                or any(g['subject']==target for g in directory.entity_delegations.values())):
+                or any(g['subject'] == target for g in directory.entity_delegations.values())):
             raise PermissionError('administrator_membership_requires_local_authority')
     elif operation == 'delegation.create':
-        parent = next((g for g in grants if g['id'] == request['parent']),None)
+        parent = next((g for g in grants if g['id'] == request['parent']), None)
         target = request['subject']
-        if parent is None or not parent['delegable'] or target == subject or not directory.allows_membership(target,parent['organization']):
+        if parent is None or not parent['delegable'] or target == subject or not directory.allows_membership(target, parent['organization']):
             raise PermissionError('account_delegation_denied')
         org = parent['organization']
         if (not set(request['groups']) <= set(parent['groups']) or not set(request['operations']) <= set(parent['operations'])
@@ -146,37 +147,37 @@ def propose(directory, subject, request, *, new_id=None):
             if current['subject'] == target:
                 raise PermissionError('account_delegation_cycle')
             current = directory.delegations.get(current['parent'])
-        candidate['delegations'].append(dict(id=new_id or uuid.uuid4().hex,subject=target,organization=org,
-            groups=request['groups'],operations=request['operations'],organization_membership=request['organization_membership'],
-            delegable=request['delegable'],enabled=True,parent=parent['id']))
+        candidate['delegations'].append(dict(id=new_id or uuid.uuid4().hex, subject=target, organization=org,
+            groups=request['groups'], operations=request['operations'], organization_membership=request['organization_membership'],
+            delegable=request['delegable'], enabled=True, parent=parent['id']))
         updated = Directory(candidate)
     else:
         grant = directory.delegations.get(request['grant'])
-        parent = next((g for g in grants if grant is not None and g['id'] == grant['parent']),None)
+        parent = next((g for g in grants if grant is not None and g['id'] == grant['parent']), None)
         if grant is None or parent is None or not parent['delegable'] or not grant['enabled']:
             raise PermissionError('account_delegation_denied')
         org, target = grant['organization'], grant['subject']
-        next(g for g in candidate['delegations'] if g['id']==grant['id'])['enabled']=False
+        next(g for g in candidate['delegations'] if g['id'] == grant['id'])['enabled'] = False
         updated = Directory(candidate)
-    return updated, {'subject':subject,'operation':operation,'organization':org,'target':target}
+    return updated, {'subject': subject, 'operation': operation, 'organization': org, 'target': target}
 
 
 def view(directory, subject):
-    grants = owned(directory,subject)
+    grants = owned(directory, subject)
     legacy_ids = {g['id'] for g in grants}
     from atraxis.account_entities import membership_grants
     for organization in directory.organizations:
-        grants += membership_grants(directory,subject,organization)
+        grants += membership_grants(directory, subject, organization)
     result = []
     for org in sorted({g['organization'] for g in grants}):
-        applicable = [g for g in grants if g['organization']==org]
+        applicable = [g for g in grants if g['organization'] == org]
         groups = set().union(*(set(g['groups']) for g in applicable))
         organization_membership = any(g['organization_membership'] for g in applicable)
-        memberships = [m for m in directory.document()['memberships'] if m['organization']==org
+        memberships = [m for m in directory.document()['memberships'] if m['organization'] == org
                        and (m['group'] in groups or m['group'] is None and organization_membership)]
         tenant = directory.tenants[directory.organizations[org]['tenant']]
-        result.append({'id':org,'name':directory.organizations[org]['name'],'tenant':tenant['name'],
-            'groups':[{'id':g,'name':directory.groups[g]['name']} for g in sorted(groups)],
-            'memberships':memberships,'grants':deepcopy(applicable),
-            'delegated':[deepcopy(g) for g in directory.delegations.values() if g['parent'] in legacy_ids & {p['id'] for p in applicable}]})
+        result.append({'id': org, 'name': directory.organizations[org]['name'], 'tenant': tenant['name'],
+            'groups': [{'id': g, 'name': directory.groups[g]['name']} for g in sorted(groups)],
+            'memberships': memberships, 'grants': deepcopy(applicable),
+            'delegated': [deepcopy(g) for g in directory.delegations.values() if g['parent'] in legacy_ids & {p['id'] for p in applicable}]})
     return result

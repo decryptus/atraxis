@@ -8,7 +8,8 @@ from atraxis.installation.worker import run, WORKER_TIMEOUT
 def _worker(pipe, certificate, private_key, server_name, cas):
     try:
         validate_tls(certificate, private_key, server_name)
-        for ca in cas: context(ca)
+        for ca in cas:
+            context(ca)
         outcome = 'ok'
     except BaseException:
         outcome = 'invalid_tls'

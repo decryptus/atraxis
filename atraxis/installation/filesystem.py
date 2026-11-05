@@ -108,17 +108,22 @@ class Root:
             require(info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o700, 'unsafe_root')
             order = [key for key in files if key != 'complete.json'] + ['complete.json']
             for filename in order:
-                if filename == 'complete.json': complete = True
+                if filename == 'complete.json':
+                    complete = True
                 out = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
                               0o600, dir_fd=fd)
                 with os.fdopen(out, 'wb') as stream:
-                    stream.write(files[filename]); stream.flush(); os.fsync(stream.fileno())
-            os.fsync(fd); os.fsync(self.fd)
+                    stream.write(files[filename])
+                    stream.flush()
+                    os.fsync(stream.fileno())
+            os.fsync(fd)
+            os.fsync(self.fd)
         except FileExistsError:
             raise InstallError('destination_exists', 'destination') from None
         except (OSError, ValueError):
             raise InstallError('publication_uncertain' if complete else 'write_failed', 'destination') from None
         finally:
-            if fd is not None: os.close(fd)
+            if fd is not None:
+                os.close(fd)
         # Failures preserve partial private state. Never delete/retry/reuse it automatically.
         return {'status': 'prepared', 'name': name, 'services_started': False}

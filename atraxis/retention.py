@@ -15,8 +15,8 @@ REPORT_VERSION = 1
 
 
 def capacity(used, limit, unit):
-    return dict(used=used, limit=limit, remaining=max(0,limit-used), unit=unit,
-                warning=used*100 >= limit*WARNING_PERCENT)
+    return dict(used=used, limit=limit, remaining=max(0, limit - used), unit=unit,
+                warning=used * 100 >= limit * WARNING_PERCENT)
 
 
 def inspect_file(path, *, accounts=False):
@@ -24,7 +24,7 @@ def inspect_file(path, *, accounts=False):
     raw = read_private(path, maximum)
     report = dict(version=REPORT_VERSION, kind='account_archive' if accounts else 'daemon_configuration',
         warning_percent=WARNING_PERCENT, policy='retain_all_evidence', purge_supported=False,
-        restore_verified=False, capacity={'file_bytes':capacity(len(raw), maximum, 'bytes')})
+        restore_verified=False, capacity={'file_bytes': capacity(len(raw), maximum, 'bytes')})
     if accounts:
         payload = account_backup.decode_backup(raw)
         report['revision'] = payload['snapshot']['revision']
@@ -32,7 +32,8 @@ def inspect_file(path, *, accounts=False):
         report['capacity']['audit_entries'] = capacity(len(payload['snapshot']['audit']), account_backup.MAX_AUDIT_ROWS, 'events')
     else:
         document = yaml.load(raw, Loader=_StrictLoader)
-        if not xys.validate(document, CONFIG_SCHEMA):raise ValueError('invalid_configuration')
+        if not xys.validate(document, CONFIG_SCHEMA):
+            raise ValueError('invalid_configuration')
         history = document.get('configuration_history', [])
         validate_history(history)
         report['sha256'] = hashlib.sha256(raw).hexdigest()

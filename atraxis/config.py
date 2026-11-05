@@ -138,7 +138,8 @@ def parse_config(data, path):
         if accounts is not None:
             _require(bool(accounts) and len(accounts) <= 4096)
             account_path = Path(accounts)
-            if not account_path.is_absolute():account_path = Path(path).resolve().parent / account_path
+            if not account_path.is_absolute():
+                account_path = Path(path).resolve().parent / account_path
             from atraxis.account_admin import load_admin_profile
             from atraxis.web_rule_editor import validate_origin
             load_admin_profile(account_path)
@@ -157,7 +158,8 @@ def parse_config(data, path):
         if observations is not None:
             _require(origin is not None and inventory_access is not None and bool(observations) and len(observations) <= 4096)
             observations = Path(observations)
-            if not observations.is_absolute(): observations = Path(path).resolve().parent / observations
+            if not observations.is_absolute():
+                observations = Path(path).resolve().parent / observations
             from atraxis.web_observations import load_profile as load_observation_profile
             load_observation_profile(observations)
             observations = str(observations)
@@ -173,7 +175,8 @@ def parse_config(data, path):
         if configuration_file is not None:
             _require(bool(configuration_file) and len(configuration_file) <= 4096)
             configuration_file = Path(configuration_file)
-            if not configuration_file.is_absolute(): configuration_file = Path(path).absolute().parent / configuration_file
+            if not configuration_file.is_absolute():
+                configuration_file = Path(path).absolute().parent / configuration_file
             from atraxis.configuration_admin import load_profile
             from atraxis.web_rule_editor import validate_origin
             load_profile(configuration_file)
