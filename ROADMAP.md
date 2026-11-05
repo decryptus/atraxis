@@ -1,8 +1,14 @@
 # Atraxis roadmap
 
-Updated 3 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
+
+## 1.0.2 release preparation
+
+The guided installer passed its Compose and native installation tests. The
+1.0.2 runtime passed operational recovery and a two-hour synthetic endurance run. See the [1.0.2 qualification notes](docs/releases/1.0.2.md).
+Publication is a separate release step.
 
 ## Available today
 
