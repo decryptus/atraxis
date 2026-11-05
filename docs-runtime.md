@@ -65,7 +65,11 @@ and unavailable access configuration gives 503.
 The inventory routes do not mutate resources. Empty status is explicitly not ready; it does not claim
 to have collected an empty infrastructure. HTTPdis request handling uses bounded
 workers, a 1 KiB request-body limit and a five-second socket inactivity timeout.
-The latter is not a whole-request wall-clock deadline. SIGINT/SIGTERM stop the
+In source builds using HTTPdis 0.6.39, the request line and headers also share
+a 10-second deadline. A request body has a separate budget of 10 seconds plus
+one second per 32 KiB, capped at 120 seconds. Sending another byte does not
+restart either budget. Expired headers close the connection. An expired body
+read returns HTTP 408. SIGINT/SIGTERM stop the
 foreground process, cancel/join source readers and close the server. The [read-only CLI](docs/cli.md) consults this API using separate client settings.
 
 ## Docker

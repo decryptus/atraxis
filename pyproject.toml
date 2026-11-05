@@ -10,7 +10,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 (GPLv3)"]
 requires-python = ">=3.11,<3.13"
-dependencies = ["dwho==0.3.66", "httpdis==0.6.34", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
+dependencies = ["dwho==0.3.66", "httpdis==0.6.39", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
 
 [project.optional-dependencies]
 installer = ["cryptography==50.0.2"]
