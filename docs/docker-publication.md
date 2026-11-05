@@ -37,8 +37,8 @@ pulled image before announcing availability. Publishing does not deploy a site.
 ## Python package publication
 
 The `publish-pypi.yml` workflow promotes the two signed-off GitHub release
-archives for 1.0.2. PRs validate their hashes and install the wheel. Once reviewed,
-advance `release/publish-pypi-1.0.2` to current main. PyPI must trust
+archives for 1.0.3. PRs validate their hashes and install the wheel. Once reviewed,
+advance `release/publish-pypi-1.0.3` to current main. PyPI must trust
 `decryptus/atraxis`, workflow `publish-pypi.yml`, environment `pypi`.
 The workflow checks each existing registry file against the release and uploads
 only missing files. Its final job downloads both files and installs from the index.
