@@ -12,14 +12,14 @@ own domain behavior and never start a TUI or daemon implicitly.
 For a validated starter configuration and step-by-step checks, use the
 [setup and diagnostic guide](docs/setup.md).
 
-The published 1.0.3 package supports Python 3.11 and 3.12. This source checkout also supports Python 3.13. On Python 3.13 the installer
+Atraxis 1.0.4 supports Python 3.11, 3.12 and 3.13. On Python 3.13 the installer
 uses the legacycrypt compatibility module for the existing SHA-512 htpasswd format.
 The host also needs the libmagic shared library used by HTTPdis/python-magic
 (`libmagic1` on Debian-family installations). The Dockerfile installs it explicitly
 and checks daemon imports during the image build.
 
 ```sh
-python -m pip install atraxis==1.0.3
+python -m pip install atraxis==1.0.4
 atraxis check-config --config /etc/atraxis/atraxis.yml
 atraxis serve --config /etc/atraxis/atraxis.yml
 ```
