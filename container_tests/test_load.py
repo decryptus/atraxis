@@ -75,6 +75,17 @@ class LoadTests(ChainFixture):
                         'python', '/state/load.py', command, *arguments, input=input, timeout=timeout)
         return json.loads(result.stdout)
 
+    def concurrent_reads(self, started, round_number):
+        reads = self.load('operator', 'reads')
+        extra_reads = 0
+        if self.duration == ENDURANCE_SECONDS:
+            # Spread the bounded admission rounds over the two-hour window.
+            # Faster runners keep exercising the APIs between write bursts.
+            deadline = started + round_number * self.duration / self.max_rounds
+            while time.monotonic() < deadline:
+                extra_reads += self.load('operator', 'reads')['count']
+        return reads, extra_reads
+
     def queue(self):
         return self.admin('queue-status', '--test')
 
@@ -177,7 +188,7 @@ class LoadTests(ChainFixture):
             accepted_ids.update(r['receipt']['id'] for r in accepted)
             self.engine('storage-resume', '--confirm-reconciled')
             try:
-                reads = self.load('operator', 'reads')  # concurrent with guarded workers
+                reads, extra_reads = self.concurrent_reads(started, cycle + 1)
             except Exception:
                 # Preserve failure-time resource evidence before cleanup. The
                 # original failing response is in require_ready's bounded error;
@@ -211,7 +222,7 @@ class LoadTests(ChainFixture):
             report['samples'].append(snapshot)
             report['rounds'].append(dict(cycle=cycle+1, admitted=len(accepted), refused=len(refused),
                 duplicate_receipts=8, recovered=1, admission_seconds=burst['seconds'],
-                admission_latency=burst['latency'], concurrent_read_latency=reads, drain_wait_seconds=drain_seconds))
+                admission_latency=burst['latency'], concurrent_read_latency=reads, extra_read_sequences=extra_reads, drain_wait_seconds=drain_seconds))
             self.checkpoint(dict(phase='cycle', elapsed_seconds=time.monotonic()-started,
                 round=report['rounds'][-1], sample=snapshot))
             if self.duration:

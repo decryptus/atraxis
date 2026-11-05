@@ -193,6 +193,20 @@ class LoadDiagnosticsTests(unittest.TestCase):
         module.docker.assert_called_once_with('exec', '-i', 'fixture-operator',
             'python', '/state/load.py', 'burst', 'binding', input='[]', timeout=30)
 
+    def test_two_hour_run_fills_fast_rounds_with_checked_reads(self):
+        module, case = harness()
+        case.duration = module.ENDURANCE_SECONDS
+        case.max_rounds = module.ENDURANCE_MAX_ROUNDS
+        case.load = Mock(return_value={'count': 64})
+        with patch.object(module.time, 'monotonic', side_effect=[119, 124, 130]):
+            first, extra = case.concurrent_reads(100, 1)
+        self.assertEqual((first, extra), ({'count': 64}, 128))
+        self.assertEqual(case.load.call_count, 3)
+        case.load.side_effect = [{'count': 64}, ValueError('read failed')]
+        with patch.object(module.time, 'monotonic', return_value=119):
+            with self.assertRaisesRegex(ValueError, 'read failed'):
+                case.concurrent_reads(100, 1)
+
     def test_existing_load_modes_keep_their_original_limits(self):
         module, _ = harness()
         self.assertEqual(module.load_settings('0'), dict(duration=0, max_rounds=240,
