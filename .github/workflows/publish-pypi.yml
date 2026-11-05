@@ -1,0 +1,117 @@
+name: Promote Atraxis 1.0.2 to PyPI
+on:
+  pull_request:
+    paths:
+      - .github/workflows/publish-pypi.yml
+      - scripts/promote-pypi.py
+  push:
+    branches: [release/publish-pypi-1.0.2]
+    paths: [.github/workflows/publish-pypi.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pypi-review-{0}', github.run_id) || 'atraxis-pypi' }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      pending: ${{ steps.stage.outputs.pending }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify source tag and exact GitHub release files
+        id: stage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" != pull_request ]]; then
+            test "$GITHUB_SHA" = "$(gh api repos/decryptus/atraxis/branches/main --jq .commit.sha)"
+          fi
+          test "$(gh api repos/decryptus/atraxis/git/ref/tags/v1.0.2 --jq .object.sha)" = 0e37b7f755e591243af227006704269168461787
+          gh release download v1.0.2 -D release-assets
+          python scripts/promote-pypi.py --stage
+          echo "pending=$(find pypi-upload -type f | wc -l)" >> "$GITHUB_OUTPUT"
+      - name: Install and check the release wheel outside the checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/verified"
+          "$RUNNER_TEMP/verified/bin/pip" install release-assets/*.whl
+          cd "$RUNNER_TEMP"
+          verified/bin/pip check
+          verified/bin/atraxis --help
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request' && steps.stage.outputs.pending != '0'
+        with:
+          name: verified-upload
+          path: pypi-upload/
+          retention-days: 2
+          if-no-files-found: error
+  publish:
+    needs: prepare
+    if: needs.prepare.outputs.pending != '0' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/publish-pypi-1.0.2') && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-upload
+          path: upload
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086
+        with:
+          packages-dir: upload/
+  verify:
+    needs: [prepare, publish]
+    if: always() && github.event_name != 'pull_request' && needs.prepare.result == 'success' && (needs.publish.result == 'success' || needs.prepare.outputs.pending == '0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare both registry downloads and install the indexed wheel
+        run: |
+          set -euo pipefail
+          for delay in 0 10 20 40 60; do
+            sleep "$delay"
+            python scripts/promote-pypi.py --verify && break
+          done
+          python scripts/promote-pypi.py --verify
+          python -m venv "$RUNNER_TEMP/registry"
+          cd "$RUNNER_TEMP"
+          for delay in 0 10 20 40; do
+            sleep "$delay"
+            registry/bin/pip install --no-cache-dir --index-url https://pypi.org/simple --only-binary atraxis 'atraxis==1.0.2' && break
+          done
+          registry/bin/pip check
+          registry/bin/python -c "from importlib.metadata import version; assert version('atraxis') == '1.0.2'"
+          registry/bin/atraxis --help
+  check-registry-image:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exercise the exact Docker Hub image on a fresh runner
+        run: |
+          set -euo pipefail
+          digest=sha256:2ad9f4539d9d969d194cf2e836b4201040e03b3dd8a762c46c18f908ac59d83d
+          image=decryptus/atraxis:1.0.2
+          docker pull --platform linux/amd64 "$image"
+          docker image inspect "$image" --format '{{json .RepoDigests}}' | jq -e --arg ref "decryptus/atraxis@$digest" 'index($ref) != null'
+          docker tag "$image" atraxis:test
+          python deploy/docker/check-image.py
