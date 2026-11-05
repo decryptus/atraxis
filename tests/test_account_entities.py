@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sqlite3
 import tempfile
+from contextlib import closing
 import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
@@ -135,7 +136,7 @@ class EntityServiceTests(unittest.TestCase):
         with self.assertRaises(PermissionError):self.admin.search(AccountQuery())
 
     def test_sql_enforces_unsigned_flags_scopes_operations_and_actor(self):
-        with sqlite3.connect(self.store.path) as c:
+        with closing(sqlite3.connect(self.store.path)) as c, c:
             c.execute('PRAGMA foreign_keys=ON')
             for statement in ("UPDATE account_audit SET actor_subject='bad/id'", "UPDATE entity_delegations SET enabled=-1", "UPDATE entity_delegations SET position=0.5",
                               "UPDATE entity_delegations SET scope_kind='tenant'", "UPDATE entity_delegation_operations SET operation='execute'",

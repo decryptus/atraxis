@@ -33,6 +33,16 @@ class WebPresentationTests(unittest.TestCase):
         self.assertIn('2026-10-07 08:00:00 UTC', page)
         self.assertEqual(payload, original)
 
+    def test_scope_and_navigation_do_not_rewrite_observed_resource_names(self):
+        payload = inventory()
+        payload['context'] = dict(organization='lab', organizations=[dict(id='lab', name='Lab')])
+        payload['sources'][0]['last_valid_snapshot']['resources'][0]['fields']['name'] = 'Configured sources'
+        page = render_inventory(payload, rules_enabled=True, configuration_enabled=True)
+        self.assertIn('<span class="resource-name">Configured sources</span>', page)
+        self.assertIn('Visible sources</span>', page)
+        self.assertIn('href="/ui/rules?organization=lab"', page)
+        self.assertIn('href="/ui/configuration"', page)
+
     def test_source_failure_retains_observations_as_historical(self):
         payload=inventory(); payload.update(ready=False, reason='sources_not_current')
         payload['sources'][0].update(current=False, availability='unavailable', last_attempt=dict(outcome='timeout'))

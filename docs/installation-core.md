@@ -155,7 +155,7 @@ python -m unittest discover -s tests -v
 python -m sphinx -n -W --keep-going -b html . /tmp/atraxis-docs
 ```
 
-The CI core suite installs the explicit extra on Python 3.11 and 3.12. Package CI
+The CI core suite installs the explicit extra on Python 3.11–3.13. Package CI
 also installs it from the built wheel before the source-archive suite. Existing
 installed-CLI checks still exercise the default wheel separately.
 

@@ -18,7 +18,7 @@ interface, separate built-in modules and the remaining live-rule mapping limits.
 
 ## Local development
 
-Use Python 3.11 or 3.12, the system `libmagic` library and a fresh environment:
+Use Python 3.11–3.13, the system `libmagic` library and a fresh environment:
 
 ```sh
 python -m venv .venv

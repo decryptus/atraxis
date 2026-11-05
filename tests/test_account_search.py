@@ -1,5 +1,6 @@
 import io
 import json
+from contextlib import closing
 import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
@@ -68,7 +69,7 @@ class AccountSearchTests(unittest.TestCase):
         with patch.object(SQLiteTransaction,'read',side_effect=AssertionError('whole directory read')):
             result=self.admin.search(AccountQuery(kind='group',q='ops'))
         self.assertEqual(result['total'],1)
-        with sqlite3.connect(self.store.path) as c:
+        with closing(sqlite3.connect(self.store.path)) as c, c:
             plan=list(c.execute("EXPLAIN QUERY PLAN SELECT id FROM account_search_scope WHERE subject=? AND kind=?",('alice','group')))
         self.assertTrue(any('account_search_kind' in row[3] for row in plan))
 

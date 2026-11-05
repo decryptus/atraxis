@@ -3,7 +3,7 @@
 For the complete order of installation, access provisioning and maintenance, use
 the [operator journey](operator-journey.md).
 
-Use Python 3.11 or 3.12 and install the native `libmagic` dependency, then install
+Source builds also support Python 3.13. For the published 1.0.3 package, use Python 3.11 or 3.12 and install the native `libmagic` dependency, then install
 Atraxis as described in the [runtime guide](../docs-runtime.md). `setup` prepares
 a starter configuration. `doctor` explains configuration and source-read problems.
 Neither command starts a daemon, creates account permissions or submits an
@@ -50,7 +50,7 @@ If an I/O failure is reported, inspect the destination before trying again: a
 complete file may already have been published. Do not remove it blindly.
 
 The listener defaults to `127.0.0.1:9810`. A non-loopback listener needs explicit
-`--behind-tls-proxy` and a properly isolated HTTPS reverse proxy; this flag does
+`--behind-tls-proxy`, at least one `--trusted-proxy-network` (for example `192.0.2.10/32`), and a properly isolated HTTPS reverse proxy; this flag does
 not install a proxy or validate its TLS configuration. Plain HTTP source reads
 are allowed only for literal loopback addresses with
 `--allow-source-loopback-http`, intended for local tests. Remote sources require
@@ -244,7 +244,7 @@ the operator provisions DNS, certificate trust and source permissions in advance
 | Method | Host prerequisites | What starts |
 | --- | --- | --- |
 | Docker Compose | Linux amd64, a local rootful Docker Engine without user namespace remapping, Docker Compose 2.24+ and existing access to the local socket | Two digest-pinned containers, Atraxis and its HTTPS proxy. The host account UID/GID reads private bind mounts. The web container must be able to reach every source. A host loopback URL resolves inside its own network namespace. |
-| Native systemd | Debian/Linux with Python 3.11 or 3.12, Atraxis installed in the wizard's persistent Python environment, and an active systemd user manager | One enabled user service runs Atraxis directly with TLS. No Docker or Nginx is required. For unattended boot the administrator enables lingering for the dedicated account. |
+| Native systemd | Debian/Linux with Python 3.11–3.13, Atraxis installed in the wizard's persistent Python environment, and an active systemd user manager | One enabled user service runs Atraxis directly with TLS. No Docker or Nginx is required. For unattended boot the administrator enables lingering for the dedicated account. |
 
 The wizard writes a salted login hash for both deployment methods. Source
 credentials remain private files. Use a fresh installation name. Deployment paths

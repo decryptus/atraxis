@@ -1,10 +1,12 @@
 """HTTPdis adapter; authentication and process lifecycle stay outside the core."""
+from ipaddress import ip_address
 import json
 import signal
 import threading
 
-from httpdis.httpdis import HttpReqHandler, HttpResponse, HttpServerContext
+from httpdis.httpdis import HttpReqError, HttpReqHandler, HttpResponse, HttpServerContext
 
+from atraxis.basic_attempts import BasicAttempts
 from atraxis.service import ReadService
 from atraxis.collection import PollingCoordinator
 
@@ -18,6 +20,31 @@ _SOCKET_TIMEOUT = 5.0
 
 class _Handler(HttpReqHandler):
     _ALLOWED_MULTIPART_FORM = False
+
+    def handle(self):
+        networks = getattr(self.get_context(), 'trusted_proxy_networks', ())
+        if networks and not any(ip_address(self.client_address[0]) in net for net in networks):
+            return
+        super().handle()
+
+    def authenticate(self, auth_users=None):
+        authorization = self.headers.get('Authorization')
+        if not authorization:
+            return super().authenticate(auth_users)
+        context = self.get_context()
+        attempts = context.basic_attempts
+        peer = self.client_address[0]
+        account = attempts.account_key(authorization)
+        wait = attempts.retry_after(peer, account)
+        if wait:
+            raise self.req_error(429, 'Too many authentication attempts',
+                                 headers={'Retry-After': str(wait), 'Cache-Control': 'no-store'})
+        try:
+            super().authenticate(auth_users)
+        except HttpReqError as error:
+            if error.code == 401:
+                attempts.failed(peer, account)
+            raise
 
     def data_from_payload(self, cmd):
         if self.path.startswith(('/ui/accounts/','/ui/inventory-access/','/ui/configuration/')) or self.path.split('?', 1)[0] in ('/ui/rules/create', '/ui/rules/import', '/ui/rules/edit', '/ui/rules/test', '/ui/rules/activate', '/ui/rules/rollback', '/ui/rules/deactivate', '/ui/rules/simulate', '/ui/rules/simulate-confirm', '/ui/rules/dispatch', '/ui/rules/dispatch-confirm', '/ui/rules/reconcile', '/ui/rules/reconcile-confirm'):
@@ -40,6 +67,8 @@ def build_context(config, service=None, *, rule_client_factory=None):
     service = service if service is not None else ReadService(config.sources)
     collector = PollingCoordinator(config.sources, service)
     context = HttpServerContext()
+    context.basic_attempts = BasicAttempts()
+    context.trusted_proxy_networks = config.trusted_proxy_networks
 
     from atraxis.web import HEADERS as WEB_HEADERS, render_inventory
 
@@ -48,8 +77,11 @@ def build_context(config, service=None, *, rule_client_factory=None):
     from atraxis.web import render_context_selection
     access = InventoryAccess(config.inventory_access_file) if config.inventory_access_file else None
 
-    def configuration_link(body):
-        return body.replace('</header>', '<a href="/ui/configuration">Configuration</a></header>', 1) if config.configuration_web_origin else body
+    def inventory_html(payload):
+        return render_inventory(payload, rules_enabled=bool(config.rules_web_file),
+                                accounts_enabled=bool(config.accounts_web_file),
+                                inventory_admin_enabled=bool(config.inventory_admin_origin),
+                                configuration_enabled=bool(config.configuration_web_origin))
 
     def scoped_inventory(request, readiness=False, html=False):
         try:
@@ -61,8 +93,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
                 value = dict(error='organization_required', organizations=scope['organizations'])
                 code = 409
             elif html:
-                return HttpResponse(code=200, data=configuration_link(render_inventory(payload,
-                    rules_enabled=bool(config.rules_web_file), accounts_enabled=bool(config.accounts_web_file), inventory_admin_enabled=bool(config.inventory_admin_origin))), headers=WEB_HEADERS.copy())
+                return HttpResponse(code=200, data=inventory_html(payload), headers=WEB_HEADERS.copy())
             else:
                 value = {k: payload[k] for k in ('ready','reason','context')} if readiness else payload
                 code = 503 if readiness and not value['ready'] else 200
@@ -87,7 +118,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
             return scoped_inventory(request, html=True)
         denied=unconfigured_context(request)
         if denied is not None:return denied
-        return HttpResponse(code=200, data=configuration_link(render_inventory(service.status(), rules_enabled=bool(config.rules_web_file), accounts_enabled=bool(config.accounts_web_file), inventory_admin_enabled=bool(config.inventory_admin_origin))),
+        return HttpResponse(code=200, data=inventory_html(service.status()),
                             headers=WEB_HEADERS.copy())
 
     for verb in _METHODS:
@@ -181,13 +212,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
         if dispatch_routes:
             dispatch = WebDispatch(config.rules_web_file, config.rules_web_origin, factory,
                                    config.rules_web_observations, access, service)
-            dispatch.tokens = editor.tokens
-        reconciliation.tokens = editor.tokens
-        creation.tokens = editor.tokens
-        simulation.tokens = editor.tokens
         activation = WebActivation(config.rules_web_file, config.rules_web_origin, factory)
-        retirement.tokens = editor.tokens
-        activation.tokens = editor.tokens  # One bounded form store for all browser operations.
 
         def editor_page(route):
             def handle_editor(request):

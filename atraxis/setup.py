@@ -19,12 +19,14 @@ def absolute_path(value):
 
 
 def candidate(*, output, auth_file, listen_addr='127.0.0.1', listen_port=9810,
-              behind_tls_proxy=False, source_id=None, source_kind=None,
+              behind_tls_proxy=False, trusted_proxy_networks=None, source_id=None, source_kind=None,
               source_origin=None, source_credentials_file=None, source_ca_file=None,
               allow_source_loopback_http=False):
     path = absolute_path(output)
     general = dict(listen_addr=listen_addr, listen_port=listen_port, max_workers=4,
                    auth_basic_file=str(absolute_path(auth_file)), behind_tls_proxy=behind_tls_proxy)
+    if trusted_proxy_networks is not None:
+        general['trusted_proxy_networks'] = list(trusted_proxy_networks)
     source_values = (source_id, source_kind, source_origin, source_credentials_file)
     if any(value is not None for value in source_values) and not all(value is not None for value in source_values):
         raise ConfigurationError('incomplete_setup_source')
@@ -87,6 +89,8 @@ def add_parser(commands):
     parser.add_argument('--listen-addr', default='127.0.0.1')
     parser.add_argument('--listen-port', type=int, default=9810)
     parser.add_argument('--behind-tls-proxy', action='store_true')
+    parser.add_argument('--trusted-proxy-network', dest='trusted_proxy_networks', action='append',
+                        help='trusted IPv4 proxy address or CIDR (repeatable)')
     parser.add_argument('--source-id')
     parser.add_argument('--source-kind', choices=STARTER_SOURCE_KINDS,
                         help='starter source; configure Prometheus metric selection in YAML')

@@ -1,6 +1,6 @@
 """Strict YAML configuration; no process lifecycle or source access."""
 from dataclasses import dataclass
-from ipaddress import ip_address
+from ipaddress import IPv4Network, ip_address, ip_network
 from pathlib import Path
 
 import yaml
@@ -20,6 +20,7 @@ general:
   max_workers?: !~~between(1,32) 1
   auth_basic_file![1,]: !!str
   behind_tls_proxy?: false
+  trusted_proxy_networks?: [ !!str ]
   rules_web_file?: !!str
   rules_web_origin?: !!str
   rules_web_observations?: !!str
@@ -72,6 +73,7 @@ class ServerConfig:
     configuration_web_origin: str | None = None
     configuration_path: str | None = None
     rules_web_observations: str | None = None
+    trusted_proxy_networks: tuple[IPv4Network, ...] = ()
 
 
 def _require(condition):
@@ -112,6 +114,10 @@ def parse_config(data, path):
         port = general.get('listen_port', 9810)
         workers = general.get('max_workers', 4)
         proxy = general.get('behind_tls_proxy', False)
+        networks = tuple(ip_network(value) for value in general.get('trusted_proxy_networks', ()))
+        if 'trusted_proxy_networks' in general:
+            _require(proxy and 0 < len(networks) <= 32)
+            _require(all(network.version == 4 and network.prefixlen > 0 for network in networks))
         mapping = general.get('rules_web_file')
         if mapping is not None:
             _require(bool(mapping) and len(mapping) <= 4096)
@@ -160,7 +166,7 @@ def parse_config(data, path):
             _require(inventory_access is not None)
             from atraxis.web_rule_editor import validate_origin
             validate_origin(inventory_admin_origin)
-        _require(address.is_loopback or proxy)
+        _require(address.is_loopback or (proxy and networks))
         configuration_file = general.get('configuration_web_file')
         configuration_origin = general.get('configuration_web_origin')
         _require(configuration_origin is None or configuration_file is not None)
@@ -187,7 +193,7 @@ def parse_config(data, path):
                                 max_workers=workers, auth_basic_file=str(secret_path))})['general']
         return ServerConfig(normalized['listen_addr'], normalized['listen_port'],
                             normalized['max_workers'], str(secret_path), proxy, sources, mapping, origin, accounts, accounts_origin, inventory_access, inventory_admin_origin,
-                            configuration_file, configuration_origin, str(Path(path).absolute()), observations)
+                            configuration_file, configuration_origin, str(Path(path).absolute()), observations, networks)
     except ConfigurationError:
         raise
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError, yaml.YAMLError):

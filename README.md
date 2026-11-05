@@ -85,7 +85,7 @@ and NGINX images, including the optional execution/simulation worker profiles.
 
 ## Install from PyPI
 
-Use Python 3.11 or 3.12 with the system libmagic library installed.
+Source builds also support Python 3.13. For the published 1.0.3 package, use Python 3.11 or 3.12 with the system libmagic library installed.
 
 ```sh
 python -m venv .venv

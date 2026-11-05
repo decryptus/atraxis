@@ -127,40 +127,60 @@ def context_navigation(scope):
     return '<section class="source"><h2>Organization</h2><nav aria-label="Organization">'+' · '.join(links)+'</nav><p class="muted">Inventory context only. Rule operations use their separately configured organization.</p></section>'
 
 
+def _inventory_page(content, *, search='/ui/search', refresh='/ui', navigation='', context=''):
+    header = navigation or '<div class="eyebrow">Operations / Inventory</div>'
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Inventory · Atraxis</title><style>' + CSS + '</style></head><body>'
+        '<a class="skip" href="#inventory">Skip to inventory</a>'
+        '<header><div class="brand">ATRA<span>XIS</span></div>' + header
+        + '<a href="' + search + '">Search inventory</a></header><main id="inventory">' + context
+        + '<div class="intro"><div><div class="eyebrow">Your infrastructure, in view</div>'
+        '<h1>Inventory overview</h1><p class="muted">Containers, certificates, metrics and the sources behind them.</p>'
+        '</div><a class="button" href="' + refresh + '">Refresh snapshot</a></div>' + content
+        + '<footer>Read-only inventory · Values are observations, not inferred health scores. '
+        'CPU may exceed 100% on multi-core hosts.</footer></main></body></html>'
+    )
+
+
 def render_context_selection(scope):
-    body = render_inventory(dict(ready=False, reason='no_visible_sources', sources=[]))
-    start = body.index('<div class="notice')
-    end = body.index('<footer>', start)
-    return body[:start] + context_navigation(scope) + '<p>Select an organization to view its inventory.</p>' + body[end:]
+    return _inventory_page(context_navigation(scope) + '<p>Select an organization to view its inventory.</p>')
 
 
-def render_inventory(payload, *, now=None, rules_enabled=False, accounts_enabled=False, inventory_admin_enabled=False):
-    """Input is a ReadService snapshot, never a raw upstream response."""
-    if 'context' in payload:
-        context = payload['context']
-        base = dict(payload)
-        del base['context']
-        page = render_inventory(base, now=now, rules_enabled=rules_enabled, accounts_enabled=accounts_enabled, inventory_admin_enabled=inventory_admin_enabled)
-        page = page.replace('<div class="intro">', context_navigation(context)+'<div class="intro">', 1)
-        page = page.replace('href="/ui">Refresh snapshot', 'href="/ui?'+urlencode({'organization':context['organization']})+'">Refresh snapshot')
-        page = page.replace('href="/ui/search"', 'href="/ui/search?'+urlencode({'organization':context['organization']})+'"')
-        for route in ('/ui/rules','/ui/interventions'):
-            page = page.replace('href="'+route+'"', 'href="'+route+'?'+urlencode({'organization':context['organization']})+'"')
-        page = page.replace('All configured sources', 'All visible sources').replace('Configured sources', 'Visible sources')
-        if not payload['sources']:
-            start = page.index('<div class="empty"><h2>No sources configured')
-            end = page.index('</div>', start)+6
-            page = page[:start]+'<div class="empty"><h2>No sources available</h2><p>No configured sources are visible with your current permissions.</p></div>'+page[end:]
-        return page
-    if rules_enabled or accounts_enabled or inventory_admin_enabled:
-        links = ('<a href="/ui/rules">Rules</a>' if rules_enabled else '') + (' <a href="/ui/accounts">Accounts</a>' if accounts_enabled else '') + (' <a href="/ui/inventory-access">Inventory access</a>' if inventory_admin_enabled else '')
-        return render_inventory(payload, now=now).replace('<div class="eyebrow">Operations / Inventory</div>', '<nav aria-label="Main">'+links+'</nav>', 1)
+def render_inventory(payload, *, now=None, rules_enabled=False, accounts_enabled=False,
+                     inventory_admin_enabled=False, configuration_enabled=False):
+    """Render scope and navigation directly, preserving the upstream snapshot values."""
+    scope = payload.get('context')
+    query = '?' + urlencode({'organization': scope['organization']}) if scope else ''
+    links = [(rules_enabled, '/ui/rules' + query, 'Rules'),
+             (accounts_enabled, '/ui/accounts', 'Accounts'),
+             (inventory_admin_enabled, '/ui/inventory-access', 'Inventory access'),
+             (configuration_enabled, '/ui/configuration', 'Configuration')]
+    menu = ' '.join(f'<a href="{url}">{label}</a>' for enabled, url, label in links if enabled)
+    navigation = '<nav aria-label="Main">' + menu + '</nav>' if menu else ''
     stamp = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
     sources = payload['sources']
     current = sum(source['current'] for source in sources)
     observed = sum(len(source['last_valid_snapshot']['resources']) for source in sources if source['current'])
+    source_label = 'Visible sources' if scope else 'Configured sources'
     ready = payload['ready']
-    notice = 'All configured sources have current observations.' if ready else REASONS[payload['reason']] + '.'
-    metrics = ''.join('<div class="metric"><strong>' + str(count) + '</strong><span>' + label + '</span></div>' for count, label in ((len(sources), 'Configured sources'), (current, 'Current sources'), (observed, 'Resources in current sources')))
-    panels = ''.join(source_panel(source) for source in sources) if sources else '<div class="empty"><h2>No sources configured</h2><p class="muted">Add a monit-docker, CertLord or Prometheus source to the daemon configuration, then restart collection.</p></div>'
-    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inventory · Atraxis</title><style>' + CSS + '</style></head><body><a class="skip" href="#inventory">Skip to inventory</a><header><div class="brand">ATRA<span>XIS</span></div><div class="eyebrow">Operations / Inventory</div><a href="/ui/search">Search inventory</a></header><main id="inventory"><div class="intro"><div><div class="eyebrow">Your infrastructure, in view</div><h1>Inventory overview</h1><p class="muted">Containers, certificates, metrics and the sources behind them.</p></div><a class="button" href="/ui">Refresh snapshot</a></div><p class="muted">Snapshot at ' + stamp + '. Refresh to check for changes.</p><div class="notice' + (' good' if ready else '') + '">' + notice + '</div><div class="metrics">' + metrics + '</div>' + panels + '<footer>Read-only inventory · Values are observations, not inferred health scores. CPU may exceed 100% on multi-core hosts.</footer></main></body></html>'
+    notice = ('All ' + source_label.lower() + ' have current observations.'
+              if ready else REASONS[payload['reason']] + '.')
+    counts = ((len(sources), source_label), (current, 'Current sources'), (observed, 'Resources in current sources'))
+    metrics = ''.join(f'<div class="metric"><strong>{count}</strong><span>{label}</span></div>'
+                      for count, label in counts)
+    if sources:
+        panels = ''.join(source_panel(source) for source in sources)
+    elif scope:
+        panels = ('<div class="empty"><h2>No sources available</h2>'
+                  '<p>No configured sources are visible with your current permissions.</p></div>')
+    else:
+        panels = ('<div class="empty"><h2>No sources configured</h2><p class="muted">'
+                  'Add a monit-docker, CertLord or Prometheus source to the daemon configuration, '
+                  'then restart collection.</p></div>')
+    content = ('<p class="muted">Snapshot at ' + stamp + '. Refresh to check for changes.</p>'
+               '<div class="notice' + (' good' if ready else '') + '">' + notice
+               + '</div><div class="metrics">' + metrics + '</div>' + panels)
+    return _inventory_page(content, search='/ui/search' + query, refresh='/ui' + query,
+                           navigation=navigation, context=context_navigation(scope) if scope else '')

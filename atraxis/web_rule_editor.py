@@ -24,6 +24,8 @@ REPORT_BYTES = 262144
 TOKEN_TTL = 900
 MAX_TOKENS = 1024
 MAX_USER_TOKENS = 16
+# Seven rule controllers share the previous overall memory budget.
+RULE_STORE_CAPACITY = MAX_TOKENS // 7
 EDITOR_METHODS = frozenset(('draft', 'read', 'save_draft', 'test', 'test_report'))
 ERRORS = {400: 'Invalid form or rule data. Open a fresh form and check your input.',
           403: 'Access denied or form expired. Open a fresh form to continue.',
@@ -52,7 +54,8 @@ def validate_origin(value):
 
 class FormTokens:
     """Single-use, actor-bound CSRF tokens; bounded, process-local, not sessions."""
-    def __init__(self, clock=time.monotonic):
+    def __init__(self, clock=time.monotonic, *, capacity=MAX_TOKENS):
+        self.capacity = capacity
         self.clock, self.lock, self.entries = clock, threading.Lock(), {}
 
     def issue(self, reader, operation, name, revision, context=None):
@@ -62,7 +65,7 @@ class FormTokens:
             owned = [key for key, item in self.entries.items() if item['username'] == reader.username]
             for key in owned[:max(0, len(owned) - MAX_USER_TOKENS + 1)]:
                 del self.entries[key]
-            if len(self.entries) >= MAX_TOKENS:
+            if len(self.entries) >= self.capacity:
                 raise ValueError('web_form_capacity')
             token = secrets.token_urlsafe(32)
             self.entries[token] = dict(expires=now + TOKEN_TTL, username=reader.username,
@@ -72,9 +75,12 @@ class FormTokens:
 
     def consume(self, token, reader, operation):
         with self.lock:
-            item = self.entries.pop(token, None)
-        if (item is None or item['expires'] <= self.clock() or item['username'] != reader.username
-                or item['identity'] != reader.entry() or item['operation'] != operation):
+            item = self.entries.get(token)
+            if (item is None or item['expires'] <= self.clock()
+                    or item['username'] != reader.username or item['operation'] != operation):
+                raise PermissionError('invalid_web_form')
+            del self.entries[token]
+        if item['identity'] != reader.entry():
             raise PermissionError('invalid_web_form')
         return item
 
@@ -242,7 +248,7 @@ from atraxis.web_organization_context import contextual
 class WebEditor:
     def __init__(self, mapping, origin, factory):
         self.mapping, self.origin, self.factory = mapping, validate_origin(origin), factory
-        self.tokens = FormTokens()
+        self.tokens = FormTokens(capacity=RULE_STORE_CAPACITY)
 
     @contextual
     def handle(self, route, path, username, *, method='GET', headers=None, raw=b'', organization=None):
