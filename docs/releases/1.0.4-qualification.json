@@ -2,9 +2,9 @@
   "schema": 1,
   "version": "1.0.4",
   "gates": {
-    "G1": "open",
-    "G2": "open",
-    "G3": "open"
+    "G1": "closed",
+    "G2": "closed",
+    "G3": "closed"
   },
   "support_matrix": "docs/v1.0.md",
   "runtime_source_base": "10345b6169dd409eb10e4bd65eabe77c766385d5",
@@ -12,12 +12,13 @@
   "evidence_sha256": {
     "operational_reference": "0e40661123d574ebb2f2d6f45d7e1b5807dba2ef43d91b58f76d6798d208b65b",
     "pilot_wheel": "1708b327bec0275d4033cad42cf2155fe8f3d326ea36fa9483d621272a1e74e2",
-    "synthetic_recovery_archive": "0976bcd587e275f939bf0a9d7944cf7066da5d19a63a6cff4599df93b43eb435"
+    "synthetic_recovery_archive": "0976bcd587e275f939bf0a9d7944cf7066da5d19a63a6cff4599df93b43eb435",
+    "endurance_archive": "e203ef52737073bb7b7073c32982787f19ec1dbca782ab0f09ffa804c646edc0"
   },
   "limits": [
     "The candidate wheel and its pinned HTTPdis dependency read four current sources on the Linux amd64 reference.",
     "On a distinct isolated restore, ten services and two SQLite databases passed recovery. Copied TLS, login revocation and repeated failed authentication were verified. Both queues stayed paused with zero workers.",
-    "The endurance run reached the 240-round limit after 6,387.93 seconds of load. Its final checkpoint was cycle 240. The required 7,200 seconds and subsequent recovery verification were not completed."
+    "The revised synthetic chain exercised 240 rounds over 7212.52 seconds with 11776 additional verified read sequences and passed final recovery."
   ],
   "runtime_files_sha256": {
     "atraxis/__init__.py": "0880a23a72b71d548e02ff54855cd59aef6b9ce28c926401c9504ef3306df785",
@@ -135,5 +136,6 @@
     "final_phase": "cycle",
     "rounds": 240,
     "elapsed_seconds": 6387.931183549
-  }
+  },
+  "endurance_source": "4904e43bd6fd56d0e5bb170a21f02b0ba9476baf"
 }
