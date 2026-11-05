@@ -19,7 +19,7 @@ import yaml
 from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
-from recovery_transfer import capture, compose_files, prepare_images, WEB_IMAGE
+from recovery_transfer import capture, compose_files, prepare_images, REGISTRY, WEB_IMAGE
 import inventory_recovery
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -284,7 +284,14 @@ finally:
                 pending.chmod(0o600)
                 os.chown(pending, 10001, 10001)
                 pending.replace(engine_config)
-                self.assertEqual(request('/ui/rules?name=compose-rule')[0], 403)
+                # The registry engine (1.0.1) hides rule existence after scope revocation.
+                # The pinned source-build fixture still exercises the 1.0.0 contract.
+                if REGISTRY:
+                    for name in ('compose-rule', 'absent-compose-rule'):
+                        with self.subTest(revoked_rule=name):
+                            self.assertEqual(request('/ui/rules?name=' + name)[0], 404)
+                else:
+                    self.assertEqual(request('/ui/rules?name=compose-rule')[0], 403)
                 check_runtime()
                 self.assertEqual(fingerprint(site), site_fingerprint)
                 for role in ('web', 'engine'):
