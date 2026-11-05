@@ -29,7 +29,8 @@ def validate_tls(certificate, private_key, server_name):
         public = lambda k: k.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
         require(public(key.public_key()) == public(certificates[0].public_key()))
         now = datetime.now(timezone.utc)
-        for cert in certificates: require(cert.not_valid_before_utc <= now < cert.not_valid_after_utc)
+        for cert in certificates:
+            require(cert.not_valid_before_utc <= now < cert.not_valid_after_utc)
         leaf = certificates[0]
         require(not leaf.extensions.get_extension_for_class(x509.BasicConstraints).value.ca)
         san = leaf.extensions.get_extension_for_class(x509.SubjectAlternativeName).value

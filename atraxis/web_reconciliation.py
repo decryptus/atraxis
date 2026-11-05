@@ -126,7 +126,8 @@ class WebReconciliation(WebEditor):
                 reader.entry()
                 return 200, page(body), {}
             pending = self.tokens.consume(confirmation(raw, route), reader, route)
-            context = pending['context']; row = context['row']
+            context = pending['context']
+            row = context['row']
             reader.entry()
             submitted = True
             result = receipt(reader.call('reconcile', row['rule'], row['event_id'], mode=row['mode'],

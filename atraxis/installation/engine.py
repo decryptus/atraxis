@@ -83,4 +83,5 @@ class Engine:
             return dict(status='ready', name=plan.name, services_started=True, deployment=deployment)
         finally:
             reservation.close()
-            if root is not None and self._root is None: root.close()
+            if root is not None and self._root is None:
+                root.close()

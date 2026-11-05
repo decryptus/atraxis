@@ -64,7 +64,8 @@ class BindingPicker(ModalScreen):
         self.dismiss(dict(row))
 
     def on_data_table_row_selected(self, event):
-        event.stop(); self.choose()
+        event.stop()
+        self.choose()
 
     def on_button_pressed(self, event):
         event.stop()

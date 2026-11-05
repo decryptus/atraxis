@@ -42,15 +42,18 @@ def load_operator_config(path, *, remote=False):
             storage_config(document['accounts_file'], Path(path).absolute().parent)
         identities = document['identities']
         _require(isinstance(identities, list) and 1 <= len(identities) <= MAX_IDENTITIES)
-        seen = set(); subjects = {}
+        seen = set()
+        subjects = {}
         key = 'token_sha256' if remote else 'uid'
         for item in identities:
             _require(type(item) is dict and set(item) == {key, 'subject', 'organization', 'atropos_client'})
             value = item[key]
             _require((isinstance(value, str) and DIGEST.fullmatch(value) is not None)
                      if remote else (type(value) is int and value >= 0))
-            _require((value,item['organization']) not in seen); seen.add((value,item['organization']))
-            _require(value not in subjects or subjects[value]==item['subject']); subjects[value]=item['subject']
+            _require((value, item['organization']) not in seen)
+            seen.add((value, item['organization']))
+            _require(value not in subjects or subjects[value] == item['subject'])
+            subjects[value] = item['subject']
             _require(all(isinstance(item[k], str) and IDENTIFIER.fullmatch(item[k])
                          for k in ('subject', 'organization')))
             _require(isinstance(item['atropos_client'], str) and 0 < len(item['atropos_client']) <= 4096)
@@ -112,7 +115,7 @@ class LocalRuleOperator:
         matches = [item for item in entries if (hmac.compare_digest(item[key], value)
                    if self.remote else item[key] == value)]
         from atraxis.organization_context import selected
-        entry = selected(matches,self.organization)
+        entry = selected(matches, self.organization)
         from atraxis.account_store import require_membership
         require_membership(self.path, document.get('accounts_file'), entry['subject'], entry['organization'])
         actor = RuleActor(entry['subject'], entry['organization'])

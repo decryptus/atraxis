@@ -45,18 +45,20 @@ def load_mapping(path):
             raise ValueError()
         if 'accounts_file' in data:
             storage_config(data['accounts_file'], Path(path).absolute().parent)
-        seen = set(); subjects = {}
+        seen = set()
+        subjects = {}
         for entry in data['identities']:
-            if (type(entry) is not dict or set(entry) != {'username','subject','organization','atropos_client'}
+            if (type(entry) is not dict or set(entry) != {'username', 'subject', 'organization', 'atropos_client'}
                     or any(type(entry[key]) is not str or not IDENTIFIER.fullmatch(entry[key])
-                           for key in ('username','subject','organization'))
-                    or (entry['username'],entry['organization']) in seen or type(entry['atropos_client']) is not str
+                           for key in ('username', 'subject', 'organization'))
+                    or (entry['username'], entry['organization']) in seen or type(entry['atropos_client']) is not str
                     or not 0 < len(entry['atropos_client']) <= 4096
                     or not entry['atropos_client'].isprintable()):
                 raise ValueError()
-            if entry['username'] in subjects and subjects[entry['username']] != entry['subject']: raise ValueError()
+            if entry['username'] in subjects and subjects[entry['username']] != entry['subject']:
+                raise ValueError()
             subjects[entry['username']] = entry['subject']
-            seen.add((entry['username'],entry['organization']))
+            seen.add((entry['username'], entry['organization']))
         if 'accounts_file' in data:
             for entry in data['identities']:
                 entry['accounts_file'] = data['accounts_file']
@@ -94,7 +96,7 @@ class RuleReader:
         destination = Path(entry['atropos_client'])
         if not destination.is_absolute():
             destination = self.path.parent / destination
-        client = self.factory(destination, expected_actor={key: entry[key] for key in ('subject','organization')})
+        client = self.factory(destination, expected_actor={key: entry[key] for key in ('subject', 'organization')})
         try:
             result = getattr(client, method)(*args, **kwargs)
             self.entry()  # Discard a result if mapping changed during the request.
@@ -109,7 +111,7 @@ def query(path):
     pairs = parse_qsl(urlsplit(path).query, keep_blank_values=True, max_num_fields=3,
                       encoding='utf-8', errors='strict')
     values = dict(pairs)
-    if len(values) != len(pairs) or not set(values) <= {'name','revision','offset'}:
+    if len(values) != len(pairs) or not set(values) <= {'name', 'revision', 'offset'}:
         raise ValueError('invalid_web_rule_query')
     name = values.get('name', '')
     revision = values.get('revision')
@@ -122,7 +124,7 @@ def query(path):
 
 
 def link(name, *, revision=None, offset=0):
-    values = {'name':name, 'offset':offset}
+    values = {'name': name, 'offset': offset}
     if revision is not None:
         values['revision'] = revision
     return '/ui/rules?' + text(urlencode(values))
@@ -137,7 +139,7 @@ def inspect_rule(reader, name, revision, offset):
     state = reader.call('active', name)
     if (type(rows) is not list or len(rows) > PAGE_SIZE or type(state) is not dict
             or any(key not in state or state[key] is not None and not valid_revision(state[key])
-                   for key in ('revision','generation'))):
+                   for key in ('revision', 'generation'))):
         raise ValueError('invalid_web_rule_response')
     for row in rows:
         if (type(row) is not dict or not valid_revision(row.get('revision'))
@@ -185,21 +187,21 @@ def render(reader, name, revision, offset, rows=None, state=None, record=None, *
     # The engine filters history after paging; an empty page is not an end marker.
     body += '<nav class="pager" aria-label="History windows">'
     if offset:
-        body += '<a href="' + link(name, offset=max(0,offset-PAGE_SIZE)) + '">Previous window</a>'
+        body += '<a href="' + link(name, offset=max(0, offset - PAGE_SIZE)) + '">Previous window</a>'
     if offset + PAGE_SIZE <= MAX_OFFSET:
-        body += '<a href="' + link(name, offset=offset+PAGE_SIZE) + '">Next window</a>'
-    body += '</nav><p class="muted">History window ' + str(offset//PAGE_SIZE+1) + '</p></section>'
+        body += '<a href="' + link(name, offset=offset + PAGE_SIZE) + '">Next window</a>'
+    body += '</nav><p class="muted">History window ' + str(offset // PAGE_SIZE + 1) + '</p></section>'
     if record is not None:
         body += '<section class="source"><h2>Selected revision</h2><p><code>' + text(revision) + '</code></p><span class="badge ' + ('current' if revision == active else 'unknown') + '">' + ('Active at page load' if revision == active else 'Not the active revision') + '</span><h3>Rule document (YAML)</h3><pre>' + text(yaml.safe_dump(record['document'], sort_keys=False, allow_unicode=True)) + '</pre></section>'
     if editing:
-        body += '<p>' + ' · '.join('<a href="/ui/rules/' + operation + '?' + text(urlencode({'name':name})) + '">Review ' + operation + '</a>' for operation in ('archive','unarchive','delete')) + '</p>'
-    body += '<p><a href="/ui/rules/audit?' + text(urlencode({'name':name})) + '">Lifecycle audit</a></p>'
+        body += '<p>' + ' · '.join('<a href="/ui/rules/' + operation + '?' + text(urlencode({'name': name})) + '">Review ' + operation + '</a>' for operation in ('archive', 'unarchive', 'delete')) + '</p>'
+    body += '<p><a href="/ui/rules/audit?' + text(urlencode({'name': name})) + '">Lifecycle audit</a></p>'
     if editing:
         if active is not None:
-            body += '<p><a href="/ui/rules/deactivate?' + text(urlencode({'name':name})) + '">Review deactivation</a></p>'
-        body += '<nav class="pager" aria-label="Rule workbench"><a href="/ui/rules/edit?' + text(urlencode({'name':name})) + '">Edit current draft</a>'
+            body += '<p><a href="/ui/rules/deactivate?' + text(urlencode({'name': name})) + '">Review deactivation</a></p>'
+        body += '<nav class="pager" aria-label="Rule workbench"><a href="/ui/rules/edit?' + text(urlencode({'name': name})) + '">Edit current draft</a>'
         if revision is not None:
-            body += '<a href="/ui/rules/test?' + text(urlencode({'name':name, 'revision':revision})) + '">Test this revision</a>'
+            body += '<a href="/ui/rules/test?' + text(urlencode({'name': name, 'revision': revision})) + '">Test this revision</a>'
         body += '</nav>'
     return page(body, name, workbench=editing)
 
@@ -215,7 +217,7 @@ def handle(path, username, mapping, *, factory=client_factory, editing=False, di
         return 400, page('<p class="notice" role="alert">' + ERRORS[400] + '</p>')
     try:
         reader = RuleReader(mapping, username, factory, organization=organization)
-        values = inspect_rule(reader, name, revision, offset) if name else (None,None,None)
+        values = inspect_rule(reader, name, revision, offset) if name else (None, None, None)
         return 200, render(reader, name, revision, offset, *values, editing=editing, dispatching=dispatching)
     except PermissionError:
         status = 403

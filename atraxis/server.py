@@ -47,7 +47,7 @@ class _Handler(HttpReqHandler):
             raise
 
     def data_from_payload(self, cmd):
-        if self.path.startswith(('/ui/accounts/','/ui/inventory-access/','/ui/configuration/')) or self.path.split('?', 1)[0] in ('/ui/rules/create', '/ui/rules/import', '/ui/rules/edit', '/ui/rules/test', '/ui/rules/activate', '/ui/rules/rollback', '/ui/rules/deactivate', '/ui/rules/simulate', '/ui/rules/simulate-confirm', '/ui/rules/dispatch', '/ui/rules/dispatch-confirm', '/ui/rules/reconcile', '/ui/rules/reconcile-confirm'):
+        if self.path.startswith(('/ui/accounts/', '/ui/inventory-access/', '/ui/configuration/')) or self.path.split('?', 1)[0] in ('/ui/rules/create', '/ui/rules/import', '/ui/rules/edit', '/ui/rules/test', '/ui/rules/activate', '/ui/rules/rollback', '/ui/rules/deactivate', '/ui/rules/simulate', '/ui/rules/simulate-confirm', '/ui/rules/dispatch', '/ui/rules/dispatch-confirm', '/ui/rules/reconcile', '/ui/rules/reconcile-confirm'):
             lengths = self.headers.get_all('Content-Length', [])
             types = self.headers.get_all('Content-Type', [])
             if (len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdigit()
@@ -95,7 +95,7 @@ def build_context(config, service=None, *, rule_client_factory=None):
             elif html:
                 return HttpResponse(code=200, data=inventory_html(payload), headers=WEB_HEADERS.copy())
             else:
-                value = {k: payload[k] for k in ('ready','reason','context')} if readiness else payload
+                value = {k: payload[k] for k in ('ready', 'reason', 'context')} if readiness else payload
                 code = 503 if readiness and not value['ready'] else 200
         except PermissionError:
             code, value = 403, dict(error='inventory_access_denied')
@@ -103,21 +103,22 @@ def build_context(config, service=None, *, rule_client_factory=None):
             code, value = 503, dict(error='inventory_access_unavailable')
         except (ValueError, TypeError):
             code, value = 400, dict(error='invalid_inventory_context')
-        return HttpResponse(code=code, data=json.dumps(value)+'\n', headers=_HEADERS.copy())
+        return HttpResponse(code=code, data=json.dumps(value) + '\n', headers=_HEADERS.copy())
 
     def unconfigured_context(request):
         try:
             if requested_organization(request.path) is not None:
                 raise ValueError('inventory_context_unavailable')
-        except (ValueError,TypeError):
-            return HttpResponse(code=400,data=json.dumps(dict(error='inventory_context_unavailable')),headers=_HEADERS.copy())
+        except (ValueError, TypeError):
+            return HttpResponse(code=400, data=json.dumps(dict(error='inventory_context_unavailable')), headers=_HEADERS.copy())
         return None
 
     def inventory_page(request):
         if access:
             return scoped_inventory(request, html=True)
-        denied=unconfigured_context(request)
-        if denied is not None:return denied
+        denied = unconfigured_context(request)
+        if denied is not None:
+            return denied
         return HttpResponse(code=200, data=inventory_html(service.status()),
                             headers=WEB_HEADERS.copy())
 
@@ -181,16 +182,16 @@ def build_context(config, service=None, *, rule_client_factory=None):
         from atraxis.web_intervention_search import handle as intervention_handle
         from atraxis.web_intervention_detail import handle as intervention_detail_handle
         def intervention_detail_page(request):
-            code,body=intervention_detail_handle(request.path,request.get_server_vars().get('HTTP_AUTH_USER'),config.rules_web_file,factory=factory,reconciliation_enabled=bool(config.rules_web_origin))
-            return HttpResponse(code=code,data=body,headers=RULE_HEADERS.copy())
+            code, body = intervention_detail_handle(request.path, request.get_server_vars().get('HTTP_AUTH_USER'), config.rules_web_file, factory=factory, reconciliation_enabled=bool(config.rules_web_origin))
+            return HttpResponse(code=code, data=body, headers=RULE_HEADERS.copy())
 
         def intervention_page(request):
-            code,body=intervention_handle(request.path,request.get_server_vars().get('HTTP_AUTH_USER'),config.rules_web_file,factory=factory)
-            return HttpResponse(code=code,data=body,headers=RULE_HEADERS.copy())
+            code, body = intervention_handle(request.path, request.get_server_vars().get('HTTP_AUTH_USER'), config.rules_web_file, factory=factory)
+            return HttpResponse(code=code, data=body, headers=RULE_HEADERS.copy())
 
         for verb in _METHODS:
-            context.register(intervention_detail_page,op=verb,name='ui/interventions/detail',to_auth=True,to_log=False)
-            context.register(intervention_page,op=verb,name='ui/interventions',to_auth=True,to_log=False)
+            context.register(intervention_detail_page, op=verb, name='ui/interventions/detail', to_auth=True, to_log=False)
+            context.register(intervention_page, op=verb, name='ui/interventions', to_auth=True, to_log=False)
             context.register(audit_page, op=verb, name='ui/rules/audit', to_auth=True, to_log=False)
             context.register(rules_page, op=verb, name='ui/rules', to_auth=True, to_log=False)
 
@@ -237,27 +238,27 @@ def build_context(config, service=None, *, rule_client_factory=None):
         def accounts_page(request):
             payload = request.get_payload()
             code, body, extra = accounts.handle(request.path, request.get_server_vars().get('HTTP_AUTH_USER'),
-                method=request.command, headers={key.lower():value for key,value in request.headers.items()},
+                method=request.command, headers={key.lower(): value for key, value in request.headers.items()},
                 raw=payload.getvalue() if payload else b'')
-            return HttpResponse(code=code,data=body,headers=dict(ACCOUNT_HEADERS,**extra))
-        for name in ('ui/accounts','ui/accounts/search','ui/accounts/edit','ui/accounts/review','ui/accounts/commit'):
-            verbs = ('POST',) if name.endswith(('/review','/commit')) else ('GET','HEAD')
+            return HttpResponse(code=code, data=body, headers=dict(ACCOUNT_HEADERS, **extra))
+        for name in ('ui/accounts', 'ui/accounts/search', 'ui/accounts/edit', 'ui/accounts/review', 'ui/accounts/commit'):
+            verbs = ('POST',) if name.endswith(('/review', '/commit')) else ('GET', 'HEAD')
             for verb in verbs:
-                context.register(accounts_page,op=verb,name=name,to_auth=True,to_log=False,max_body_size=ACCOUNT_FORM_BYTES)
+                context.register(accounts_page, op=verb, name=name, to_auth=True, to_log=False, max_body_size=ACCOUNT_FORM_BYTES)
 
     if config.inventory_admin_origin is not None:
         from atraxis.web_inventory_admin import WebInventoryAdmin, HEADERS as INVENTORY_ADMIN_HEADERS, FORM_BYTES as INVENTORY_ADMIN_BYTES
-        inventory_admin = WebInventoryAdmin(config.inventory_access_file,config.inventory_admin_origin)
+        inventory_admin = WebInventoryAdmin(config.inventory_access_file, config.inventory_admin_origin)
         def inventory_admin_page(request):
-            payload=request.get_payload()
-            code,body,extra=inventory_admin.handle(request.path,request.get_server_vars().get('HTTP_AUTH_USER'),
-                method=request.command,headers={key.lower():value for key,value in request.headers.items()},
+            payload = request.get_payload()
+            code, body, extra = inventory_admin.handle(request.path, request.get_server_vars().get('HTTP_AUTH_USER'),
+                method=request.command, headers={key.lower(): value for key, value in request.headers.items()},
                 raw=payload.getvalue() if payload else b'')
-            return HttpResponse(code=code,data=body,headers=dict(INVENTORY_ADMIN_HEADERS,**extra))
-        for name in ('ui/inventory-access','ui/inventory-access/edit','ui/inventory-access/remove','ui/inventory-access/review','ui/inventory-access/commit'):
-            verbs=('POST',) if name.endswith(('/review','/commit')) else ('GET','HEAD')
+            return HttpResponse(code=code, data=body, headers=dict(INVENTORY_ADMIN_HEADERS, **extra))
+        for name in ('ui/inventory-access', 'ui/inventory-access/edit', 'ui/inventory-access/remove', 'ui/inventory-access/review', 'ui/inventory-access/commit'):
+            verbs = ('POST',) if name.endswith(('/review', '/commit')) else ('GET', 'HEAD')
             for verb in verbs:
-                context.register(inventory_admin_page,op=verb,name=name,to_auth=True,to_log=False,max_body_size=INVENTORY_ADMIN_BYTES)
+                context.register(inventory_admin_page, op=verb, name=name, to_auth=True, to_log=False, max_body_size=INVENTORY_ADMIN_BYTES)
 
     if config.configuration_web_origin is not None:
         from atraxis.web_configuration import WebConfiguration, HEADERS as CONFIG_HEADERS, FORM_BYTES as CONFIG_FORM_BYTES
@@ -266,20 +267,21 @@ def build_context(config, service=None, *, rule_client_factory=None):
         def configuration_page(request):
             payload = request.get_payload()
             code, body, extra = configuration.handle(request.path, request.get_server_vars().get('HTTP_AUTH_USER'),
-                method=request.command, headers={key.lower(): value for key,value in request.headers.items()},
+                method=request.command, headers={key.lower(): value for key, value in request.headers.items()},
                 raw=payload.getvalue() if payload else b'')
-            return HttpResponse(code=code,data=body,headers=dict(CONFIG_HEADERS,**extra))
-        for name in ('ui/configuration','ui/configuration/edit','ui/configuration/review','ui/configuration/commit'):
-            for verb in (('POST',) if name.endswith(('/review','/commit')) else ('GET','HEAD')):
-                context.register(configuration_page,op=verb,name=name,to_auth=True,to_log=False,max_body_size=CONFIG_FORM_BYTES)
+            return HttpResponse(code=code, data=body, headers=dict(CONFIG_HEADERS, **extra))
+        for name in ('ui/configuration', 'ui/configuration/edit', 'ui/configuration/review', 'ui/configuration/commit'):
+            for verb in (('POST',) if name.endswith(('/review', '/commit')) else ('GET', 'HEAD')):
+                context.register(configuration_page, op=verb, name=name, to_auth=True, to_log=False, max_body_size=CONFIG_FORM_BYTES)
 
     def route(method, readiness=False, inventory=False):
         def handle(request):
             if access and (readiness or inventory):
                 return scoped_inventory(request, readiness=readiness)
             if readiness or inventory:
-                denied=unconfigured_context(request)
-                if denied is not None:return denied
+                denied = unconfigured_context(request)
+                if denied is not None:
+                    return denied
             value = method()
             code = 503 if readiness and not value['ready'] else 200
             return HttpResponse(code=code, data=json.dumps(value, allow_nan=False) + '\n',

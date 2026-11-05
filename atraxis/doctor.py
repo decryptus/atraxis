@@ -175,7 +175,8 @@ def main(options):
     terminated = threading.Event()
     previous = None
     def terminate(signum, frame):
-        terminated.set(); cancel.set()
+        terminated.set()
+        cancel.set()
     try:
         if threading.current_thread() is threading.main_thread():
             previous = signal.signal(signal.SIGTERM, terminate)

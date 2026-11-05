@@ -39,7 +39,7 @@ class JSONStorage:
                 self._commit(transaction.pending)
 
     def _commit(self, payload):
-        payload = json.dumps(payload,sort_keys=True,ensure_ascii=True).encode()
+        payload = json.dumps(payload, sort_keys=True, ensure_ascii=True).encode()
         if not 0 < len(payload) <= MAX_PAYLOAD_BYTES:
             raise AccountError('account_store_capacity_reached')
         descriptor, temporary = tempfile.mkstemp(prefix='.accounts-', dir=self.path.parent)
@@ -69,11 +69,12 @@ class JSONStorage:
         from atraxis.account_delegation import view
         data = AccountStore._decode(self.read())
         directory = Directory(data['directory'])
-        organizations = view(directory,subject)
+        organizations = view(directory, subject)
         from atraxis.account_entities import view as entity_view
         entities = entity_view(directory, subject)
-        if not organizations and not entities['entity_grants']: raise PermissionError('account_administration_denied')
-        return search_accounts(dict(subject=subject,revision=data['revision'],organizations=organizations, **entities),query)
+        if not organizations and not entities['entity_grants']:
+            raise PermissionError('account_administration_denied')
+        return search_accounts(dict(subject=subject, revision=data['revision'], organizations=organizations, **entities), query)
 
 
 class JSONTransaction:

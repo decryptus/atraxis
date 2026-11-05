@@ -259,13 +259,14 @@ class RuleWorkbench:
     def prepare_retirement(self, operation):
         head = self.app.draft(self.name)
         state = self.app.availability(self.name)
-        if state['status'] == 'deleted': raise ValueError('rule_deleted')
+        if state['status'] == 'deleted':
+            raise ValueError('rule_deleted')
         self.pending = dict(operation=operation, revision=head['revision'], expected_generation=state['generation'])
         description = {'archive': 'Preserves history and audit. The rule must first be inactive.',
                        'unarchive': 'Makes the rule available. Does not activate it.',
                        'delete': 'Permanently removes draft contents and test reports. Audit remains. Never-activated, unlinked drafts only.'}
-        self.detail = [operation.upper()+' '+self.name, 'Current status: '+state['status'],
-                       'Draft revision: '+head['revision'], description[operation],
+        self.detail = [operation.upper() + ' ' + self.name, 'Current status: ' + state['status'],
+                       'Draft revision: ' + head['revision'], description[operation],
                        'Atropos checks this permission for every historical scope.',
                        'ENTER confirms this exact change. ESC cancels.']
         self.detail_offset = 0
@@ -275,9 +276,10 @@ class RuleWorkbench:
         getattr(self.app, pending['operation'])(self.name, expected_revision=pending['revision'],
                                               expected_generation=pending['expected_generation'])
         if pending['operation'] == 'delete':
-            self.rows=[]; self.state=None
+            self.rows = []
+            self.state = None
             self.show('audit')
-            self.message='Draft contents deleted. Audit preserved; this rule name remains reserved.'
+            self.message = 'Draft contents deleted. Audit preserved; this rule name remains reserved.'
         else:
             self.refresh()
-            self.message='Rule '+('archived.' if pending['operation']=='archive' else 'available; not activated.')
+            self.message = 'Rule ' + ('archived.' if pending['operation'] == 'archive' else 'available; not activated.')

@@ -27,21 +27,25 @@ def add_parser(commands):
     source.add_argument('--operator-config', help='private local administrator configuration')
     source.add_argument('--remote-config', help='private remote rule client configuration')
     source.add_argument('--remote', action='store_true', help='remote connection from ATRAXIS_* environment and explicit options')
-    parser.add_argument('-o','--organization', help='explicit organization; required for a multi-organization identity')
+    parser.add_argument('-o', '--organization', help='explicit organization; required for a multi-organization identity')
     parser.add_argument('--server-url', help='Atraxis HTTPS service URL')
     parser.add_argument('--token-file', help='private bearer token file; never pass the token value as an argument')
     parser.add_argument('--ca-file', help='CA bundle for the remote service')
     parser.add_argument('--request-timeout', type=int, help='request deadline in seconds (1–60)')
     commands = parser.add_subparsers(dest='rule_command', required=True)
     commands.add_parser('catalog')
-    search=commands.add_parser('search-interventions',help='search your admitted runs for one rule')
-    search.add_argument('name');search.add_argument('-q','--query',default='')
-    search.add_argument('--mode',choices=('all','real','test'),default='all')
-    search.add_argument('--status',default='');search.add_argument('--target',default='');search.add_argument('--workflow',default='')
-    search.add_argument('--since',default='',help='UTC date, YYYY-MM-DDTHH:MM:SS')
-    search.add_argument('--until',default='',help='UTC date, YYYY-MM-DDTHH:MM:SS')
-    search.add_argument('--page',type=int,default=1);search.add_argument('--limit',type=int,default=50)
-    search.add_argument('--tui',action='store_true')
+    search = commands.add_parser('search-interventions', help='search your admitted runs for one rule')
+    search.add_argument('name')
+    search.add_argument('-q', '--query', default='')
+    search.add_argument('--mode', choices=('all', 'real', 'test'), default='all')
+    search.add_argument('--status', default='')
+    search.add_argument('--target', default='')
+    search.add_argument('--workflow', default='')
+    search.add_argument('--since', default='', help='UTC date, YYYY-MM-DDTHH:MM:SS')
+    search.add_argument('--until', default='', help='UTC date, YYYY-MM-DDTHH:MM:SS')
+    search.add_argument('--page', type=int, default=1)
+    search.add_argument('--limit', type=int, default=50)
+    search.add_argument('--tui', action='store_true')
     bindings = commands.add_parser('test-bindings', help='list authorized test workflow metadata')
     bindings.add_argument('name')
     bindings.add_argument('--target', type=_target, required=True)
@@ -99,11 +103,15 @@ def add_parser(commands):
             item.add_argument('--event-id', required=True, help='stable event identity for recovery and deduplication')
             item.add_argument('--confirm', action='store_true', required=True, help='confirm the reviewed workflow submission')
     status = commands.add_parser('dispatch-status')
-    status.add_argument('name'); status.add_argument('--event-id', required=True)
+    status.add_argument('name')
+    status.add_argument('--event-id', required=True)
     test_status = commands.add_parser('test-dispatch-status')
-    test_status.add_argument('name'); test_status.add_argument('--event-id', required=True)
+    test_status.add_argument('name')
+    test_status.add_argument('--event-id', required=True)
     report = commands.add_parser('report')
-    report.add_argument('name'); report.add_argument('revision'); report.add_argument('test_id')
+    report.add_argument('name')
+    report.add_argument('revision')
+    report.add_argument('test_id')
     tui = commands.add_parser('tui', help='terminal rule workbench; requires a TTY')
     tui.add_argument('--name', required=True)
     tui.add_argument('--ui', choices=('curses', 'textual'), default='curses')
@@ -136,14 +144,15 @@ def run_command(options, operator):
     if command in ('archive', 'unarchive', 'delete'):
         return getattr(app, command)(options.name, expected_revision=options.expected_revision,
                                      expected_generation=options.expected_generation)
-    if command=='search-interventions':
-        from atraxis.intervention_search import InterventionQuery,SearchService,date_value
-        query=InterventionQuery(q=options.query,mode=options.mode,status=options.status,target=options.target,
-            workflow=options.workflow,since=date_value(options.since),until=date_value(options.until),page=options.page,limit=options.limit)
-        service=SearchService(app,options.name)
+    if command == 'search-interventions':
+        from atraxis.intervention_search import InterventionQuery, SearchService, date_value
+        query = InterventionQuery(q=options.query, mode=options.mode, status=options.status, target=options.target,
+            workflow=options.workflow, since=date_value(options.since), until=date_value(options.until), page=options.page, limit=options.limit)
+        service = SearchService(app, options.name)
         if options.tui:
             from atraxis.intervention_search_textual import run
-            run(service,query);return None
+            run(service, query)
+            return None
         return service.search(query)
     if command in ('availability', 'active', 'draft'):
         return getattr(app, command)(options.name)
@@ -211,7 +220,7 @@ def main(options):
             ('timeout', getattr(options, 'request_timeout', None))) if value is not None}
         if options.operator_config and overrides:
             raise ValueError('remote_options_with_operator_config')
-        context = {} if getattr(options,'organization',None) is None else dict(organization=options.organization)
+        context = {} if getattr(options, 'organization', None) is None else dict(organization=options.organization)
         if options.remote_config or getattr(options, 'remote', False):
             from atraxis.rule_remote import RemoteRuleOperator
             operator = RemoteRuleOperator(options.remote_config, overrides=overrides, **context)
