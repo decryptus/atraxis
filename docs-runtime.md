@@ -20,7 +20,7 @@ The host also needs the libmagic shared library used by HTTPdis/python-magic
 and checks daemon imports during the image build.
 
 ```sh
-python -m pip install .
+python -m pip install atraxis==1.0.2
 atraxis check-config --config /etc/atraxis/atraxis.yml
 atraxis serve --config /etc/atraxis/atraxis.yml
 ```

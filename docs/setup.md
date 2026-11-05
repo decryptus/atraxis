@@ -176,11 +176,11 @@ cross-replica invalidation or distributed cutoff of already authorized work.
 
 ## Guided preparation in the terminal
 
-From a checkout containing the wizard, install the terminal and TLS dependencies
-in your virtual environment, then launch the assistant under the installer account:
+In the installer account’s virtual environment, install the published package with
+the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install '.[textual,installer]'
+python -m pip install 'atraxis[textual,installer]==1.0.2'
 atraxis install-wizard
 ```
 
