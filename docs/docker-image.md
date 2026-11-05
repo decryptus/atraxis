@@ -1,9 +1,7 @@
 # Run the Atraxis Docker image
 
 The Docker Hub target is [decryptus/atraxis](https://hub.docker.com/r/decryptus/atraxis).
-The first stable image version is **1.0.1**, paired with Atropos 1.0.0.
-Check the available Docker Hub tags before pulling; the image becomes available
-only after the reviewed publication completes.
+Version **1.0.2** is available for Linux amd64.
 
 The Linux amd64 image contains Atraxis and `atropos-client[observations]==1.0.0`.
 It provides the inventory/API/web service and CLI commands. The engine, ZEN,
@@ -11,11 +9,11 @@ Auton server, Prometheus, Covenant and Textual terminal UI are not bundled.
 Direct Monit-Docker and CertLord connections need neither Prometheus nor Covenant.
 Atropos remains an optional separately configured service for rule management.
 
-Once the stable tag is available:
+Pull the stable image and check its CLI:
 
 ```sh
-docker pull decryptus/atraxis:1.0.1
-docker run --rm --network none decryptus/atraxis:1.0.1 --help
+docker pull decryptus/atraxis:1.0.2
+docker run --rm --network none decryptus/atraxis:1.0.2 --help
 ```
 
 Use an exact version tag or digest in deployments. `latest`, `1` and `1.0` are
@@ -33,7 +31,7 @@ paths below `/var/lib/atraxis`. Empty sources explicitly report not ready.
 
 ```sh
 export ATRAXIS_CONFIG_DIR=/absolute/private/atraxis-config
-export ATRAXIS_VERSION=1.0.1
+export ATRAXIS_VERSION=1.0.2
 docker compose -f deploy/docker/compose.yml up -d
 ```
 
