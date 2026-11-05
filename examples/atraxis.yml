@@ -4,6 +4,8 @@ general:
   max_workers: 4
   auth_basic_file: /run/secrets/atraxis.htpasswd
   behind_tls_proxy: false
+  # For a non-loopback bind, set behind_tls_proxy to true and list the actual proxy IPs.
+  # trusted_proxy_networks: [192.0.2.10/32]
 
 # Collection starts with serve. Empty sources are valid but never ready.
 # Use setup and doctor; see docs/setup.md and docs/source-configuration.md.

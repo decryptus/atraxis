@@ -65,7 +65,7 @@ class Authority:
         return self.cert.public_bytes(serialization.Encoding.PEM)
 
 
-def fixtures(root):
+def fixtures(root, proxy_network):
     authority, untrusted = Authority('acceptance CA'), Authority('untrusted acceptance CA')
     for role in ('monitor', 'certificates', 'atraxis', 'gateway', 'client'):
         directory = root / role
@@ -84,7 +84,7 @@ def fixtures(root):
     (root / 'atraxis/outbound.json').write_text(json.dumps(
         dict(username='source-reader', password='synthetic-source-password')))
     config = {'general': {'auth_basic_file': 'users', 'listen_addr': '0.0.0.0',
-                          'behind_tls_proxy': True}, 'sources': [
+                          'behind_tls_proxy': True, 'trusted_proxy_networks': [proxy_network]}, 'sources': [
         dict(source_id=role, kind=kind, origin='https://' + role + '.test:8443',
              ca_file='ca.pem', credentials_file='outbound.json',
              poll_interval=2, timeout=2, max_age=60)
@@ -145,10 +145,11 @@ def main():
                   ('monitor', 'certificates', 'atraxis', 'gateway', 'client')}
     with tempfile.TemporaryDirectory(prefix='atraxis-network-') as directory:
         root = Path(directory)
-        fixtures(root)
         try:
             for network in networks.values():
                 docker('network', 'create', '--internal', network)
+            backend = json.loads(docker('network', 'inspect', networks['backend']).stdout)[0]
+            fixtures(root, backend['IPAM']['Config'][0]['Subnet'])
 
             def create(role, network, command, *, ingress=False):
                 return docker('create', '--name', containers[role], *HARDENING,

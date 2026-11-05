@@ -4,6 +4,14 @@ Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## Changes since 1.0.3
+
+Source builds limit repeated Basic authentication failures, filter TCP peers for
+non-loopback proxy deployments, isolate rule form tokens and render scoped
+inventory navigation directly. Existing non-loopback configurations need
+`general.trusted_proxy_networks` before upgrade. See the [runtime guide](docs-runtime.md).
+The Python install and core test matrices include 3.13.
+
 ## 1.0.3 HTTP read deadlines
 
 The installed-image tests exercise slow headers and bodies with HTTPdis 0.6.39. See the [release notes and qualification scope](docs/releases/1.0.3.md).

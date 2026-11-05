@@ -9,11 +9,11 @@ description = "Supervision and operator interfaces for authorized infrastructure
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 (GPLv3)"]
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = ["dwho==0.3.66", "httpdis==0.6.39", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
 
 [project.optional-dependencies]
-installer = ["cryptography==50.0.2"]
+installer = ["cryptography==50.0.2", "legacycrypt; python_version >= '3.13'"]
 textual = ["dwho[textual]==0.3.66"]
 rules = ["atropos-client[observations]==1.0.0"]
 

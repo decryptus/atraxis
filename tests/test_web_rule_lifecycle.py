@@ -107,6 +107,11 @@ class LifecycleTests(unittest.TestCase):
             self.error = None
         self.assertEqual(self.active_state['revision'], NEW_REVISION)
 
+    def test_wrong_operation_cannot_burn_a_confirmation(self):
+        token = self.token('rollback')
+        self.assertEqual(self.confirm('deactivate', token)[0], 403)
+        self.assertEqual(self.confirm('rollback', token)[0], 303)
+
     def test_cross_operation_and_account_tokens_origin_and_fields_rejected(self):
         for op, other in [('rollback', 'deactivate'), ('deactivate', 'rollback')]:
             self.assertEqual(self.confirm(other, self.token(op))[0], 403)

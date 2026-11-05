@@ -4,7 +4,7 @@ from urllib.parse import parse_qsl, urlencode
 
 from atraxis.web import text
 from atraxis.web_rules import RuleReader, NAME, IDENTIFIER, MAX_DOCUMENT_BYTES, page
-from atraxis.web_rule_editor import (FormTokens, FORM_BYTES, REPORT_BYTES, ERRORS,
+from atraxis.web_rule_editor import (FormTokens, RULE_STORE_CAPACITY, FORM_BYTES, REPORT_BYTES, ERRORS,
     UNCERTAIN, validate_origin, record_checked, context_checked, form_document)
 from atraxis.web_organization_context import contextual
 
@@ -89,7 +89,7 @@ def parse_form(raw, route):
 class WebCreation:
     def __init__(self, mapping, origin, factory):
         self.mapping, self.origin, self.factory = mapping, validate_origin(origin), factory
-        self.tokens = FormTokens()
+        self.tokens = FormTokens(capacity=RULE_STORE_CAPACITY)
 
     @contextual
     def handle(self, route, path, username, *, method='GET', headers=None, raw=b'', organization=None):

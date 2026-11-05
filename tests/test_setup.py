@@ -72,7 +72,7 @@ class SetupTests(unittest.TestCase):
                         dict(source_origin='https://reader:secret@lab.example.test'), dict(listen_addr='0.0.0.0'),
                         dict(source_origin='http://127.0.0.1:8000'), dict(source_ca_file=self.credentials)):
             with self.subTest(changes=changes), self.assertRaises(ValueError): candidate(**self.values(**changes))
-        path, document = candidate(**self.values(listen_addr='0.0.0.0', behind_tls_proxy=True,
+        path, document = candidate(**self.values(listen_addr='0.0.0.0', behind_tls_proxy=True, trusted_proxy_networks=['192.0.2.3'],
                                     source_origin='http://127.0.0.1:8000', allow_source_loopback_http=True))
         self.assertTrue(document['general']['behind_tls_proxy'])
         self.assertTrue(document['sources'][0]['allow_loopback_http'])

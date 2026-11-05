@@ -12,9 +12,8 @@ own domain behavior and never start a TUI or daemon implicitly.
 For a validated starter configuration and step-by-step checks, use the
 [setup and diagnostic guide](docs/setup.md).
 
-Use Python 3.11 or 3.12. Package metadata excludes Python 3.13+ because the pinned
-HTTPdis dependency still imports `cgi`, removed from the Python 3.13 standard
-library. Broader Python support requires a dependency update and runtime validation.
+The published 1.0.3 package supports Python 3.11 and 3.12. This source checkout also supports Python 3.13. On Python 3.13 the installer
+uses the legacycrypt compatibility module for the existing SHA-512 htpasswd format.
 The host also needs the libmagic shared library used by HTTPdis/python-magic
 (`libmagic1` on Debian-family installations). The Dockerfile installs it explicitly
 and checks daemon imports during the image build.
@@ -45,9 +44,19 @@ restart is required after rotating the file in this prototype.
 
 Defaults: IPv4 loopback, port 9810, four workers (maximum 32). All three read routes
 require Basic authentication. Use HTTPS termination remotely. A non-loopback bind
-requires explicit `behind_tls_proxy: true`; this acknowledges deployment intent,
-it does not configure TLS or enforce network isolation automatically. Expose the
-internal listener only to the trusted proxy. No forwarded identity headers are trusted.
+requires both `behind_tls_proxy: true` and `trusted_proxy_networks`. List the
+actual IPv4 addresses of the TLS proxies, for example `[192.0.2.10/32]`, or an
+isolated backend subnet. Migrate existing non-loopback configurations before
+restarting. Atraxis drops other TCP peers before it reads their HTTP headers.
+Configure TLS at the proxy and keep its backend private. Forwarded headers do
+not establish peer identity.
+
+Eight failed Basic checks for the same TCP peer and account within 60 seconds
+temporarily return HTTP 429 with `Retry-After`. A peer reaching 64 failures
+across account names in its 60-second window is also throttled. An initial request without credentials still receives the normal
+authentication challenge. Behind a proxy, clients using the same account share
+the per-account allowance and all clients share the peer allowance. Up to 4,096
+peers are tracked. At capacity, a new peer waits for the oldest entry to expire.
 
 | Route | Authenticated response |
 | --- | --- |
@@ -76,7 +85,7 @@ foreground process, cancel/join source readers and close the server. The [read-o
 
 The Dockerfile builds a non-root image (UID/GID 10001) and starts the same daemon.
 Use a separate container YAML with `listen_addr: 0.0.0.0` and
-`behind_tls_proxy: true`, mounted at `/etc/atraxis/atraxis.yml` read-only. Mount the
+`behind_tls_proxy: true` and the trusted proxy IPs in `trusted_proxy_networks`, mounted at `/etc/atraxis/atraxis.yml` read-only. Mount the
 htpasswd file read-only at `/run/secrets/atraxis.htpasswd`, readable by UID 10001.
 Put the container and TLS reverse proxy on a dedicated network; do not publish
 port 9810 to the Internet. Docker DNS/service names provide internal addressing;

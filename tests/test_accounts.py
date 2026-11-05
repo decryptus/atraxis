@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import sqlite3
+from contextlib import closing
 import unittest
 from unittest.mock import patch
 import yaml
@@ -88,7 +89,7 @@ class StoreTests(unittest.TestCase):
         self.revision=self.store.apply(Directory(fixture()),None)
 
     def tamper(self,data):
-        with sqlite3.connect(self.path) as connection:
+        with closing(sqlite3.connect(self.path)) as connection, connection:
             if data['version']!=3:
                 connection.execute('PRAGMA user_version=999')
             elif data['membership']!=self.store.snapshot()['membership']:

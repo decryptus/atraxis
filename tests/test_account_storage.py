@@ -9,6 +9,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import threading
+from contextlib import closing
 import unittest
 from unittest.mock import patch
 
@@ -75,7 +76,7 @@ class AccountStorageTests(unittest.TestCase):
 
     def test_relational_constraints_reject_invalid_identifiers_and_relationships(self):
         self.store.apply(default_directory('alice'), None)
-        with sqlite3.connect(self.path) as connection:
+        with closing(sqlite3.connect(self.path)) as connection, connection:
             connection.execute('PRAGMA foreign_keys=ON')
             for sql,args in (("UPDATE account_audit SET uid=?",(-1,)),
                              ("UPDATE account_audit SET revision=?",('a'*31,)),
@@ -119,7 +120,7 @@ class AccountStorageTests(unittest.TestCase):
             self.store.snapshot()
         self.assertFalse(self.path.exists())
         self.store.apply(default_directory('alice'), None)
-        with sqlite3.connect(self.path) as connection:
+        with closing(sqlite3.connect(self.path)) as connection, connection:
             connection.execute('PRAGMA user_version=999')
         before = self.path.read_bytes()
         for operation in (self.store.snapshot, lambda: self.store.apply(default_directory('bob'), None)):
@@ -226,7 +227,7 @@ class AccountStorageTests(unittest.TestCase):
         import uuid
         revision=self.store.apply(default_directory('alice'),None)
         event=self.store.snapshot()['audit'][-1]
-        with sqlite3.connect(self.path) as c:
+        with closing(sqlite3.connect(self.path)) as c, c:
             for _ in range(4096):
                 next_revision=uuid.uuid4().hex
                 c.execute('INSERT INTO account_audit(revision,previous,uid,time,sha256) VALUES(?,?,?,?,?)',
@@ -239,7 +240,7 @@ class AccountStorageTests(unittest.TestCase):
         self.assertEqual(len(snapshot['audit']),4098)
 
     def test_old_blob_schema_is_rejected_without_migration(self):
-        with sqlite3.connect(self.path) as c:
+        with closing(sqlite3.connect(self.path)) as c, c:
             c.execute('CREATE TABLE account_snapshot(id INTEGER PRIMARY KEY,payload BLOB)')
             c.execute('PRAGMA user_version=1')
         self.path.chmod(0o600)

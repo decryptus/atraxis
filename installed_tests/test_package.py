@@ -14,6 +14,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+from contextlib import closing
 import unittest
 
 import atraxis
@@ -100,7 +101,7 @@ class InstalledPackageTests(unittest.TestCase):
         self.assertEqual(initialized['revision'], before['revision'])
         self.assertTrue(before['directory']['entity_delegations'])
         self.assertTrue(audit)
-        with sqlite3.connect(self.root / 'accounts.db') as connection:
+        with closing(sqlite3.connect(self.root / 'accounts.db')) as connection, connection:
             tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             self.assertTrue({'users', 'organizations', 'organization_memberships', 'account_audit'} <= tables)
             self.assertEqual(connection.execute('PRAGMA integrity_check').fetchone()[0], 'ok')

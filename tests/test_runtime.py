@@ -1,6 +1,7 @@
 import base64
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import replace
+from ipaddress import ip_network
 import hashlib
 import http.client
 import io
@@ -53,8 +54,17 @@ class ConfigurationTests(unittest.TestCase):
 
     def test_explicit_proxy_binding(self):
         self.path.write_text(self.config_text.replace('auth_basic_file: users',
-                             'auth_basic_file: users\n  listen_addr: 0.0.0.0\n  behind_tls_proxy: true'))
+                             'auth_basic_file: users\n  listen_addr: 0.0.0.0\n  behind_tls_proxy: true\n  trusted_proxy_networks: [192.0.2.3]'))
         self.assertEqual(load_config(self.path).listen_addr, '0.0.0.0')
+
+    def test_nonloopback_requires_bounded_trusted_proxy_networks(self):
+        for networks in (None, [], ['0.0.0.0/0'], ['::1'], ['192.0.2.5/24'], ['invalid']):
+            general = dict(auth_basic_file='users', listen_addr='0.0.0.0', behind_tls_proxy=True)
+            if networks is not None:
+                general['trusted_proxy_networks'] = networks
+            self.path.write_text(yaml.safe_dump({'general': general}))
+            with self.subTest(networks=networks), self.assertRaises(ConfigurationError):
+                load_config(self.path)
 
     def test_schema_enforces_scalar_types_and_ranges(self):
         invalid = {
@@ -211,6 +221,49 @@ class HttpRuntimeTests(unittest.TestCase):
             return response.status, dict(response.getheaders()), response.read()
         finally:
             connection.close()
+
+    def test_basic_failures_block_one_account_and_recover_after_expiry(self):
+        from atraxis.basic_attempts import MAX_FAILURES, WINDOW_SECONDS
+        clock = [100.0]
+        self.context.basic_attempts.clock = lambda: clock[0]
+        def send(username, password):
+            token = base64.b64encode(f'{username}:{password}'.encode()).decode()
+            with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
+                connection.request('GET', '/healthz', headers={'Authorization': 'Basic ' + token})
+                response = connection.getresponse()
+                return response.status, response.getheader('Retry-After')
+        self.context.auth.users['other'] = self.context.auth.users['reader']
+        for _ in range(MAX_FAILURES):
+            self.assertEqual(send('reader', 'wrong')[0], 401)
+        self.assertEqual(send('reader', 'fixture-password'), (429, str(WINDOW_SECONDS)))
+        self.assertEqual(send('other', 'fixture-password')[0], 200)
+        self.assertEqual(self.request('/healthz', authorized=False)[0], 401)
+        clock[0] += WINDOW_SECONDS
+        self.assertEqual(send('reader', 'fixture-password')[0], 200)
+
+    def test_password_spray_and_peer_table_are_bounded(self):
+        from atraxis.basic_attempts import BasicAttempts, MAX_PEER_FAILURES
+        now = [0]
+        attempts = BasicAttempts(lambda: now[0])
+        with patch('atraxis.basic_attempts.MAX_PEERS', 2):
+            for name in range(MAX_PEER_FAILURES):
+                self.assertEqual(attempts.retry_after('first', name), 0)
+                attempts.failed('first', name)
+            self.assertGreater(attempts.retry_after('first', 'new'), 0)
+            self.assertEqual(attempts.retry_after('second', 'new'), 0)
+            attempts.failed('second', 'new')
+            self.assertGreater(attempts.retry_after('third', 'new'), 0)
+            now[0] += 60
+            self.assertEqual(attempts.retry_after('third', 'new'), 0)
+
+    def test_proxy_filter_uses_the_tcp_peer_before_authentication(self):
+        self.context.trusted_proxy_networks = (ip_network('192.0.2.8/32'),)
+        with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
+            connection.request('GET', '/healthz', headers={'X-Forwarded-For': '192.0.2.8'})
+            with self.assertRaises((http.client.RemoteDisconnected, ConnectionResetError)):
+                connection.getresponse()
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1'),)
+        self.assertEqual(self.request('/healthz')[0], 200)
 
     def test_authenticated_health(self):
         code, headers, body = self.request('/healthz')

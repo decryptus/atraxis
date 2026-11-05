@@ -1,6 +1,5 @@
 """Generate and start new, host-authorized inventory-only installations."""
 import base64
-import crypt
 import http.client
 import json
 import os
@@ -21,7 +20,7 @@ MODES = ('compose', 'systemd')
 SAFE_PATH = re.compile(r'/[A-Za-z0-9_./-]+')
 DOCKER = '/usr/bin/docker'
 SYSTEMCTL = '/usr/bin/systemctl'
-WEB_IMAGE = 'decryptus/atraxis:1.0.1@sha256:4eb418f8417a12b1867a03b2784e0edf302522ddfb7e62c780dd47c9ce89e108'
+WEB_IMAGE = 'decryptus/atraxis:1.0.3@sha256:7ef63335446fb915f97cf28b2c94f72c965d788d88dafdb694b1911090fa32d7'
 PROXY_IMAGE = 'nginx:1.30.6@sha256:b565a9579cdabe43de09a5a278dc95ceee721dae1cacf85247effc4f6630d511'
 NGINX = b"""pid /tmp/nginx.pid;
 error_log /dev/stderr warn;
@@ -80,6 +79,10 @@ def _compose(plan, public_files):
 
 def render(mode, plan, login, directory):
     require(mode in MODES, 'deployment_denied', 'destination')
+    if sys.version_info >= (3, 13):
+        import legacycrypt as crypt
+    else:
+        import crypt
     try:
         hashed = crypt.crypt(login['password'], crypt.mksalt(crypt.METHOD_SHA512, rounds=200000))
     except (ValueError, OSError):
