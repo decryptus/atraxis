@@ -43,11 +43,12 @@ def prepare(root: Path) -> None:
             or any(not re.fullmatch('[0-9a-f]{64}', value)
                    for value in qualification['evidence_sha256'].values())):
         raise ValueError('reviewed_operational_gates_required')
-    if 'baseline_qualification_sha256' in qualification:
-        baseline_path = root / 'docs/releases/1.0.0-qualification.json'
+    if version == '1.0.3' or 'baseline_qualification_sha256' in qualification:
+        baseline_version = '1.0.2' if version == '1.0.3' else '1.0.0'
+        baseline_path = root / f'docs/releases/{baseline_version}-qualification.json'
         baseline_bytes = baseline_path.read_bytes()
         baseline = json.loads(baseline_bytes)
-        if (hashlib.sha256(baseline_bytes).hexdigest() != qualification['baseline_qualification_sha256']
+        if (hashlib.sha256(baseline_bytes).hexdigest() != qualification.get('baseline_qualification_sha256')
                 or baseline['runtime_files_sha256'] != qualification['runtime_files_sha256']):
             raise ValueError('patch_baseline_identity_mismatch')
     paths = sorted((root / 'atraxis').rglob('*.py'))
