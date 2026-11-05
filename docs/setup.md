@@ -3,7 +3,7 @@
 For the complete order of installation, access provisioning and maintenance, use
 the [operator journey](operator-journey.md).
 
-Source builds also support Python 3.13. For the published 1.0.3 package, use Python 3.11 or 3.12 and install the native `libmagic` dependency, then install
+Use Python 3.11, 3.12 or 3.13 and install the native `libmagic` dependency, then install
 Atraxis as described in the [runtime guide](../docs-runtime.md). `setup` prepares
 a starter configuration. `doctor` explains configuration and source-read problems.
 Neither command starts a daemon, creates account permissions or submits an
@@ -180,7 +180,7 @@ In the installer account’s virtual environment, install the published package 
 the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install 'atraxis[textual,installer]==1.0.3'
+python -m pip install 'atraxis[textual,installer]==1.0.4'
 atraxis install-wizard
 ```
 

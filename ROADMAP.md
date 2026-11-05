@@ -4,10 +4,10 @@ Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## Changes since 1.0.3
+## 1.0.4 access controls
 
-Source builds limit repeated Basic authentication failures, filter TCP peers for
-non-loopback proxy deployments, isolate rule form tokens and render scoped
+Atraxis 1.0.4 limits repeated Basic authentication failures, filters TCP peers for
+non-loopback proxy deployments, isolates rule form tokens and renders scoped
 inventory navigation directly. Existing non-loopback configurations need
 `general.trusted_proxy_networks` before upgrade. See the [runtime guide](docs-runtime.md).
 The Python install and core test matrices include 3.13.
