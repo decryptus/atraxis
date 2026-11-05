@@ -83,9 +83,22 @@ configuration, persistent state and TLS. Pull the published Linux amd64 image wi
 The [full Compose installation](docs/docker-compose.md) downloads Atraxis, Atropos
 and NGINX images, including the optional execution/simulation worker profiles.
 
+## Install from PyPI
+
+Use Python 3.11 or 3.12 with the system libmagic library installed.
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install atraxis==1.0.2
+atraxis --help
+```
+
+The [Atraxis package on PyPI](https://pypi.org/project/atraxis/1.0.2/) provides the supervision platform. For the interactive installer, see the [setup guide](docs/setup.md#guided-preparation-in-the-terminal).
+
 ## Install from source
 
-Requires Python 3.11 or 3.12. Start in a dedicated virtual environment:
+To install the same release from its Git tag:
 
 ```sh
 git clone https://github.com/decryptus/atraxis.git
@@ -187,7 +200,7 @@ Start with the [setup and diagnostic guide](docs/setup.md): `atraxis setup`
 previews a validated starter configuration, and `atraxis doctor` explains local
 configuration problems and optionally checks current source observations.
 
-See [runtime configuration and Docker notes](docs-runtime.md). Install with `python -m pip install .`, validate with `atraxis check-config --config /etc/atraxis/atraxis.yml` and start with `atraxis serve --config /etc/atraxis/atraxis.yml`. Commands are explicit; no automatic TUI startup. Source collection runs with the daemon. Use `atraxis status` or `atraxis inventory` with a separate client configuration to consult the API; see [CLI usage and exit codes](docs/cli.md).
+See [runtime configuration and Docker notes](docs-runtime.md). Validate with `atraxis check-config --config /etc/atraxis/atraxis.yml` and start with `atraxis serve --config /etc/atraxis/atraxis.yml`. Commands are explicit; no automatic TUI startup. Source collection runs with the daemon. Use `atraxis status` or `atraxis inventory` with a separate client configuration to consult the API; see [CLI usage and exit codes](docs/cli.md).
 
 For a single-host installation, follow the [Docker Compose guide](docs/docker-compose.md).
 It covers separate verified TLS connections, persistent data, cold restoration

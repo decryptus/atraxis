@@ -4,11 +4,11 @@ Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## 1.0.2 release preparation
+## 1.0.2 release
 
 The guided installer passed its Compose and native installation tests. The
 1.0.2 runtime passed operational recovery and a two-hour synthetic endurance run. See the [1.0.2 qualification notes](docs/releases/1.0.2.md).
-Publication is a separate release step.
+The release is available on [GitHub](https://github.com/decryptus/atraxis/releases/tag/v1.0.2), [PyPI](https://pypi.org/project/atraxis/1.0.2/) and [Docker Hub](https://hub.docker.com/r/decryptus/atraxis/tags?name=1.0.2).
 
 ## Available today
 
