@@ -1,6 +1,8 @@
 name: two-hour container endurance
 on:
   workflow_dispatch:
+  push:
+    branches: [qualification/endurance]
 permissions:
   contents: read
 jobs:

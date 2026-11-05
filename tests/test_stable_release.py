@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 
 _SPEC = importlib.util.spec_from_file_location('stable_release',
     Path(__file__).resolve().parents[1] / 'scripts/prepare-stable-release.py')
@@ -87,6 +88,29 @@ class StableReleaseTests(unittest.TestCase):
         file.symlink_to(external)
         with self.assertRaisesRegex(ValueError, 'invalid_archive'):
             _MODULE.prepare(self.root)
+
+    def test_pilot_wheel_comparison_preserves_code_entry_points_and_requirements(self):
+        path = self.root / 'candidate.whl'
+        info = 'atraxis-1.0.2.dist-info/'
+        entries = {info+'WHEEL': b'Wheel-Version: 1.0', info+'RECORD': b'index',
+                   info+'entry_points.txt': b'atraxis=atraxis.cli:main',
+                   info+'METADATA': b'Requires-Dist: example==1\n\nOriginal README',
+                   'atraxis/cli.py': b'pass'}
+
+        def digest(files):
+            with zipfile.ZipFile(path, 'w') as wheel:
+                for name, data in files.items():
+                    wheel.writestr(name, data)
+            return _MODULE.wheel_payload_digest(path, '1.0.2')
+
+        expected = digest(entries)
+        self.assertEqual(expected, digest({**entries, info+'RECORD': b'new index',
+            info+'METADATA': b'Requires-Dist: example==1\n\nRevised README'}))
+        for name, value in [(info+'METADATA', b'Requires-Dist: example==2\n\nOriginal README'),
+                            (info+'entry_points.txt', b'atraxis=other:main'),
+                            ('atraxis/cli.py', b'changed'), ('extra.pth', b'import other')]:
+            with self.subTest(name=name):
+                self.assertNotEqual(expected, digest({**entries, name: value}))
 
     def test_candidate_version_cannot_use_stable_workflow(self):
         (self.root / 'pyproject.toml').write_text('[project]\nname="atraxis"\nversion="1.0.0rc1"\n')
