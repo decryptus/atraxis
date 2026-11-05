@@ -65,7 +65,7 @@ services:
         bind: {create_host_path: false}
   engine:
     <<: *runtime
-    image: decryptus/atropos:1.0.0
+    image: decryptus/atropos:1.0.1
     network_mode: service:engine-tls
     depends_on: [engine-tls]
     volumes:
@@ -78,7 +78,7 @@ services:
   worker:
     <<: *runtime
     profiles: [execution]
-    image: decryptus/atropos:1.0.0
+    image: decryptus/atropos:1.0.1
     command: [rules-worker, --config, /etc/atropos/engine.yml]
     networks: [control]
     volumes: &worker-volumes
@@ -91,7 +91,7 @@ services:
   test-worker:
     <<: *runtime
     profiles: [simulation]
-    image: decryptus/atropos:1.0.0
+    image: decryptus/atropos:1.0.1
     command: [rules-worker, --config, /etc/atropos/engine.yml, --test]
     networks: [control]
     volumes: *worker-volumes

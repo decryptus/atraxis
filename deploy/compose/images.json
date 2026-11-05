@@ -7,9 +7,10 @@
       "id": "sha256:640816602b922c382b06ab343088d0ac295211081b26e9fce0aab64e3b166a00"
     },
     "engine": {
-      "name": "decryptus/atropos:1.0.0",
-      "digest": "sha256:b00a92261b7330f136a9c757b3d2e8512782b4d781f6c6f68cdc22596febcd82",
-      "id": "sha256:997a60816031a140643e47595aabaa9a6d2cb2bac09d0ef20f8661fd723789ea"
+      "name": "decryptus/atropos:1.0.1",
+      "digest": "sha256:42f2d2a8a3c96a062288ee57450ef0c68c461701b2de311ab129e4a4217414f0",
+      "id": "sha256:90a5b554364421ab6c039631f86593ab73edfe21171512288b5e8927e150b6fd",
+      "source_commit": "253454f83a09ebce1d0bab04b736e959e5b98c56"
     },
     "proxy": {
       "name": "nginx:1.30.6",
