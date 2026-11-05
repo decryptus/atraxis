@@ -17,7 +17,7 @@
   "limits": [
     "The candidate wheel and its pinned HTTPdis dependency read four current sources on the Linux amd64 reference.",
     "On a distinct isolated restore, ten services and two SQLite databases passed recovery. Copied TLS, login revocation and repeated failed authentication were verified. Both queues stayed paused with zero workers.",
-    "Endurance evidence is pending. Stable publication requires final review and gate closure."
+    "The endurance run reached the 240-round limit after 6,387.93 seconds of load. Its final checkpoint was cycle 240. The required 7,200 seconds and subsequent recovery verification were not completed."
   ],
   "runtime_files_sha256": {
     "atraxis/__init__.py": "0880a23a72b71d548e02ff54855cd59aef6b9ce28c926401c9504ef3306df785",
@@ -128,5 +128,12 @@
     "atraxis/web_rule_retirement.py": "c6a65a17cb6997a5c4db9f88e1c047ef247d6d8a3f0f1c72cdf60aa2ec6979b3",
     "atraxis/web_rules.py": "393849365a42013f602f68b3abd75a31df6450ca40897bdb5524986179f953fe",
     "atraxis/web_simulation.py": "e650f2e6bafdd3293fe8bb22d68d05a379b0923ce55c64526cf4828f3e85c5e5"
+  },
+  "failed_endurance_attempt": {
+    "run_id": 41990264095,
+    "archive_sha256": "4fd26f44a4829cfcc496cc15a5ee6e79ec980fff28acf01eb32350f28c188b5d",
+    "final_phase": "cycle",
+    "rounds": 240,
+    "elapsed_seconds": 6387.931183549
   }
 }
