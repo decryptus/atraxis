@@ -23,6 +23,12 @@ jobs:
         with:
           repository: decryptus/atropos
           ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
+          path: .acceptance/released-client
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: decryptus/atropos
+          ref: 253454f83a09ebce1d0bab04b736e959e5b98c56
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v4
@@ -51,22 +57,24 @@ jobs:
           import json
           from pathlib import Path
           import subprocess
+          def package_files(root, package):
+              paths = sorted((root / package).rglob('*.py'))
+              assert paths, f'missing source package: {root / package}'
+              return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in paths}
+
           source = Path('.acceptance/engine')
-          expected = {str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in sorted((source / 'atropos').rglob('*.py'))}
-          expected.update({str(p.relative_to(source / 'client')): hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in sorted((source / 'client/atropos_client').rglob('*.py'))})
-          web_source = Path('.acceptance/released-web')
-          web_files = {str(p.relative_to(web_source)): hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in sorted((web_source / 'atraxis').rglob('*.py'))}
-          web_files.update({name: digest for name, digest in expected.items() if name.startswith('atropos_client/')})
+          expected = package_files(source, 'atropos')
+          expected.update(package_files(source / 'client', 'atropos_client'))
+          web_files = package_files(Path('.acceptance/released-web'), 'atraxis')
+          web_files.update(package_files(Path('.acceptance/released-client/client'), 'atropos_client'))
           verifier = '''import hashlib, importlib.util, json
           from importlib.metadata import version
           from pathlib import Path
-          project, release = json.loads(%r)
+          project, release, client_release = json.loads(%r)
           assert version(project) == release
           assert version('sonicprobe') == '0.3.62'
-          assert version('atropos-client') == '1.0.0'
+          assert version('atropos-client') == client_release
           if project == 'atraxis-atropos':
               from atropos import __version__ as engine_version
               assert engine_version == release, 'engine_runtime_version_mismatch'
@@ -79,13 +87,13 @@ jobs:
           print('Installed package bytes verified:', project)
           '''
           images = {}
-          for image, project, release, files in (
-                  ('decryptus/atropos:1.0.0', 'atraxis-atropos', '1.0.0', expected),
-                  ('decryptus/atraxis:1.0.1', 'atraxis', '1.0.1', web_files)):
+          for image, project, release, client_release, files in (
+                  ('decryptus/atropos:1.0.1', 'atraxis-atropos', '1.0.1', '1.0.1', expected),
+                  ('decryptus/atraxis:1.0.1', 'atraxis', '1.0.1', '1.0.0', web_files)):
               subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
                   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
                   '--cpus', '2', '--pids-limit', '128', '--entrypoint', 'python', image, '-'],
-                  input=verifier % (json.dumps([project, release]), json.dumps(files)),
+                  input=verifier % (json.dumps([project, release, client_release]), json.dumps(files)),
                   text=True, check=True, timeout=60)
               images[image] = dict(files=files, image=subprocess.check_output(
                   ['docker', 'image', 'inspect', '--format', '{{.Id}}', image], text=True).strip())
@@ -100,7 +108,7 @@ jobs:
           specification = json.loads(Path('deploy/compose/locks/versions.json').read_text())
           environments = {}
           for profile in ('web', 'engine'):
-              image = {'web': 'decryptus/atraxis:1.0.1', 'engine': 'decryptus/atropos:1.0.0'}[profile]
+              image = {'web': 'decryptus/atraxis:1.0.1', 'engine': 'decryptus/atropos:1.0.1'}[profile]
               output = subprocess.check_output(['docker', 'run', '--rm', '--network', 'none',
                   '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
                   '--memory', '128m', '--cpus', '1', '--pids-limit', '32', '--entrypoint', 'cat',

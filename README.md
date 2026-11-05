@@ -67,9 +67,9 @@ inventory and rule-management interfaces.
 ## Release 1.0
 
 `1.0.0` is the first stable Atraxis package for the documented reference profile.
-See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engine and client **1.0.0** are now independently published on PyPI as
-[`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.0/) and
-[`atropos-client`](https://pypi.org/project/atropos-client/1.0.0/). Atraxis 1.0.0
+See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engine and client **1.0.1** are independently published on PyPI as
+[`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.1/) and
+[`atropos-client`](https://pypi.org/project/atropos-client/1.0.1/). Atraxis 1.0.0
 still pins client **0.1.0a10** for its optional `rules` extra. This `main` checkout
 is **1.0.1** and pins the published client **1.0.0**. The engine is installed
 in its own environment. See the
@@ -163,7 +163,7 @@ optional Prometheus → Alertmanager path.
 | **Atraxis** | Authorized inventory, web/CLI/Textual interfaces and rule-authoring gateway | The console installed here |
 | [monit-docker](https://github.com/decryptus/monit-docker) · [Website](https://www.monit-docker.com/) | Container monitoring and autonomous local actions | To observe Docker resources |
 | [CertLord](https://github.com/decryptus/certlord) · [Website](https://atraxis.io/certlord.html) | TLS certificate issuance, renewal and deployment | To observe managed certificates |
-| [Atropos](https://github.com/decryptus/atropos) · [Engine package](https://pypi.org/project/atraxis-atropos/1.0.0/) | Rule lifecycle, permissions, persistence and guarded workflows | For the optional rule features; separate service |
+| [Atropos](https://github.com/decryptus/atropos) · [Engine package](https://pypi.org/project/atraxis-atropos/1.0.1/) | Rule lifecycle, permissions, persistence and guarded workflows | For the optional rule features; separate service |
 | [atropos-client](https://github.com/decryptus/atropos/tree/main/client) · [Package](https://pypi.org/project/atropos-client/1.0.0/) | Python transport to the Atropos API | For rule consumers; respect each application's version pin |
 | [Covenant](https://github.com/decryptus/covenant) | Export observations and numeric metrics | Optional; required for the two complete inventory adapters through Prometheus |
 | [Prometheus](https://prometheus.io/) | Collect/store metrics and evaluate alert rules | Optional; required when choosing a Prometheus source adapter |

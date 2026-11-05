@@ -1,6 +1,7 @@
 """Verify pinned public checkouts and apply the bounded Auton fixture patch."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -13,7 +14,14 @@ def git(path, *args):
                                    text=True, timeout=30).strip()
 
 
-for role, directory in [('atropos', '.acceptance/engine'), ('auton', '.auton-source')]:
+directories = {'atropos': '.acceptance/engine', 'auton': '.auton-source'}
+if os.environ.get('ATRAXIS_COMPOSE_REGISTRY') == '1':
+    lock = json.loads((root.parents[1] / 'deploy/compose/images.json').read_text())
+    inputs['web_client'] = dict(inputs['atropos'])
+    directories['web_client'] = '.acceptance/released-client'
+    inputs['atropos']['commit'] = lock['images']['engine']['source_commit']
+
+for role, directory in directories.items():
     if git(directory, 'rev-parse', 'HEAD') != inputs[role]['commit']:
         raise ValueError('acceptance_source_identity_mismatch: ' + role)
     if git(directory, 'status', '--porcelain'):
