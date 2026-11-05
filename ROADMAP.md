@@ -4,6 +4,10 @@ Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## 1.0.5 candidate
+
+The readability patch expands compact Python statements throughout the application. See the [candidate notes](docs/releases/1.0.5.md).
+
 ## 1.0.4 access controls
 
 Atraxis 1.0.4 limits repeated Basic authentication failures, filters TCP peers for

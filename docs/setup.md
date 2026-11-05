@@ -180,7 +180,7 @@ In the installer account’s virtual environment, install the published package 
 the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install 'atraxis[textual,installer]==1.0.4'
+python -m pip install 'atraxis[textual,installer]==1.0.5'
 atraxis install-wizard
 ```
 
