@@ -4,6 +4,10 @@ Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## 1.0.3 HTTP read deadlines
+
+The installed-image tests exercise slow headers and bodies with HTTPdis 0.6.39. See the [release notes and qualification scope](docs/releases/1.0.3.md).
+
 ## 1.0.2 release
 
 The guided installer passed its Compose and native installation tests. The

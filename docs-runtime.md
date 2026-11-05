@@ -20,7 +20,7 @@ The host also needs the libmagic shared library used by HTTPdis/python-magic
 and checks daemon imports during the image build.
 
 ```sh
-python -m pip install atraxis==1.0.2
+python -m pip install atraxis==1.0.3
 atraxis check-config --config /etc/atraxis/atraxis.yml
 atraxis serve --config /etc/atraxis/atraxis.yml
 ```
@@ -65,7 +65,7 @@ and unavailable access configuration gives 503.
 The inventory routes do not mutate resources. Empty status is explicitly not ready; it does not claim
 to have collected an empty infrastructure. HTTPdis request handling uses bounded
 workers, a 1 KiB request-body limit and a five-second socket inactivity timeout.
-In source builds using HTTPdis 0.6.39, the request line and headers also share
+In 1.0.3 with HTTPdis 0.6.39, the request line and headers also share
 a 10-second deadline. A request body has a separate budget of 10 seconds plus
 one second per 32 KiB, capped at 120 seconds. Sending another byte does not
 restart either budget. Expired headers close the connection. An expired body
