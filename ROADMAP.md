@@ -4,6 +4,20 @@ Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## Next patch — ingress and form budgets (unreleased)
+
+The candidate separates Basic failure budgets by account behind configured trusted
+proxies. The supplied nginx configurations enforce a per-client request budget;
+existing deployments must apply both changes together. Four active forms per
+account/controller replace the previous limit of sixteen. Core CI now rejects
+compact Python statements (Ruff E701–E703), with the earlier formatting-only
+commit recorded for blame tooling.
+
+Unit and disposable Compose acceptance cover account isolation, expiry, form
+eviction, ingress bursts and forged forwarding headers. These runtime changes
+are not part of 1.0.5 and require a newly qualified package before publication or
+deployment; the previous release's operational evidence cannot qualify them.
+
 ## 1.0.5 readability patch
 
 The readability patch expands compact Python statements throughout the application. Its exact package passed operational cold recovery and two-hour endurance qualification. See the [release notes](docs/releases/1.0.5.md).

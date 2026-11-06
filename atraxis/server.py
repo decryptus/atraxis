@@ -35,6 +35,11 @@ class _Handler(HttpReqHandler):
         attempts = context.basic_attempts
         peer = self.client_address[0]
         account = attempts.account_key(authorization)
+        networks = context.trusted_proxy_networks
+        if any(ip_address(peer) in network for network in networks):
+            # The trusted ingress limits client addresses. Keep failures for
+            # different accounts independent behind its shared TCP address.
+            peer = (peer, account)
         wait = attempts.retry_after(peer, account)
         if wait:
             raise self.req_error(429, 'Too many authentication attempts',

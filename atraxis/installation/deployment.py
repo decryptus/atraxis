@@ -27,6 +27,8 @@ error_log /dev/stderr warn;
 events { worker_connections 128; }
 http {
     access_log off;
+    limit_req_zone $binary_remote_addr zone=atraxis_clients:1m rate=10r/s;
+    limit_req_status 429;
     client_body_temp_path /tmp/client;
     proxy_temp_path /tmp/proxy;
     fastcgi_temp_path /tmp/fastcgi;
@@ -38,6 +40,7 @@ http {
         ssl_certificate_key /tls/server.key;
         ssl_protocols TLSv1.2 TLSv1.3;
         location / {
+            limit_req zone=atraxis_clients burst=20 nodelay;
             proxy_pass http://127.0.0.1:9810;
             proxy_set_header Host $http_host;
             proxy_next_upstream off;
@@ -99,6 +102,8 @@ def render(mode, plan, login, directory):
     config = dict(auth_basic_file='users.htpasswd',
                   listen_addr=plan.listen_address if mode == 'systemd' else '127.0.0.1',
                   listen_port=plan.listen_port if mode == 'systemd' else 9810)
+    if mode == 'compose':
+        config.update(behind_tls_proxy=True, trusted_proxy_networks=['127.0.0.1/32'])
     files['atraxis.yml'] = json.dumps(dict(general=config, sources=sources), indent=2).encode()
     if mode == 'compose':
         files['compose.yaml'] = json.dumps(_compose(plan, mounted), indent=2).encode()

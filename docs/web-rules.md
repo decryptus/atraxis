@@ -163,7 +163,10 @@ They do not activate a rule, invoke Auton or deliver an alert.
 
 Forms expire after 15 minutes, are bound to the authenticated account and current
 mapping, and can be used only once. Reopen a form after expiry, restart or a refused
-submission. Opening many forms may invalidate older ones in the same controller. Rule creation, editing, activation, retirement, simulation, dispatch and reconciliation keep separate stores within the daemon’s overall rule-token capacity. The daemon keeps only
+submission. In the unreleased patch after 1.0.5, each account can retain four forms
+per controller (sixteen in 1.0.5). Opening a fifth invalidates its oldest form.
+Rule creation, editing, activation, retirement, simulation, dispatch and
+reconciliation keep separate stores within the daemon’s overall rule-token capacity. The daemon keeps only
 bounded, temporary form metadata in memory; authoritative documents and reports
 remain in Atropos. Run this increment in one daemon process: independent replicas
 do not share form tokens, so a request reaching another replica is refused.

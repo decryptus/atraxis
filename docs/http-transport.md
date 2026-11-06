@@ -88,3 +88,18 @@ acceptance is claimed. Scheduling, application shutdown, source-specific parsing
 authenticated inventory and CLI reads are now connected and tested separately.
 Synthetic Docker runtime validation is recorded in the milestone review. Explicitly
 authorized live acceptance remains outstanding.
+
+## Basic attempts behind a trusted ingress
+
+This is an unreleased change after 1.0.5.
+
+The generated Compose nginx configuration limits each client address to ten
+requests per second, with a burst of twenty and HTTP 429 for excess requests.
+Atraxis counts failures separately per account when the TCP peer belongs to
+`general.trusted_proxy_networks`. Direct clients retain both address and account
+failure budgets. Forwarded address headers do not choose the limiter key.
+
+For existing proxy deployments, apply the nginx limit and configure the actual
+proxy addresses in `trusted_proxy_networks` together. Keep the application port
+private. The guided Compose deployment uses `127.0.0.1/32` in its shared network
+namespace. A trusted proxy must enforce its own per-client ingress limit.

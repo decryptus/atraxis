@@ -23,7 +23,7 @@ CASE_BYTES = 65536
 REPORT_BYTES = 262144
 TOKEN_TTL = 900
 MAX_TOKENS = 1024
-MAX_USER_TOKENS = 16
+MAX_USER_TOKENS = 4
 # Seven rule controllers share the previous overall memory budget.
 RULE_STORE_CAPACITY = MAX_TOKENS // 7
 EDITOR_METHODS = frozenset(('draft', 'read', 'save_draft', 'test', 'test_report'))
