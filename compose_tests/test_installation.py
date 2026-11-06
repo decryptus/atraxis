@@ -153,7 +153,10 @@ print(json.dumps(s.snapshot(), sort_keys=True))
                     if time.monotonic() > deadline:
                         self.fail('compose_startup_deadline')
                     time.sleep(0.5)
-                ingress = exercise_ingress(compose, ca, password, account_isolation=not legacy_registry)
+                client_isolation = not (REGISTRY and IMAGE_LOCK['images']['web']['name'] in
+                                        ('decryptus/atraxis:1.0.1', 'decryptus/atraxis:1.0.6'))
+                ingress = exercise_ingress(compose, ca, password, account_isolation=not legacy_registry,
+                                           client_isolation=client_isolation)
                 (ROOT / 'acceptance-artifacts/ingress-budget.json').write_text(
                     json.dumps(ingress, sort_keys=True) + '\n')
                 self.assertEqual(request('/healthz', 'wrong-password')[0], 401)
