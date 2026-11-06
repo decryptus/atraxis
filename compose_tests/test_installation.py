@@ -19,6 +19,7 @@ import yaml
 from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
+from ingress_budget import exercise_ingress
 from recovery_transfer import capture, compose_files, prepare_images, REGISTRY, WEB_IMAGE
 import inventory_recovery
 
@@ -50,6 +51,7 @@ class InstallationTests(unittest.TestCase):
             write('web', 'users.htpasswd', 'alice:{SHA}' + digest + '\nbob:{SHA}' + digest + '\n')
             write('web', 'atraxis.yml', dict(general=dict(listen_addr='127.0.0.1', listen_port=9810,
                 max_workers=4, auth_basic_file='/etc/atraxis/users.htpasswd',
+                behind_tls_proxy=True, trusted_proxy_networks=['127.0.0.1/32'],
                 rules_web_file='/etc/atraxis/web-rules.yml'), sources=[]))
             write('web', 'web-rules.yml', dict(version=1,
                 accounts_file=dict(backend='sqlite', url='sqlite:////var/lib/atraxis/accounts.db'),
@@ -146,6 +148,9 @@ print(json.dumps(s.snapshot(), sort_keys=True))
                     if time.monotonic() > deadline:
                         self.fail('compose_startup_deadline')
                     time.sleep(0.5)
+                ingress = exercise_ingress(compose, ca, password)
+                (ROOT / 'acceptance-artifacts/ingress-budget.json').write_text(
+                    json.dumps(ingress, sort_keys=True) + '\n')
                 self.assertEqual(request('/healthz', 'wrong-password')[0], 401)
                 self.assertEqual(request('/readyz')[0], 503)  # No invented ready inventory.
                 self.assertEqual(request('/ui/rules')[0], 200)

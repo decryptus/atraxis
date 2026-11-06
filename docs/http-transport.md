@@ -99,7 +99,23 @@ Atraxis counts failures separately per account when the TCP peer belongs to
 `general.trusted_proxy_networks`. Direct clients retain both address and account
 failure budgets. Forwarded address headers do not choose the limiter key.
 
-For existing proxy deployments, apply the nginx limit and configure the actual
-proxy addresses in `trusted_proxy_networks` together. Keep the application port
+After upgrading to a qualified release containing this change, apply the nginx
+limit and configure the actual proxy addresses in `trusted_proxy_networks`
+together. Keep the application port
 private. The guided Compose deployment uses `127.0.0.1/32` in its shared network
 namespace. A trusted proxy must enforce its own per-client ingress limit.
+
+The guided installer's pinned 1.0.5 image does not contain this new account
+isolation. Its nginx limit alone cannot prevent the old shared 64-failure lockout.
+The installer image pin must be updated after a release containing this runtime
+has completed qualification. Until then, the guided Compose acceptance proves
+ingress throttling and readiness only, not the new authentication behavior.
+The separate registry Compose starter still pins 1.0.1. That version does not
+support `trusted_proxy_networks`; its example keeps the future settings commented
+until its image is upgraded and the full starter is qualified.
+
+Limits remain local to each application process. Eight failures against the same
+account behind a proxy can temporarily block that account, even for another
+client. The bounded failure table also refuses new keys when its 4096 entries
+are occupied until an entry expires. These controls do not guarantee availability
+under a distributed attack; clients sharing a NAT address share nginx's budget.
