@@ -20,7 +20,7 @@ from cold_volume import fingerprint, pack, restore
 from worker_profiles import exercise_workers, assert_restored_workers
 from operator_access import exercise_operator_access, ACCOUNT_SNAPSHOT
 from ingress_budget import exercise_ingress
-from recovery_transfer import capture, compose_files, prepare_images, REGISTRY, WEB_IMAGE
+from recovery_transfer import capture, compose_files, prepare_images, REGISTRY, WEB_IMAGE, IMAGE_LOCK
 import inventory_recovery
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,10 +49,15 @@ class InstallationTests(unittest.TestCase):
                 path.write_text(content if isinstance(content, str) else yaml.safe_dump(content))
             digest = base64.b64encode(hashlib.sha1(password.encode()).digest()).decode()
             write('web', 'users.htpasswd', 'alice:{SHA}' + digest + '\nbob:{SHA}' + digest + '\n')
-            write('web', 'atraxis.yml', dict(general=dict(listen_addr='127.0.0.1', listen_port=9810,
+            # Only the explicitly locked historical registry fixture lacks this
+            # schema. Source candidates and future registry pins must exercise it.
+            legacy_registry = REGISTRY and IMAGE_LOCK['images']['web']['name'] == 'decryptus/atraxis:1.0.1'
+            general = dict(listen_addr='127.0.0.1', listen_port=9810,
                 max_workers=4, auth_basic_file='/etc/atraxis/users.htpasswd',
-                behind_tls_proxy=True, trusted_proxy_networks=['127.0.0.1/32'],
-                rules_web_file='/etc/atraxis/web-rules.yml'), sources=[]))
+                rules_web_file='/etc/atraxis/web-rules.yml')
+            if not legacy_registry:
+                general.update(behind_tls_proxy=True, trusted_proxy_networks=['127.0.0.1/32'])
+            write('web', 'atraxis.yml', dict(general=general, sources=[]))
             write('web', 'web-rules.yml', dict(version=1,
                 accounts_file=dict(backend='sqlite', url='sqlite:////var/lib/atraxis/accounts.db'),
                 identities=[dict(username=user, subject=user, organization='lab',
@@ -148,7 +153,7 @@ print(json.dumps(s.snapshot(), sort_keys=True))
                     if time.monotonic() > deadline:
                         self.fail('compose_startup_deadline')
                     time.sleep(0.5)
-                ingress = exercise_ingress(compose, ca, password)
+                ingress = exercise_ingress(compose, ca, password, account_isolation=not legacy_registry)
                 (ROOT / 'acceptance-artifacts/ingress-budget.json').write_text(
                     json.dumps(ingress, sort_keys=True) + '\n')
                 self.assertEqual(request('/healthz', 'wrong-password')[0], 401)
