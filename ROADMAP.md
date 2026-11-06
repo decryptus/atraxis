@@ -4,7 +4,7 @@ Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## Next patch — ingress and form budgets (unreleased)
+## 1.0.6 — ingress and form budgets (qualification pending)
 
 The candidate separates Basic failure budgets by account behind configured trusted
 proxies. The supplied nginx configurations enforce a per-client request budget;

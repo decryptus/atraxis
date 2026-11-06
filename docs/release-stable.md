@@ -13,7 +13,7 @@ in the required package workflow. Changed/missing archives or hashes, open gates
 a changed runtime module, an existing tag/release or a failed check abort publication.
 
 Publication is explicit: either dispatch `Publish reviewed stable release` on
-main with the tested PR head, or move the dedicated `release/publish-1.0.5` branch
+main with the tested PR head, or move the dedicated `release/publish-1.0.6` branch
 from a commit preceding that workflow to the exact reviewed merge on main.
 Only that named publication branch triggers the push path. It resolves the single
 merged PR for the main commit and checks its exact head; ordinary main pushes,
@@ -33,7 +33,7 @@ The publisher checks both before staging archives. The 1.0.1 transition to stabl
 Atropos packages has separate dependency-installation and container evidence;
 it does not rerun or extend the historical operational/endurance campaign.
 
-For 1.0.2, 1.0.4 and 1.0.5 the publisher checks the final wheel against the qualified pilot
+For 1.0.2, 1.0.4, 1.0.5 and 1.0.6 the publisher checks the final wheel against the qualified pilot
 wheel's installed files, entry points and metadata headers. The ZIP timestamps,
 generated RECORD and long README description may vary between builds. The
 published archives come from the successful package job for the final PR head.
