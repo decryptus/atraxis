@@ -4,18 +4,17 @@ Use the [operator journey](operator-journey.md) alongside this guide to provisio
 identities, add scoped inventory access before opening the service, and plan
 credential/certificate renewal and recovery.
 
-This single-host starter downloads Atraxis **1.0.1**, Atropos **1.0.1** and
+This single-host starter downloads Atraxis **1.0.6**, Atropos **1.0.1** and
 NGINX **1.30.6** from Docker Hub. It runs the two applications behind separate
 TLS proxies without building images or checking out the engine source.
 The Atraxis web image uses client **1.0.0** over HTTPS. Both worker profiles use the
 same **1.0.1** image as the engine.
 Use Docker Compose 2.24 or newer. The supported platform is **Linux amd64**.
 
-The new per-account Basic isolation behind nginx is not in these pinned images.
-The updated nginx configuration alone does not provide that application change.
-See [ingress limits and version requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress)
-before changing proxy trust settings. The starter image pins require a separate
-qualified upgrade; do not uncomment options unsupported by the current image.
+The web image includes per-account Basic isolation behind the trusted local nginx
+proxy. Both `behind_tls_proxy` and `trusted_proxy_networks: [127.0.0.1/32]`
+are active in the example; nginx also enforces per-client ingress limits.
+See [ingress limits and version requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress).
 
 The application images contain Python 3.12.16 and locked dependencies. The
 versioned image names and validated manifest/config digests are recorded in

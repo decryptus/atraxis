@@ -1,10 +1,9 @@
 general:
   listen_addr: 127.0.0.1
   listen_port: 9810
-  # The registry starter still pins 1.0.1, which cannot accept trusted_proxy_networks.
-  # After the new ingress runtime is qualified and pinned, configure both:
-  # behind_tls_proxy: true
-  # trusted_proxy_networks: [127.0.0.1/32]
+  # Only the local TLS proxy shares this network namespace.
+  behind_tls_proxy: true
+  trusted_proxy_networks: [127.0.0.1/32]
   max_workers: 4
   auth_basic_file: /etc/atraxis/users.htpasswd
   rules_web_file: /etc/atraxis/web-rules.yml

@@ -110,9 +110,9 @@ isolation. Its nginx limit alone cannot prevent the old shared 64-failure lockou
 The installer image pin must be updated after a release containing this runtime
 has completed qualification. Until then, the guided Compose acceptance proves
 ingress throttling and readiness only, not the new authentication behavior.
-The separate registry Compose starter still pins 1.0.1. That version does not
-support `trusted_proxy_networks`; its example keeps the future settings commented
-until its image is upgraded and the full starter is qualified.
+The separate registry Compose starter pins the verified 1.0.6 web image with
+both proxy trust settings active. Its nginx and application protections are
+exercised together by registry Compose acceptance.
 
 Limits remain local to each application process. Eight failures against the same
 account behind a proxy can temporarily block that account, even for another
