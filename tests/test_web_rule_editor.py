@@ -167,6 +167,33 @@ class EditorTests(unittest.TestCase):
         token=tokens.issue(reader,'edit','cpu',REVISION);now[0]=901
         with self.assertRaises(PermissionError):tokens.consume(token,reader,'edit')
 
+    def test_twenty_accounts_keep_four_active_forms_each(self):
+        from types import SimpleNamespace
+        from atraxis.web_rule_editor import RULE_STORE_CAPACITY
+        tokens = FormTokens(capacity=RULE_STORE_CAPACITY)
+        newest = []
+        for number in range(20):
+            reader = SimpleNamespace(username=str(number), initial={}, entry=lambda: {})
+            for _ in range(16):
+                token = tokens.issue(reader, 'edit', 'cpu', REVISION)
+            newest.append((token, reader))
+        self.assertEqual(len(tokens.entries), 80)
+        for token, reader in newest:
+            tokens.consume(token, reader, 'edit')
+
+    def test_fifth_form_expires_only_its_owners_oldest_form(self):
+        from types import SimpleNamespace
+        tokens = FormTokens()
+        first = SimpleNamespace(username='first', initial={}, entry=lambda: {})
+        other = SimpleNamespace(username='other', initial={}, entry=lambda: {})
+        retained = tokens.issue(other, 'edit', 'cpu', REVISION)
+        owned = [tokens.issue(first, 'edit', 'cpu', REVISION) for _ in range(5)]
+        with self.assertRaises(PermissionError):
+            tokens.consume(owned[0], first, 'edit')
+        for token in owned[1:]:
+            tokens.consume(token, first, 'edit')
+        tokens.consume(retained, other, 'edit')
+
     def test_xss_head_and_method_allowlist(self):
         self.document_message='</textarea><script>alert(1)</script>'
         code,headers,body=self.request('/ui/rules/edit?name=cpu')

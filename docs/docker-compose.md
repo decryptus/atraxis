@@ -11,6 +11,12 @@ The Atraxis web image uses client **1.0.0** over HTTPS. Both worker profiles use
 same **1.0.1** image as the engine.
 Use Docker Compose 2.24 or newer. The supported platform is **Linux amd64**.
 
+The new per-account Basic isolation behind nginx is not in these pinned images.
+The updated nginx configuration alone does not provide that application change.
+See [ingress limits and version requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress)
+before changing proxy trust settings. The starter image pins require a separate
+qualified upgrade; do not uncomment options unsupported by the current image.
+
 The application images contain Python 3.12.16 and locked dependencies. The
 versioned image names and validated manifest/config digests are recorded in
 `deploy/compose/images.json`. All services, including NGINX, run as UID/GID

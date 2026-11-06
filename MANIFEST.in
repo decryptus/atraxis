@@ -1,4 +1,4 @@
-include .dockerignore .gitignore .readthedocs.yaml
+include .dockerignore .gitignore .git-blame-ignore-revs .readthedocs.yaml
 include AGENTS.md CONTRIBUTING.md Dockerfile LICENSE README.md ROADMAP.md
 include conf.py index.rst docs-core.md docs-runtime.md pyproject.toml MANIFEST.in
 graft .github

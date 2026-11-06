@@ -226,15 +226,17 @@ class HttpRuntimeTests(unittest.TestCase):
         from atraxis.basic_attempts import MAX_FAILURES, WINDOW_SECONDS
         clock = [100.0]
         self.context.basic_attempts.clock = lambda: clock[0]
-        def send(username, password):
+        def send(username, password, forwarded='192.0.2.250'):
             token = base64.b64encode(f'{username}:{password}'.encode()).decode()
             with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
-                connection.request('GET', '/healthz', headers={'Authorization': 'Basic ' + token})
+                connection.request('GET', '/healthz', headers={
+                    'Authorization': 'Basic ' + token, 'X-Forwarded-For': forwarded,
+                    'X-Real-IP': forwarded})
                 response = connection.getresponse()
                 return response.status, response.getheader('Retry-After')
         self.context.auth.users['other'] = self.context.auth.users['reader']
-        for _ in range(MAX_FAILURES):
-            self.assertEqual(send('reader', 'wrong')[0], 401)
+        for index in range(MAX_FAILURES):
+            self.assertEqual(send('reader', 'wrong', f'192.0.2.{index + 1}')[0], 401)
         self.assertEqual(send('reader', 'fixture-password'), (429, str(WINDOW_SECONDS)))
         self.assertEqual(send('other', 'fixture-password')[0], 200)
         self.assertEqual(self.request('/healthz', authorized=False)[0], 401)
@@ -255,6 +257,20 @@ class HttpRuntimeTests(unittest.TestCase):
             self.assertGreater(attempts.retry_after('third', 'new'), 0)
             now[0] += 60
             self.assertEqual(attempts.retry_after('third', 'new'), 0)
+
+    def test_trusted_proxy_failures_do_not_lock_other_accounts(self):
+        from atraxis.basic_attempts import MAX_PEER_FAILURES
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
+        for index in range(MAX_PEER_FAILURES):
+            token = base64.b64encode(f'unknown-{index}:wrong'.encode()).decode()
+            with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
+                connection.request('GET', '/healthz', headers={'Authorization': 'Basic ' + token})
+                self.assertEqual(connection.getresponse().status, 401)
+        self.assertEqual(self.request('/healthz')[0], 200)
+
+    def test_trusted_proxy_still_limits_failures_for_the_same_account(self):
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
+        self.test_basic_failures_block_one_account_and_recover_after_expiry()
 
     def test_proxy_filter_uses_the_tcp_peer_before_authentication(self):
         self.context.trusted_proxy_networks = (ip_network('192.0.2.8/32'),)
