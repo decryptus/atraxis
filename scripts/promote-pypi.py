@@ -8,15 +8,15 @@ import urllib.error
 import urllib.request
 from urllib.parse import urlsplit
 
-RELEASE = '85e6107cb17d83c3030b202dced494dc7e9123c5'
-VERSION = '1.0.4'
+RELEASE = 'a419b0303d22cf47d9503a1a441639d0e629edb9'
+VERSION = '1.0.5'
 PROVENANCE = 'release-provenance.json'
 FILES = {
-    'atraxis-1.0.4-py3-none-any.whl': '8394ef375a47d72131ccd83b76f070e70a4bf40ddefda602926c75824751397c',
-    'atraxis-1.0.4.tar.gz': 'ea5421668376e50a1cee7a8ee290790f8f3c8ed50f6b0da922f50a5eaf7ac70e',
+    'atraxis-1.0.5-py3-none-any.whl': '0b205d5953e9380ad461530464b590f1b706a41658d1cb9a2156984336d6c101',
+    'atraxis-1.0.5.tar.gz': '91181825536d0b911baa7bff2c5a1b8ae51f129b25f288e2f2adaa2f20e74720',
 }
-ASSETS = {**FILES, PROVENANCE: '7b17c0bd6155ccf615ffd62ee06a71baedf87d466f66f9bb7d59204a8c000400',
-          'SHA256SUMS': '66e6ff4277e186dd1e6660d96dd5ae58a985501c652c14f2b22b1b6aa06808ad'}
+ASSETS = {**FILES, PROVENANCE: 'd999b1ed1bda22eca75a5b774e1f5d3b7cbf541587f1a8765fa2cd0575faaf3e',
+          'SHA256SUMS': 'eae8550c2ec77eb8525d036b4c987f3ee29628eb59afa0f700eea248b5695df7'}
 LIMIT = 10 * 1024 * 1024
 
 
