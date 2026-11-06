@@ -20,7 +20,7 @@ MODES = ('compose', 'systemd')
 SAFE_PATH = re.compile(r'/[A-Za-z0-9_./-]+')
 DOCKER = '/usr/bin/docker'
 SYSTEMCTL = '/usr/bin/systemctl'
-WEB_IMAGE = 'decryptus/atraxis:1.0.3@sha256:7ef63335446fb915f97cf28b2c94f72c965d788d88dafdb694b1911090fa32d7'
+WEB_IMAGE = 'decryptus/atraxis:1.0.5@sha256:092d8494279ff253f3cd2287c83f809a341f5835ab837621e8549354300b980e'
 PROXY_IMAGE = 'nginx:1.30.6@sha256:b565a9579cdabe43de09a5a278dc95ceee721dae1cacf85247effc4f6630d511'
 NGINX = b"""pid /tmp/nginx.pid;
 error_log /dev/stderr warn;
