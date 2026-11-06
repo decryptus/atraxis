@@ -11,9 +11,12 @@ The Atraxis web image uses client **1.0.0** over HTTPS. Both worker profiles use
 same **1.0.1** image as the engine.
 Use Docker Compose 2.24 or newer. The supported platform is **Linux amd64**.
 
-The web image includes per-account Basic isolation behind the trusted local nginx
+The published web image includes the initial per-account Basic isolation behind the trusted local nginx
 proxy. Both `behind_tls_proxy` and `trusted_proxy_networks: [127.0.0.1/32]`
 are active in the example; nginx also enforces per-client ingress limits.
+The source proxy now overwrites `X-Forwarded-For`; the pinned 1.0.6 application
+does not yet use it for client isolation. The follow-up needs a qualified image
+update, not just a proxy configuration change.
 See [ingress limits and version requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress).
 
 The application images contain Python 3.12.16 and locked dependencies. The

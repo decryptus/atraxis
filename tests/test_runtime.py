@@ -212,7 +212,7 @@ class HttpRuntimeTests(unittest.TestCase):
 
     def request(self, path, method='GET', authorized=True):
         connection = http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)
-        headers = {}
+        headers = {'X-Forwarded-For': '192.0.2.250'}
         if authorized:
             headers['Authorization'] = 'Basic ' + base64.b64encode(b'reader:fixture-password').decode()
         try:
@@ -254,23 +254,58 @@ class HttpRuntimeTests(unittest.TestCase):
             self.assertGreater(attempts.retry_after('first', 'new'), 0)
             self.assertEqual(attempts.retry_after('second', 'new'), 0)
             attempts.failed('second', 'new')
-            self.assertGreater(attempts.retry_after('third', 'new'), 0)
+            self.assertEqual(attempts.retry_after('third', 'new'), 0)
+            attempts.failed('third', 'new')
+            self.assertEqual(len(attempts.peers), 2)
+            self.assertNotIn('first', attempts.peers)
             now[0] += 60
             self.assertEqual(attempts.retry_after('third', 'new'), 0)
 
-    def test_trusted_proxy_failures_do_not_lock_other_accounts(self):
-        from atraxis.basic_attempts import MAX_PEER_FAILURES
-        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
-        for index in range(MAX_PEER_FAILURES):
-            token = base64.b64encode(f'unknown-{index}:wrong'.encode()).decode()
-            with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
-                connection.request('GET', '/healthz', headers={'Authorization': 'Basic ' + token})
-                self.assertEqual(connection.getresponse().status, 401)
-        self.assertEqual(self.request('/healthz')[0], 200)
+    def proxy_request(self, address, password='wrong', extra_address=None):
+        token = base64.b64encode(f'reader:{password}'.encode()).decode()
+        with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as connection:
+            connection.putrequest('GET', '/healthz')
+            connection.putheader('Authorization', 'Basic ' + token)
+            if address is not None:
+                connection.putheader('X-Forwarded-For', address)
+            if extra_address is not None:
+                connection.putheader('X-Forwarded-For', extra_address)
+            connection.endheaders()
+            response = connection.getresponse()
+            response.read()
+            return response.status
 
-    def test_trusted_proxy_still_limits_failures_for_the_same_account(self):
+    def test_trusted_proxy_isolates_clients_for_the_same_account(self):
+        from atraxis.basic_attempts import MAX_FAILURES
         self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
-        self.test_basic_failures_block_one_account_and_recover_after_expiry()
+        for _ in range(MAX_FAILURES):
+            self.assertEqual(self.proxy_request('192.0.2.1'), 401)
+        self.assertEqual(self.proxy_request('192.0.2.1', 'fixture-password'), 429)
+        self.assertEqual(self.proxy_request('192.0.2.2', 'fixture-password'), 200)
+
+    def test_full_proxy_table_does_not_lock_a_new_client(self):
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
+        with patch('atraxis.basic_attempts.MAX_PEERS', 2):
+            for address in ('192.0.2.1', '192.0.2.2'):
+                self.assertEqual(self.proxy_request(address), 401)
+            self.assertEqual(self.proxy_request('192.0.2.3', 'fixture-password'), 200)
+            self.assertEqual(len(self.context.basic_attempts.peers), 2)
+
+    def test_proxy_requires_one_valid_address(self):
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
+        for value in (None, '', 'unknown', '192.0.2.1, 192.0.2.2',
+                      '192.0.2.1:80', 'fe80::1%eth0', 'x' * 46):
+            with self.subTest(value=value):
+                self.assertEqual(self.proxy_request(value, 'fixture-password'), 400)
+        self.assertEqual(self.proxy_request('192.0.2.1', 'fixture-password', '192.0.2.2'), 400)
+        self.assertEqual(len(self.context.basic_attempts.peers), 0)
+
+    def test_proxy_ipv6_text_forms_share_a_budget(self):
+        from atraxis.basic_attempts import MAX_FAILURES
+        self.context.trusted_proxy_networks = (ip_network('127.0.0.1/32'),)
+        for _ in range(MAX_FAILURES):
+            self.assertEqual(self.proxy_request('2001:db8::1'), 401)
+        self.assertEqual(self.proxy_request('2001:0db8:0:0:0:0:0:1', 'fixture-password'), 429)
 
     def test_proxy_filter_uses_the_tcp_peer_before_authentication(self):
         self.context.trusted_proxy_networks = (ip_network('192.0.2.8/32'),)

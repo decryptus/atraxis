@@ -174,3 +174,15 @@ The 1.0 support matrix names the qualified versioned configuration, API and stor
 contracts. Unsupported formats are rejected explicitly; stored data is not silently
 converted or deleted. Prototype compatibility and arbitrary component combinations
 are not promised.
+
+## Implemented — Basic ingress follow-up (unreleased)
+
+The failure table evicts its oldest entry at capacity instead of denying unknown
+clients. Trusted ingress must overwrite one X-Forwarded-For address; the listener
+validates it and isolates failures by client address and account. Direct clients
+cannot spoof their limiter key. Regression tests cover table saturation, targeted
+account lockout, invalid/duplicate headers and canonical IPv6 addresses.
+
+Registry and guided-install image pins, package publication, public website and
+production deployments remain unchanged pending qualification of a release.
+No claim is made that existing 1.0.6 installations contain this follow-up.
