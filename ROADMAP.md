@@ -175,7 +175,7 @@ contracts. Unsupported formats are rejected explicitly; stored data is not silen
 converted or deleted. Prototype compatibility and arbitrary component combinations
 are not promised.
 
-## Implemented — Basic ingress follow-up (unreleased)
+## Prepared — 1.0.7 Basic ingress follow-up
 
 The failure table evicts its oldest entry at capacity instead of denying unknown
 clients. Trusted ingress must overwrite one X-Forwarded-For address; the listener
