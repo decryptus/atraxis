@@ -2,9 +2,9 @@
   "schema": 1,
   "version": "1.0.5",
   "gates": {
-    "G1": "open",
-    "G2": "open",
-    "G3": "open"
+    "G1": "closed",
+    "G2": "closed",
+    "G3": "closed"
   },
   "support_matrix": "docs/v1.0.md",
   "runtime_source_base": "3c24b093c8704f511d73f1a159455198ea658b59",
@@ -13,7 +13,10 @@
     "source_observation": "5006e41c60625f92ec131d4d13e898d68939d843c84fde3773bd9a6dbd74e60e",
     "pilot_wheel": "dd7e4765a97826c194e465024787befd4cbd4a70c8f4a66dc0f4710cc1673a3a",
     "synthetic_recovery_archive": "0cf4a3ea2277be3bb34f6c947d038536aa550c55b9bb0db211b52e2f06541c3e",
-    "endurance_archive": "11b44572e0bfe3fdc9692cdfcfbb4f605e36e5ae85bb0fc209498917d0eafb39"
+    "endurance_archive": "11b44572e0bfe3fdc9692cdfcfbb4f605e36e5ae85bb0fc209498917d0eafb39",
+    "operational_recovery_archive": "21a5ebc403826b750329eaa3211153ac43c6f2427f74a7ea65aba4ec01281b60",
+    "operational_snapshot_manifest": "8b70e708c1a4d99d4cd6c8443b435d04384944fc6d21f2e34f996412db236ad2",
+    "operational_stream": "97b2d30434d984c48cf3870a4a0e669cd48c2e799ae3ae6535cd65fc06fbde2d"
   },
   "runtime_files_sha256": {
     "atraxis/__init__.py": "0880a23a72b71d548e02ff54855cd59aef6b9ce28c926401c9504ef3306df785",
@@ -129,7 +132,9 @@
     "The exact 1.0.5 wheel read four current sources on the pilot. Its 108 packaged modules matched the reviewed sources by SHA-256.",
     "The disposable Compose fixture passed recovery on a separate runner.",
     "The synthetic endurance run completed 234 rounds over 7219.08 seconds, including 384 additional verified read sequences, and passed final recovery.",
-    "The authorized distinct-host restore attempt stopped before backup transfer because the operational recovery point exceeded the 36-hour freshness limit and the latest backup preflight failed its space-or-size guard. A healthy current reference remains required. The previous temporary restored copy was removed after the 1.0.4 run."
+    "A fresh, explicitly authorized cold capture was streamed to a distinct isolated runner. The exact 1.0.5 wheel passed restoration of 10 services, two SQLite databases and eight persistent trees, preserving accounts, audits, current revocations and execution pause. Final source authority and cleanup were verified.",
+    "The earlier operational attempt failed the existing backup health/freshness and source staging guards. The first streamed attempt failed the receiving-runner capacity guard before source access. These failures are retained; the original local-backup 8 GiB guard and receiving-runner 12 GiB restore reserve plus wire allowance were not weakened.",
+    "The isolated restored copy ran no workers and did not resume execution, refresh external live sources or verify external delivery. Four current sources were read separately with the exact wheel before capture. This qualification does not repair the nightly backup infrastructure or qualify arbitrary deployments."
   ],
   "public_runs": {
     "package": 42124218422,
@@ -143,5 +148,32 @@
     "completed_rounds": 234,
     "extra_read_sequences": 384,
     "recovery_verified": true
+  },
+  "operational_recovery": {
+    "status": "passed",
+    "candidate": "3c24b093c8704f511d73f1a159455198ea658b59",
+    "wheel_sha256": "dd7e4765a97826c194e465024787befd4cbd4a70c8f4a66dc0f4710cc1673a3a",
+    "streamed_capture": true,
+    "distinct_host": true,
+    "restored_services": 10,
+    "sqlite_databases": 2,
+    "trees_restored": 8,
+    "live_sources_current": 4,
+    "accounts_and_audit_equal": true,
+    "tls_verified": true,
+    "tls_leaf_renewal_verified": true,
+    "revoked_copy_login_denied": true,
+    "replacement_copy_login_accepted": true,
+    "repeated_bad_login_throttled": true,
+    "wrong_auth_rejected": true,
+    "all_networks_internal": true,
+    "execution_paused": true,
+    "test_execution_paused": true,
+    "workers": 0,
+    "resumed": false,
+    "final_source_authority_verified": true,
+    "private_copy_cleanup_verified": true,
+    "live_source_freshness_verified": false,
+    "external_delivery_verified": false
   }
 }
