@@ -1,8 +1,12 @@
 # Atraxis roadmap
 
-Updated 5 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
+
+## 1.0.5 readability patch
+
+The readability patch expands compact Python statements throughout the application. Its exact package passed operational cold recovery and two-hour endurance qualification. See the [release notes](docs/releases/1.0.5.md).
 
 ## 1.0.4 access controls
 

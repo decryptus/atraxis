@@ -76,7 +76,7 @@ def prepare(root: Path) -> None:
             raise ValueError('invalid_archive')
         if file.stat().st_size != entry['size'] or hashlib.sha256(file.read_bytes()).hexdigest() != entry['sha256']:
             raise ValueError('archive_digest_mismatch')
-    if version in ('1.0.2', '1.0.4'):
+    if version in ('1.0.2', '1.0.4', '1.0.5'):
         wheel = download / f'dist/atraxis-{version}-py3-none-any.whl'
         if wheel_payload_digest(wheel, version) != qualification.get('pilot_wheel_payload_sha256'):
             raise ValueError('pilot_wheel_payload_mismatch')
