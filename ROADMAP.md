@@ -4,7 +4,7 @@ Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## 1.0.6 — ingress and form budgets (qualified; GitHub/Docker published)
+## 1.0.6 — ingress and form budgets (published)
 
 The candidate separates Basic failure budgets by account behind configured trusted
 proxies. The supplied nginx configurations enforce a per-client request budget;
@@ -19,15 +19,16 @@ are not part of 1.0.5 and require a newly qualified package before publication o
 deployment; the previous release's operational evidence cannot qualify them.
 The exact 1.0.6 package has now passed fresh operational source reads and isolated
 cold recovery and verified two-hour endurance (240 rounds). G1, G2 and G3 are
-closed for the bounded reference scope; GitHub and Docker are verified, with PyPI
-and website promotion pending. See the
+closed for the bounded reference scope. GitHub, Docker Hub and PyPI publication
+are verified, including a fresh index installation and pip check. The EN/FR site
+has been promoted after registry verification. See the
 [1.0.6 qualification notes](docs/releases/1.0.6.md).
 The guided installer currently pins the published 1.0.5 image, which still has
 the shared Basic peer budget. Updating that pin to a newly qualified image is
 required before the guided deployment can deliver the complete correction.
 The registry Compose starter now selects the verified 1.0.6 web digest and
-matching proxy trust configuration. Registry acceptance must pass this exact
-recipe before promotion. Its engine and client pins remain unchanged.
+matching proxy trust configuration. All twelve promotion workflows passed this exact
+recipe before publication. Its engine and client pins remain unchanged.
 
 ## 1.0.5 readability patch
 
