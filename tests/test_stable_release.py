@@ -117,6 +117,43 @@ class StableReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'stable_version'):
             _MODULE.prepare(self.root)
 
+    def test_ingress_release_requires_its_exact_qualified_wheel_payload(self):
+        version = '1.0.6'
+        (self.root / 'pyproject.toml').write_text(
+            '[project]\nname="atraxis"\nversion="1.0.6"\n')
+        qualification = json.loads((self.root / 'docs/releases/1.0.0-qualification.json').read_text())
+        qualification['version'] = version
+        qualification_path = self.root / f'docs/releases/{version}-qualification.json'
+        self.manifest['version'] = version
+        self.manifest['files'] = {}
+        for path in list((self.download / 'dist').iterdir()):
+            renamed = path.with_name(path.name.replace('1.0.0', version))
+            path.rename(renamed)
+            if renamed.suffix == '.whl':
+                info = f'atraxis-{version}.dist-info/'
+                with zipfile.ZipFile(renamed, 'w') as wheel:
+                    for name, data in {
+                        info + 'METADATA': b'Name: atraxis\nVersion: 1.0.6\n\nFixture',
+                        info + 'WHEEL': b'Wheel-Version: 1.0',
+                        info + 'RECORD': b'index',
+                        info + 'entry_points.txt': b'atraxis=atraxis.cli:main',
+                        'atraxis/__init__.py': b'# fixture\n',
+                    }.items():
+                        wheel.writestr(name, data)
+                candidate = renamed
+            self.manifest['files']['dist/' + renamed.name] = dict(
+                size=renamed.stat().st_size, sha256=hashlib.sha256(renamed.read_bytes()).hexdigest())
+        self.save_manifest()
+        for payload in (None, 'f' * 64):
+            qualification['pilot_wheel_payload_sha256'] = payload
+            qualification_path.write_text(json.dumps(qualification))
+            with self.assertRaisesRegex(ValueError, 'pilot_wheel_payload_mismatch'):
+                _MODULE.prepare(self.root)
+            self.assertFalse((self.root / 'stable-assets').exists())
+        qualification['pilot_wheel_payload_sha256'] = _MODULE.wheel_payload_digest(candidate, version)
+        qualification_path.write_text(json.dumps(qualification))
+        _MODULE.prepare(self.root)
+
     def test_changed_runtime_cannot_reuse_operational_qualification(self):
         (self.root/'atraxis/__init__.py').write_text('# different runtime\n')
         with self.assertRaisesRegex(ValueError,'operational_runtime_identity'):

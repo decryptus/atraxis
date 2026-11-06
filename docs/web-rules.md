@@ -163,7 +163,7 @@ They do not activate a rule, invoke Auton or deliver an alert.
 
 Forms expire after 15 minutes, are bound to the authenticated account and current
 mapping, and can be used only once. Reopen a form after expiry, restart or a refused
-submission. In the unreleased patch after 1.0.5, each account can retain four forms
+submission. In Atraxis 1.0.6, each account can retain four forms
 per controller (sixteen in 1.0.5). Opening a fifth invalidates its oldest form.
 Rule creation, editing, activation, retirement, simulation, dispatch and
 reconciliation keep separate stores within the daemon’s overall rule-token capacity. The daemon keeps only

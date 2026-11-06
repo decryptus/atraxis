@@ -180,9 +180,15 @@ In the installer account’s virtual environment, install the published package 
 the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install 'atraxis[textual,installer]==1.0.5'
+python -m pip install 'atraxis[textual,installer]==1.0.6'
 atraxis install-wizard
 ```
+
+The native deployment uses the installed 1.0.6 package. Guided Compose still
+selects the pinned 1.0.5 image, which does not contain the new per-account Basic
+isolation behind nginx. For that protection, use a qualified 1.0.6 application
+image and the matching proxy configuration; see the
+[ingress limits and image requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress).
 
 ### Prepare the host once
 
