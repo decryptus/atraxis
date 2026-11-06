@@ -129,7 +129,7 @@
     "The exact 1.0.5 wheel read four current sources on the pilot. Its 108 packaged modules matched the reviewed sources by SHA-256.",
     "The disposable Compose fixture passed recovery on a separate runner.",
     "The synthetic endurance run completed 234 rounds over 7219.08 seconds, including 384 additional verified read sequences, and passed final recovery.",
-    "A distinct-host restore of the operational reference with the 1.0.5 wheel is pending. The temporary 1.0.4 restore was removed after its run."
+    "The authorized distinct-host restore attempt stopped before backup transfer because the operational recovery point exceeded the 36-hour freshness limit and the latest backup preflight failed its space-or-size guard. A healthy current reference remains required. The previous temporary restored copy was removed after the 1.0.4 run."
   ],
   "public_runs": {
     "package": 42124218422,
