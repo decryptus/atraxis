@@ -17,6 +17,10 @@ Unit and disposable Compose acceptance cover account isolation, expiry, form
 eviction, ingress bursts and forged forwarding headers. These runtime changes
 are not part of 1.0.5 and require a newly qualified package before publication or
 deployment; the previous release's operational evidence cannot qualify them.
+The exact 1.0.6 package has now passed fresh operational source reads and isolated
+cold recovery. G1 and G2 are closed for the bounded reference scope; G3 remains
+open until the two-hour endurance evidence is verified. See the
+[1.0.6 qualification notes](docs/releases/1.0.6.md).
 The guided installer currently pins the published 1.0.5 image, which still has
 the shared Basic peer budget. Updating that pin to a newly qualified image is
 required before the guided deployment can deliver the complete correction.

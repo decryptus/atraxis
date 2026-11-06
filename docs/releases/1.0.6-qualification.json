@@ -2,14 +2,13 @@
   "schema": 1,
   "version": "1.0.6",
   "gates": {
-    "G1": "open",
-    "G2": "open",
+    "G1": "closed",
+    "G2": "closed",
     "G3": "open"
   },
   "support_matrix": "docs/v1.0.md",
-  "runtime_source_base": null,
-  "pilot_wheel_payload_sha256": null,
-  "evidence_sha256": {},
+  "runtime_source_base": "0bd6ee962974b9354c66be678e40ba4fe9b81085",
+  "pilot_wheel_payload_sha256": "0264d5a7cfc89ddbf9f77b90ca46cb921eefed1a46156e105848f976ec928b5a",
   "runtime_files_sha256": {
     "atraxis/__init__.py": "0880a23a72b71d548e02ff54855cd59aef6b9ce28c926401c9504ef3306df785",
     "atraxis/__main__.py": "e9fadca44f59461f2093d79a043b21f830c6b0004a6bcf3fb462327dd773b1be",
@@ -120,5 +119,57 @@
     "atraxis/web_rules.py": "ed4d429f340a3a2a91793b9679662e7bb74ad0e306a049c393a3669d6c065450",
     "atraxis/web_simulation.py": "e650f2e6bafdd3293fe8bb22d68d05a379b0923ce55c64526cf4828f3e85c5e5"
   },
-  "qualification_status": "pending: exact candidate package, fresh operational evidence, synthetic recovery and two-hour endurance"
+  "evidence_sha256": {
+    "pilot_wheel": "6e490f5f26483701148ef0990b16098ccc37a0ad6d76cea60c7924cb818f754f",
+    "source_observation": "74bf4e6db904b4b6d2edf03948bab2e6c4c81955ff9f0b419a317ea1b263e180",
+    "operational_recovery_archive": "74bf4e6db904b4b6d2edf03948bab2e6c4c81955ff9f0b419a317ea1b263e180",
+    "operational_snapshot_manifest": "654e3c4fa49610a3f89fa6c79b6cb4a6466e734b0a9cd6be6ddcd326933017f4",
+    "operational_stream": "6c01a84b2f2788560e5ffdebea5e3ff28b7db2d88947f820c7d47fa28f1d8b06",
+    "synthetic_recovery_archive": "e59995e0a4a6650e362e3f80d9fbaaea455548640b8aecae4f0005a694c3b1b9"
+  },
+  "public_runs": {
+    "package": 42191538615,
+    "synthetic_recovery": 42192229666,
+    "endurance": 42191537342
+  },
+  "operational_recovery": {
+    "status": "passed",
+    "candidate": "0bd6ee962974b9354c66be678e40ba4fe9b81085",
+    "wheel_sha256": "6e490f5f26483701148ef0990b16098ccc37a0ad6d76cea60c7924cb818f754f",
+    "distinct_host": true,
+    "accounts_and_audit_equal": true,
+    "all_networks_internal": true,
+    "tls_leaf_renewal_verified": true,
+    "revoked_copy_login_denied": true,
+    "replacement_copy_login_accepted": true,
+    "repeated_bad_login_throttled": true,
+    "execution_paused": true,
+    "test_execution_paused": true,
+    "final_source_authority_verified": true,
+    "streamed_capture": true,
+    "tls_verified": true,
+    "wrong_auth_rejected": true,
+    "restored_services": 10,
+    "sqlite_databases": 2,
+    "trees_restored": 8,
+    "live_sources_current": 4,
+    "workers": 0,
+    "resumed": false,
+    "live_source_freshness_verified": false,
+    "external_delivery_verified": false,
+    "private_copy_cleanup_verified": true
+  },
+  "endurance": {
+    "source_commit": "0bd6ee962974b9354c66be678e40ba4fe9b81085",
+    "status": "pending_verification"
+  },
+  "limits": [
+    "The exact 1.0.6 Python 3.12 wheel has 108 packaged modules matching the reviewed runtime by SHA256. Only deployment generation, HTTP authentication and rule-form quotas differ from 1.0.5.",
+    "Four current sources were read with the exact wheel before a fresh authorized cold capture. The same aggregate archive contains the source observation and operational recovery evidence.",
+    "The exact wheel restored 10 services, two SQLite databases and eight persistent trees on a distinct isolated runner. Accounts, audits, renewed TLS, current copied-credential revocations and execution pause were verified. Final source authority and private-copy cleanup passed.",
+    "The disposable Compose fixture passed separate-host recovery, retaining audits, revocations, paused work and uncertainty protections. This does not establish live external delivery.",
+    "The isolated operational copy ran no workers, resumed no execution and did not refresh external sources. No pilot service was upgraded. Source staging and receiver capacity guards were preserved.",
+    "The two-hour endurance run remains pending. Do not close G3 or publish before checking its exact source provenance, artifact digest, complete phase, at least 7200 load seconds, at most 240 rounds, verified activity and final recovery.",
+    "The guided installer still selects the separately qualified 1.0.5 image. The registry Compose starter still selects its separately qualified 1.0.1 images until a reviewed pin upgrade. These surfaces do not yet deliver the full new authentication behavior."
+  ]
 }

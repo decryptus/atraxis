@@ -91,7 +91,7 @@ authorized live acceptance remains outstanding.
 
 ## Basic attempts behind a trusted ingress
 
-This is an unreleased change after 1.0.5.
+This behavior is introduced in Atraxis 1.0.6.
 
 The generated Compose nginx configuration limits each client address to ten
 requests per second, with a burst of twenty and HTTP 429 for excess requests.
