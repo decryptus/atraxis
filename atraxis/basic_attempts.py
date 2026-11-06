@@ -44,9 +44,7 @@ class BasicAttempts:
             self._expire(now)
             entry = self.peers.get(peer)
             if entry is None:
-                if len(self.peers) < MAX_PEERS:
-                    return 0
-                entry = next(iter(self.peers.values()))
+                return 0
             elif entry['total'] < MAX_PEER_FAILURES and entry['accounts'].get(account, 0) < MAX_FAILURES:
                 return 0
             return max(1, ceil(entry['until'] - now))
@@ -58,7 +56,7 @@ class BasicAttempts:
             entry = self.peers.get(peer)
             if entry is None:
                 if len(self.peers) >= MAX_PEERS:
-                    return
+                    self.peers.popitem(last=False)
                 entry = self.peers[peer] = dict(until=now + WINDOW_SECONDS, total=0, accounts={})
             # Concurrent checks already admitted may finish after this limit.
             if entry['total'] < MAX_PEER_FAILURES:

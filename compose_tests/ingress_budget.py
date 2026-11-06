@@ -10,7 +10,7 @@ import ssl
 import sys
 import time
 
-ca, password, account_isolation = json.loads(sys.argv[1])
+ca, password, account_isolation, client_isolation = json.loads(sys.argv[1])
 context = ssl.create_default_context(cadata=ca)
 
 def request(index, username=None, secret=None, address='127.0.0.2'):
@@ -38,7 +38,8 @@ assert request(0, 'alice', password, '127.0.0.3')[0] == 200, 'other_client_block
 time.sleep(3)
 assert request(0, 'alice', password)[0] == 200, 'burst_recovery_failed'
 evidence = dict(nginx_burst_rejected=True, forwarded_headers_ignored=True,
-    distinct_client_access=True, account_isolation_verified=False)
+    distinct_client_access=True, account_isolation_verified=False,
+    client_isolation_verified=False)
 if not account_isolation:
     # Explicitly historical 1.0.1 registry acceptance: never claim the new
     # runtime protection was verified on an image that predates its code.
@@ -49,28 +50,35 @@ if not account_isolation:
 # Stay below nginx's rate while exceeding the old shared 64-failure budget.
 started = time.monotonic()
 for index in range(65):
-    assert request(index, f'unknown-{index}', 'wrong')[0] == 401, 'shared_peer_lockout'
+    expected = 429 if client_isolation and index == 64 else 401
+    assert request(index, f'unknown-{index}', 'wrong')[0] == expected, 'client_failure_budget'
     time.sleep(0.21)
 assert time.monotonic() - started < 60, 'spray_exceeded_failure_window'
 assert request(0, 'alice', password, '127.0.0.3')[0] == 200, 'other_account_blocked'
 
+target = 'alice' if client_isolation else 'targeted-account'
 for index in range(8):
-    assert request(index, 'targeted-account', 'wrong')[0] == 401, 'premature_account_limit'
+    assert request(index, target, 'wrong', '127.0.0.4')[0] == 401, 'premature_account_limit'
     time.sleep(0.21)
-status, retry = request(9, 'targeted-account', 'wrong')
+status, retry = request(9, target, 'wrong', '127.0.0.4')
 assert status == 429 and retry and 0 < int(retry) <= 60, 'account_limit_missing'
-assert request(0, 'alice', password, '127.0.0.3')[0] == 200, 'account_limit_not_isolated'
+if client_isolation:
+    assert request(0, 'alice', password, '127.0.0.3')[0] == 200, 'same_account_other_client_blocked'
+else:
+    # Published 1.0.6 can isolate different accounts, not clients of one account.
+    assert request(0, 'alice', password, '127.0.0.3')[0] == 200, 'account_limit_not_isolated'
 evidence.update(account_isolation_verified=True, unrelated_failures=65,
-    same_account_limit=8)
+    same_account_limit=8, client_isolation_verified=client_isolation)
 print(json.dumps(evidence))
 '''
 
 
-def exercise_ingress(compose, authority, password, *, account_isolation):
+def exercise_ingress(compose, authority, password, *, account_isolation, client_isolation):
     # Execute inside the candidate web container's shared proxy namespace. Two
     # real loopback source addresses reach nginx; both reach Atraxis as 127.0.0.1.
     result = compose('exec', '-T', 'web', 'python', '-c', CLIENT,
-                     json.dumps([authority.pem().decode(), password, account_isolation]), timeout=60)
+                     json.dumps([authority.pem().decode(), password, account_isolation, client_isolation]), timeout=60)
     evidence = json.loads(result.stdout)
     assert evidence['account_isolation_verified'] is account_isolation
+    assert evidence['client_isolation_verified'] is client_isolation
     return evidence

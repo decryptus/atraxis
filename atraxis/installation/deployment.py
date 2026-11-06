@@ -43,6 +43,7 @@ http {
             limit_req zone=atraxis_clients burst=20 nodelay;
             proxy_pass http://127.0.0.1:9810;
             proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-For $remote_addr;
             proxy_next_upstream off;
         }
     }

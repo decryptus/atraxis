@@ -91,31 +91,38 @@ authorized live acceptance remains outstanding.
 
 ## Basic attempts behind a trusted ingress
 
-This behavior is introduced in Atraxis 1.0.6.
+The current source adds client-address isolation and bounded-table eviction;
+these changes are not yet in the published 1.0.6 image.
 
-The generated Compose nginx configuration limits each client address to ten
-requests per second, with a burst of twenty and HTTP 429 for excess requests.
-Atraxis counts failures separately per account when the TCP peer belongs to
-`general.trusted_proxy_networks`. Direct clients retain both address and account
-failure budgets. Forwarded address headers do not choose the limiter key.
+The generated nginx configuration limits each client address to ten requests per
+second, with a burst of twenty and HTTP 429 for excess requests. It overwrites
+`X-Forwarded-For` with `$remote_addr`, never `$proxy_add_x_forwarded_for` or a
+client-supplied value. Atraxis reads this header only when the TCP peer is in
+`general.trusted_proxy_networks`. Exactly one bare IPv4/IPv6 address is required;
+missing, duplicate, chained, scoped or malformed values return HTTP 400 before
+password verification. Untrusted direct clients cannot select their limiter key
+with forwarding headers. Forwarded usernames never establish identity.
 
-After upgrading to a qualified release containing this change, apply the nginx
-limit and configure the actual proxy addresses in `trusted_proxy_networks`
-together. Keep the application port
-private. The guided Compose deployment uses `127.0.0.1/32` in its shared network
-namespace. A trusted proxy must enforce its own per-client ingress limit.
+The failure budgets are eight per (client address, account) and 64 per client
+address, over a fixed 60-second window. A failing client cannot lock a different
+address out of the same account. The table holds at most 4096 addresses; on a new
+failure at capacity, it evicts the oldest entry. An unknown address is not blocked
+merely because the table is full. Successful authentication does not add entries.
+Eviction may discard an attacker's budget under high churn: this is an explicit
+availability tradeoff, so keep nginx ingress throttling enabled.
 
-The guided installer's pinned 1.0.5 image does not contain this new account
-isolation. Its nginx limit alone cannot prevent the old shared 64-failure lockout.
-The installer image pin must be updated after a release containing this runtime
-has completed qualification. Until then, the guided Compose acceptance proves
-ingress throttling and readiness only, not the new authentication behavior.
-The separate registry Compose starter pins the verified 1.0.6 web image with
-both proxy trust settings active. Its nginx and application protections are
-exercised together by registry Compose acceptance.
+Upgrade the application and proxy configuration together. Existing custom proxies
+must overwrite the header as above before enabling the new application. Keep the
+application port private and trust only the actual immediate proxy. The guided
+Compose namespace uses `127.0.0.1/32`. Additional ingress hops require a separate
+explicit trusted-address design; arbitrary forwarding chains are not accepted.
 
-Limits remain local to each application process. Eight failures against the same
-account behind a proxy can temporarily block that account, even for another
-client. The bounded failure table also refuses new keys when its 4096 entries
-are occupied until an entry expires. These controls do not guarantee availability
-under a distributed attack; clients sharing a NAT address share nginx's budget.
+Guided Compose still pins 1.0.5 and the registry starter pins 1.0.6. Neither image
+contains this follow-up. Their pins must be updated after release qualification;
+changing nginx alone does not install the new application behavior. Existing
+published releases retain their documented limitations.
+
+Limits are local to each application process. Clients sharing a NAT address share
+budgets, and these controls cannot guarantee availability under a distributed
+attack. There is deliberately no global per-account lock that a remote attacker
+could use against clients at other addresses.

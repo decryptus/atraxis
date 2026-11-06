@@ -119,7 +119,7 @@ http {
       proxy_set_header Host $host;
       proxy_set_header X-Forwarded-User "";
       proxy_set_header X-Remote-User "";
-      proxy_set_header X-Forwarded-For "";
+      proxy_set_header X-Forwarded-For $remote_addr;
       proxy_connect_timeout 2s;
       proxy_read_timeout 5s;
       proxy_next_upstream off;

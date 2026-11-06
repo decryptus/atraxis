@@ -16,6 +16,7 @@ _HEADERS = {'Content-Type': 'application/json; charset=utf-8',
 _METHODS = ('GET', 'HEAD')
 _ROUTES = (('healthz', 'health'), ('readyz', 'readiness'), ('v1/status', 'status'))
 _SOCKET_TIMEOUT = 5.0
+_MAX_FORWARDED_ADDRESS = 45
 
 
 class _Handler(HttpReqHandler):
@@ -37,9 +38,15 @@ class _Handler(HttpReqHandler):
         account = attempts.account_key(authorization)
         networks = context.trusted_proxy_networks
         if any(ip_address(peer) in network for network in networks):
-            # The trusted ingress limits client addresses. Keep failures for
-            # different accounts independent behind its shared TCP address.
-            peer = (peer, account)
+            # One trusted hop must overwrite the field, never append a chain.
+            forwarded = self.headers.get_all('X-Forwarded-For', [])
+            try:
+                if (len(forwarded) != 1 or len(forwarded[0]) > _MAX_FORWARDED_ADDRESS
+                        or '%' in forwarded[0]):
+                    raise ValueError
+                peer = str(ip_address(forwarded[0].strip()))
+            except ValueError:
+                raise self.req_error(400, 'Invalid proxy client address') from None
         wait = attempts.retry_after(peer, account)
         if wait:
             raise self.req_error(429, 'Too many authentication attempts',

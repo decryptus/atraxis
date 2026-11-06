@@ -31,6 +31,7 @@ class DeploymentTests(unittest.TestCase):
         config = json.loads(files['atraxis.yml'])
         self.assertTrue(config['general']['behind_tls_proxy'])
         self.assertEqual(config['general']['trusted_proxy_networks'], ['127.0.0.1/32'])
+        self.assertIn(b'proxy_set_header X-Forwarded-For $remote_addr;', files['nginx.conf'])
         web_sources = {v['source'] for v in web['volumes']}
         self.assertNotIn('./server.key', web_sources)
         self.assertEqual(web_sources, {'./atraxis.yml','./users.htpasswd',
