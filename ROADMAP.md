@@ -4,7 +4,7 @@ Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## 1.0.6 — ingress and form budgets (qualification pending)
+## 1.0.6 — ingress and form budgets (qualified; publication pending)
 
 The candidate separates Basic failure budgets by account behind configured trusted
 proxies. The supplied nginx configurations enforce a per-client request budget;
@@ -18,8 +18,8 @@ eviction, ingress bursts and forged forwarding headers. These runtime changes
 are not part of 1.0.5 and require a newly qualified package before publication or
 deployment; the previous release's operational evidence cannot qualify them.
 The exact 1.0.6 package has now passed fresh operational source reads and isolated
-cold recovery. G1 and G2 are closed for the bounded reference scope; G3 remains
-open until the two-hour endurance evidence is verified. See the
+cold recovery and verified two-hour endurance (240 rounds). G1, G2 and G3 are
+closed for the bounded reference scope; registry publication remains pending. See the
 [1.0.6 qualification notes](docs/releases/1.0.6.md).
 The guided installer currently pins the published 1.0.5 image, which still has
 the shared Basic peer budget. Updating that pin to a newly qualified image is

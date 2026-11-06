@@ -4,7 +4,7 @@
   "gates": {
     "G1": "closed",
     "G2": "closed",
-    "G3": "open"
+    "G3": "closed"
   },
   "support_matrix": "docs/v1.0.md",
   "runtime_source_base": "0bd6ee962974b9354c66be678e40ba4fe9b81085",
@@ -125,7 +125,8 @@
     "operational_recovery_archive": "74bf4e6db904b4b6d2edf03948bab2e6c4c81955ff9f0b419a317ea1b263e180",
     "operational_snapshot_manifest": "654e3c4fa49610a3f89fa6c79b6cb4a6466e734b0a9cd6be6ddcd326933017f4",
     "operational_stream": "6c01a84b2f2788560e5ffdebea5e3ff28b7db2d88947f820c7d47fa28f1d8b06",
-    "synthetic_recovery_archive": "e59995e0a4a6650e362e3f80d9fbaaea455548640b8aecae4f0005a694c3b1b9"
+    "synthetic_recovery_archive": "e59995e0a4a6650e362e3f80d9fbaaea455548640b8aecae4f0005a694c3b1b9",
+    "endurance_archive": "d1593d12d002e974b01991726f41541b9a9d76da1588fe9a72ca3c13b0ba5900"
   },
   "public_runs": {
     "package": 42191538615,
@@ -160,8 +161,20 @@
     "private_copy_cleanup_verified": true
   },
   "endurance": {
+    "load_seconds": 7206.43450907,
+    "minimum_seconds": 7200,
+    "completed_rounds": 240,
+    "recovery_verified": true,
+    "accepted_test_runs": 6000,
     "source_commit": "0bd6ee962974b9354c66be678e40ba4fe9b81085",
-    "status": "pending_verification"
+    "status": "passed",
+    "artifact_id": 13497830798,
+    "phase": "complete",
+    "admitted_per_round": 24,
+    "refused_per_round": 24,
+    "concurrent_reads_per_round": 64,
+    "duplicate_receipts_per_round": 8,
+    "extra_read_sequences": 32832
   },
   "limits": [
     "The exact 1.0.6 Python 3.12 wheel has 108 packaged modules matching the reviewed runtime by SHA256. Only deployment generation, HTTP authentication and rule-form quotas differ from 1.0.5.",
@@ -169,7 +182,7 @@
     "The exact wheel restored 10 services, two SQLite databases and eight persistent trees on a distinct isolated runner. Accounts, audits, renewed TLS, current copied-credential revocations and execution pause were verified. Final source authority and private-copy cleanup passed.",
     "The disposable Compose fixture passed separate-host recovery, retaining audits, revocations, paused work and uncertainty protections. This does not establish live external delivery.",
     "The isolated operational copy ran no workers, resumed no execution and did not refresh external sources. No pilot service was upgraded. Source staging and receiver capacity guards were preserved.",
-    "The two-hour endurance run remains pending. Do not close G3 or publish before checking its exact source provenance, artifact digest, complete phase, at least 7200 load seconds, at most 240 rounds, verified activity and final recovery.",
+    "Two-hour endurance passed with 240 rounds, verified activity and final recovery. The shared provenance generator labels 14400 seconds and quiescence for the separate memory workflow; the executed endurance workflow and final report require 7200 seconds. This evidence does not establish four-hour memory/quiescence qualification.",
     "The guided installer still selects the separately qualified 1.0.5 image. The registry Compose starter still selects its separately qualified 1.0.1 images until a reviewed pin upgrade. These surfaces do not yet deliver the full new authentication behavior."
   ]
 }
