@@ -8,7 +8,7 @@ import tomllib
 import zipfile
 
 
-def wheel_payload_digest(path, version):
+def wheel_payload_digest(path, version, *, installer_baseline=None):
     """Compare installed payload, metadata headers and scripts across qualified builds."""
     info = f'atraxis-{version}.dist-info'
     with zipfile.ZipFile(path) as wheel:
@@ -26,7 +26,21 @@ def wheel_payload_digest(path, version):
                 data, separator, _description = data.partition(b'\n\n')
                 if not separator:
                     raise ValueError('invalid_wheel_metadata')
-            members[name] = hashlib.sha256(data).hexdigest()
+            digest = hashlib.sha256(data).hexdigest()
+            if installer_baseline is not None:
+                old_info = 'atraxis-1.0.7.dist-info'
+                if name == info + '/METADATA':
+                    line = b'\nVersion: 1.0.8\n'
+                    if data.count(line) != 1:
+                        raise ValueError('installer_version_mismatch')
+                    digest = hashlib.sha256(data.replace(line, b'\nVersion: 1.0.7\n')).hexdigest()
+                if name == 'atraxis/installation/deployment.py':
+                    if digest != installer_baseline['qualified_guided_installer_module']:
+                        raise ValueError('installer_module_mismatch')
+                    digest = installer_baseline['previous_module']
+                if name.startswith(info + '/'):
+                    name = old_info + name[len(info):]
+            members[name] = digest
     return hashlib.sha256(json.dumps(members, sort_keys=True).encode()).hexdigest()
 
 
@@ -80,6 +94,21 @@ def prepare(root: Path) -> None:
         wheel = download / f'dist/atraxis-{version}-py3-none-any.whl'
         if wheel_payload_digest(wheel, version) != qualification.get('pilot_wheel_payload_sha256'):
             raise ValueError('pilot_wheel_payload_mismatch')
+    if version == '1.0.8':
+        baseline_file = root / 'docs/releases/1.0.7-qualification.json'
+        reviewed = qualification['evidence_sha256']
+        if hashlib.sha256(baseline_file.read_bytes()).hexdigest() != reviewed['service_qualification_1_0_7']:
+            raise ValueError('installer_baseline_mismatch')
+        baseline = json.loads(baseline_file.read_text())
+        module = 'atraxis/installation/deployment.py'
+        expected_modules = dict(baseline['runtime_files_sha256'])
+        expected_modules[module] = reviewed['qualified_guided_installer_module']
+        if runtime != expected_modules:
+            raise ValueError('installer_scope_mismatch')
+        wheel = download / f'dist/atraxis-{version}-py3-none-any.whl'
+        comparison = dict(reviewed, previous_module=baseline['runtime_files_sha256'][module])
+        if wheel_payload_digest(wheel, version, installer_baseline=comparison) != baseline['pilot_wheel_payload_sha256']:
+            raise ValueError('installer_payload_mismatch')
     assets = root / 'stable-assets'
     assets.mkdir(exist_ok=False)
     for name in sorted(expected_names):

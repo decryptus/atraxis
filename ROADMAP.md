@@ -4,6 +4,13 @@ Updated 7 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## 1.0.8 — installer and Compose alignment
+
+The Python package and tagged source deliver the 1.0.7 Docker image through both
+installation paths. The guided installer verifies the running image against the
+registry lock in its real-manager acceptance test. See the
+[1.0.8 release notes](docs/releases/1.0.8.md).
+
 ## 1.0.7 — Basic ingress follow-up (published)
 
 The failure table evicts its oldest entry at capacity instead of denying unknown
@@ -23,8 +30,8 @@ verified the pinned 1.0.7 image, matching nginx configuration and separate-host
 recovery. The [product website](https://atraxis.io/) provides FR/EN installation
 and coordinated upgrade instructions.
 The published 1.0.7 installer generates guided installs with image 1.0.5.
-The source installer now selects the published 1.0.7 web image by digest. The existing pilot was restored
-after qualification, not upgraded.
+The pilot was subsequently upgraded to image 1.0.7. All four sources were
+current after deployment and account and audit content was verified.
 No claim is made that existing 1.0.6 installations contain this follow-up.
 
 ## 1.0.6 — ingress and form budgets (published)

@@ -117,11 +117,9 @@ application port private and trust only the actual immediate proxy. The guided
 Compose namespace uses `127.0.0.1/32`. Additional ingress hops require a separate
 explicit trusted-address design; arbitrary forwarding chains are not accepted.
 
-Guided Compose in the immutable 1.0.7 package still pins image 1.0.5 and does not
-install this follow-up. Use the registry Compose starter with image 1.0.7 for the
-current ingress behavior. Updating the guided installer requires a subsequent
-package release. Existing deployments need an explicit coordinated upgrade;
-changing nginx alone does not install the new application behavior.
+The 1.0.8 guided installer and the Compose starter in tag v1.0.8 deploy image
+1.0.7 with this proxy configuration. Existing installations need a coordinated
+application and proxy upgrade.
 
 Limits are local to each application process. Clients sharing a NAT address share
 budgets, and these controls cannot guarantee availability under a distributed
