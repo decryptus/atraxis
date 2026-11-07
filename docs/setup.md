@@ -184,8 +184,9 @@ python -m pip install 'atraxis[textual,installer]==1.0.7'
 atraxis install-wizard
 ```
 
-The native deployment uses the installed 1.0.7 package. Guided Compose still
-selects image 1.0.5. To isolate failed Basic logins by client address and account,
+The native deployment uses the installed package. For guided Compose, the PyPI
+1.0.7 installer selects image 1.0.5. The installer built from the current
+source tree selects image 1.0.7 by its published digest. To isolate failed Basic logins by client address and account,
 use the [registry Compose starter](docker-compose.md) with the published 1.0.7
 image and its matching nginx configuration. The trusted proxy must overwrite
 `X-Forwarded-For` with `$remote_addr`; see the

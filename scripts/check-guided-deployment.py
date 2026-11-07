@@ -3,6 +3,7 @@ import argparse
 import base64
 from concurrent.futures import ThreadPoolExecutor
 import http.client
+import json
 import os
 from pathlib import Path
 import socket
@@ -72,6 +73,15 @@ def main(mode):
             assert result['status'] == 'ready' and len(seen) >= 2
             assert not (directory / 'login.json').exists()
             if mode == 'compose':
+                lock = json.loads((ROOT / 'deploy/compose/images.json').read_text())['images']['web']
+                container = subprocess.check_output(
+                    ['docker', 'compose', '-f', str(directory / 'compose.yaml'), 'ps', '-q', 'web'],
+                    text=True).strip()
+                reference, image_id = subprocess.check_output(
+                    ['docker', 'inspect', '--format', '{{.Config.Image}} {{.Image}}', container],
+                    text=True).split()
+                assert reference == lock['name'] + '@' + lock['digest'], reference
+                assert image_id == lock['id'], image_id
                 check_ingress(doc['listen_port'], server_ca)
             print(f'{mode}: fresh deployment, anonymous refusal and authenticated HTTPS readiness passed.')
         finally:
