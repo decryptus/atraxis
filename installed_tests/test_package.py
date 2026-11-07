@@ -43,7 +43,7 @@ class InstalledPackageTests(unittest.TestCase):
     def test_base_package_has_no_embedded_engine_and_explicit_commands(self):
         for module in ('atropos', 'zen', 'atropos_client', 'textual'):
             self.assertIsNone(importlib.util.find_spec(module), module + ' unexpectedly installed by base package')
-        self.assertIn('sonicprobe==0.3.62', importlib.metadata.requires('atraxis'))
+        self.assertIn('sonicprobe==0.3.65', importlib.metadata.requires('atraxis'))
         self.assertIn('check-config', self.cli('--help').stdout)
         self.cli(code=2)
         self.cli('check-config', '--config', str(self.root / 'absent.yml'), code=1)

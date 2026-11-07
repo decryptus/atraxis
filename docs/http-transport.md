@@ -125,3 +125,9 @@ Limits are local to each application process. Clients sharing a NAT address shar
 budgets, and these controls cannot guarantee availability under a distributed
 attack. There is deliberately no global per-account lock that a remote attacker
 could use against clients at other addresses.
+
+The guided installer accepts IPv4 listener addresses. When a trusted ingress forwards
+an IPv6 client address, Basic authentication failures share one budget per /64.
+IPv4-mapped addresses share the budget of the corresponding IPv4 client. A custom
+dual-stack ingress must preserve the client address: if Docker presents only its
+gateway to nginx, the application can only limit the shared gateway.
