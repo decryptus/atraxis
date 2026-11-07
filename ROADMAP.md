@@ -1,6 +1,6 @@
 # Atraxis roadmap
 
-Updated 6 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 7 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
@@ -175,7 +175,7 @@ contracts. Unsupported formats are rejected explicitly; stored data is not silen
 converted or deleted. Prototype compatibility and arbitrary component combinations
 are not promised.
 
-## Prepared — 1.0.7 Basic ingress follow-up
+## 1.0.7 — Basic ingress follow-up (qualified)
 
 The failure table evicts its oldest entry at capacity instead of denying unknown
 clients. Trusted ingress must overwrite one X-Forwarded-For address; the listener
@@ -183,6 +183,9 @@ validates it and isolates failures by client address and account. Direct clients
 cannot spoof their limiter key. Regression tests cover table saturation, targeted
 account lockout, invalid/duplicate headers and canonical IPv6 addresses.
 
-Registry and guided-install image pins, package publication, public website and
-production deployments remain unchanged pending qualification of a release.
+The exact 1.0.7 wheel passed four-source operational reads and isolated cold
+recovery of ten services and two SQLite databases. Two-hour endurance completed
+240 rounds with final recovery. G1, G2 and G3 are closed for the bounded profile.
+Package/image publication and website promotion follow these verified gates.
+Registry and guided-install image pins still require separate promotion.
 No claim is made that existing 1.0.6 installations contain this follow-up.

@@ -2,12 +2,20 @@
   "schema": 1,
   "version": "1.0.7",
   "gates": {
-    "G1": "open",
-    "G2": "open",
-    "G3": "open"
+    "G1": "closed",
+    "G2": "closed",
+    "G3": "closed"
   },
   "support_matrix": "docs/v1.0.md",
-  "evidence_sha256": {},
+  "evidence_sha256": {
+    "pilot_wheel": "4947130a723bc4749a6dd97aa312ad0e04aed5d3b0063f7985caa75b2a48e394",
+    "source_observation": "e2bb6f7a6adb7699c0e0fe5dfa1f3ce5f61065922413892255c56b8c7532a570",
+    "operational_recovery_archive": "e2bb6f7a6adb7699c0e0fe5dfa1f3ce5f61065922413892255c56b8c7532a570",
+    "operational_snapshot_manifest": "b66f0c769295aeaaf2d380214d87fb715bbdce21dc8cd107ca8d6e7557e45640",
+    "operational_stream": "937a6fc2534c301aafa80fee80dbb17b1a97c5a5688e44c9271b0d55e581afce",
+    "synthetic_recovery_archive": "023d76f01bac0d59ba495c1a261c7b50c73a47f98a749b3dcd6c56b7b97d8d14",
+    "endurance_archive": "44bafa9a12a4910eccf278d4b252c9bfc47344ae953e3e8002aff6e936ebb7ce"
+  },
   "runtime_files_sha256": {
     "atraxis/__init__.py": "0880a23a72b71d548e02ff54855cd59aef6b9ce28c926401c9504ef3306df785",
     "atraxis/__main__.py": "e9fadca44f59461f2093d79a043b21f830c6b0004a6bcf3fb462327dd773b1be",
@@ -119,8 +127,55 @@
     "atraxis/web_simulation.py": "e650f2e6bafdd3293fe8bb22d68d05a379b0923ce55c64526cf4828f3e85c5e5"
   },
   "limits": [
-    "Preparation only; no prior-release qualification is reused for changed runtime.",
-    "Two-hour endurance, separate-host recovery and exact-wheel operational qualification must be verified before stable publication.",
-    "Package/image publication and public website updates are pending."
-  ]
+    "The exact 1.0.7 Python 3.12 wheel has 108 packaged modules matching the reviewed runtime by SHA256. Subsequent release documentation and CI changes do not alter its installed payload.",
+    "Four current sources were read with the candidate before the fresh authorized cold capture. The exact wheel restored 10 services, two SQLite databases and eight persistent trees on a distinct isolated runner. Accounts, audits, renewed TLS, copied-credential revocation and execution pause passed. Final source authority and private-copy cleanup passed.",
+    "The restored copy had zero workers, resumed no execution and did not refresh external sources. No live pilot service was upgraded. This qualification does not establish live external delivery.",
+    "Two-hour synthetic endurance passed with 240 rounds and final recovery. The shared provenance generator labels the separate four-hour memory campaign; this run establishes only the executed 7200-second endurance profile.",
+    "Registry Compose and guided installer pins require separate image promotion. At qualification time they still select 1.0.6 and 1.0.5 respectively."
+  ],
+  "runtime_source_base": "2ab030d5d09a24de32f7e43e0b97b7f501919160",
+  "pilot_wheel_payload_sha256": "1751707c142b72c4d24be713d48be237e3e21fe0ab81e23f091cec0ac838e5b6",
+  "public_runs": {
+    "package": 42260050477,
+    "synthetic_recovery": 42260050517,
+    "endurance": 42257884090
+  },
+  "operational_recovery": {
+    "accounts_and_audit_equal": true,
+    "all_networks_internal": true,
+    "candidate": "2ab030d5d09a24de32f7e43e0b97b7f501919160",
+    "distinct_host": true,
+    "execution_paused": true,
+    "external_delivery_verified": false,
+    "final_source_authority_verified": true,
+    "live_source_freshness_verified": false,
+    "live_sources_current": 4,
+    "repeated_bad_login_throttled": true,
+    "replacement_copy_login_accepted": true,
+    "restored_services": 10,
+    "resumed": false,
+    "revoked_copy_login_denied": true,
+    "sqlite_databases": 2,
+    "status": "passed",
+    "streamed_capture": true,
+    "test_execution_paused": true,
+    "tls_leaf_renewal_verified": true,
+    "tls_verified": true,
+    "trees_restored": 8,
+    "wheel_sha256": "4947130a723bc4749a6dd97aa312ad0e04aed5d3b0063f7985caa75b2a48e394",
+    "workers": 0,
+    "wrong_auth_rejected": true,
+    "private_copy_cleanup_verified": true
+  },
+  "endurance": {
+    "load_seconds": 7206.429567556,
+    "minimum_seconds": 7200,
+    "completed_rounds": 240,
+    "recovery_verified": true,
+    "accepted_test_runs": 6000,
+    "source_commit": "bc015df3bde1e6b49954bd0733a5dba7979a0376",
+    "status": "passed",
+    "artifact_id": 13533662036,
+    "phase": "complete"
+  }
 }
