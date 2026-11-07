@@ -5,7 +5,10 @@ Synthetic source and alert contracts, real services, private ephemeral CA, no ho
 ports or external effects. Run through unittest; missing prerequisites fail.
 """
 import argparse
-import base64
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 import hashlib
 import importlib.util
 import json
@@ -89,8 +92,8 @@ http {
   }
 }
 ''' % port)
-    digest = base64.b64encode(hashlib.sha1(password.encode()).digest()).decode()
-    write(root / 'web', 'users', 'alice:{SHA}' + digest + '\n')
+    digest = crypt(password, mksalt(METHOD_BLOWFISH, rounds=16))
+    write(root / 'web', 'users', 'alice:' + digest + '\n')
     write(root / 'web', 'source.json', dict(username='source-reader', password='synthetic-source-password'))
     write(root / 'web', 'access.yml', dict(version=3, store='accounts.db', administrators=[], audit=[],
         servers=[], resource_groups=[], identities=[dict(username='alice', subject='alice')],
@@ -130,7 +133,7 @@ http {
             'ops.notify': dict(backend='alertmanager', target='demo/container/web', origin='https://alert.test:8443',
                 token_file='alert.token', ca_file='ca.pem', labels={'alertname': 'InterventionComplete'}, simulation='test_receiver')}))
     write(root / 'redis', 'redis.conf', 'bind 127.0.0.1\nport 6379\ndir /state\nsave ""\nappendonly yes\nappendfsync always\nmaxmemory-policy noeviction\nrequirepass ' + storage_password + '\n')
-    write(root / 'auton', 'users', 'operator:{SHA}' + digest + '\n')
+    write(root / 'auton', 'users', 'operator:' + digest + '\n')
     config = yaml.safe_load((OPTIONS.auton_source / 'etc/auton/auton.yml.example').read_text())
     config['general'].update(listen_addr='127.0.0.1', listen_port=8666, max_life_time=0, max_requests=0,
         auth_basic='Acceptance', auth_basic_file='/state/users',

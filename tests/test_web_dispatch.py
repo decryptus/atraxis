@@ -171,7 +171,7 @@ class WebDispatchTests(unittest.TestCase):
     def test_routes_default_absent_and_configuration_requires_origin_inventory(self):
         from atraxis.server import build_context
         import base64
-        (self.root/'users').write_text('alice:{SHA}'+base64.b64encode(hashlib.sha1(b'fixture').digest()).decode()+'\n')
+        (self.root/'users').write_text('alice:'+'$2b$04$WCen5S0fszJX2awrg14Fq.25URm.ukTUUW.e7Hm.rdFkWk2W2skpC'+'\n')
         config=self.root/'server.yml'
         base=dict(auth_basic_file='users',rules_web_file='mapping.yml',rules_web_origin=ORIGIN)
         config.write_text(yaml.safe_dump(dict(general=base)))

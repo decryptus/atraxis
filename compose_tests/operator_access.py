@@ -1,5 +1,8 @@
 """Exercise the documented access journey on the disposable Compose project only."""
-import base64
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 import hashlib
 import json
 import os
@@ -36,8 +39,7 @@ def private(path, value):
 
 
 def login_line(username, password):
-    # SHA1 is confined to these disposable test credentials, never provisioning advice.
-    return username + ':{SHA}' + base64.b64encode(hashlib.sha1(password.encode()).digest()).decode() + '\n'
+    return username + ':' + crypt(password, mksalt(METHOD_BLOWFISH, rounds=16)) + '\n'
 
 
 def await_read(callback, predicate, label):

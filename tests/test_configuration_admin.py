@@ -1,7 +1,6 @@
 """Explicit installation authority, review/CAS, private writes and HTTP forms."""
 import base64
 from copy import deepcopy
-import hashlib
 from html.parser import HTMLParser
 import http.client
 import json
@@ -38,8 +37,8 @@ class ConfigurationFixture(unittest.TestCase):
         directory['users'].append(dict(id='bob',name='Bob',enabled=True))
         directory['memberships'].append(dict(user='bob',organization='default',group=None))
         self.store=AccountStore(self.root/'accounts.db');self.store.apply(Directory(directory),None)
-        digest=base64.b64encode(hashlib.sha1(b'synthetic').digest()).decode()
-        self.write('users','alice:{SHA}'+digest+'\nbob:{SHA}'+digest+'\n',raw=True)
+        digest='$2b$04$WCen5S0fszJX2awrg14Fq.V8q/ExG/IkZJBegBBoNR8RMu2ua8DGi'
+        self.write('users','alice:'+digest+'\nbob:'+digest+'\n',raw=True)
         self.write('source.json',json.dumps(dict(username='reader',password='private-source-secret')),raw=True)
         self.profile=dict(version=1,store='accounts.db',identities=[dict(username=user,subject=user,organization='default') for user in ('alice','bob')],
             administrators=[dict(subject='alice',organization='default')],

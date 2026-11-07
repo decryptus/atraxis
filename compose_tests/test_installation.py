@@ -1,5 +1,9 @@
 """Real operator Compose, clean volumes and synthetic verified HTTPS only."""
 import base64
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 import hashlib
 import importlib.util
 import json
@@ -47,8 +51,8 @@ class InstallationTests(unittest.TestCase):
             def write(role, name, content):
                 path = site / role / name
                 path.write_text(content if isinstance(content, str) else yaml.safe_dump(content))
-            digest = base64.b64encode(hashlib.sha1(password.encode()).digest()).decode()
-            write('web', 'users.htpasswd', 'alice:{SHA}' + digest + '\nbob:{SHA}' + digest + '\n')
+            digest = crypt(password, mksalt(METHOD_BLOWFISH, rounds=16))
+            write('web', 'users.htpasswd', 'alice:' + digest + '\nbob:' + digest + '\n')
             # Only the explicitly locked historical registry fixture lacks this
             # schema. Source candidates and future registry pins must exercise it.
             legacy_registry = REGISTRY and IMAGE_LOCK['images']['web']['name'] == 'decryptus/atraxis:1.0.1'

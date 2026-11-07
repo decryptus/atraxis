@@ -5,9 +5,7 @@ Requires Docker and cryptography in the host test environment. No published port
 external services, production credentials or image publication.
 """
 import argparse
-import base64
 from datetime import datetime, timedelta, timezone
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -79,8 +77,8 @@ def fixtures(root, proxy_network):
             authority.leaf(directory, 'expired', 'monitor.test', expired=True)
             untrusted.leaf(directory, 'untrusted', 'monitor.test')
     (root / 'client/untrusted-ca.pem').write_bytes(untrusted.pem())
-    password = base64.b64encode(hashlib.sha1(b'synthetic-reader-password').digest()).decode()
-    (root / 'atraxis/users').write_text('reader:{SHA}' + password + '\n')
+    password = '$2b$04$WCen5S0fszJX2awrg14Fq.atb5zeK7G6LeMwDdeYx73JP4FAws64C'
+    (root / 'atraxis/users').write_text('reader:' + password + '\n')
     (root / 'atraxis/outbound.json').write_text(json.dumps(
         dict(username='source-reader', password='synthetic-source-password')))
     config = {'general': {'auth_basic_file': 'users', 'listen_addr': '0.0.0.0',

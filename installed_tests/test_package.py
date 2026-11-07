@@ -1,6 +1,5 @@
 """Acceptance of the built base package, run outside the source checkout."""
 import base64
-import hashlib
 import http.client
 import importlib.metadata
 import importlib.util
@@ -64,7 +63,7 @@ class InstalledPackageTests(unittest.TestCase):
             return result
         private_file('source.json', dict(username='reader', password='synthetic-private-secret'))
         users = self.root / 'users'
-        users.write_text('operator:{SHA}' + base64.b64encode(hashlib.sha1(b'synthetic').digest()).decode() + '\n')
+        users.write_text('operator:' + '$2b$04$WCen5S0fszJX2awrg14Fq.V8q/ExG/IkZJBegBBoNR8RMu2ua8DGi' + '\n')
         users.chmod(0o600)
         source_origin = 'https://monitor.invalid'
         private_file('configuration-admin.json', dict(version=1, store='accounts.db',
@@ -119,9 +118,9 @@ class InstalledPackageTests(unittest.TestCase):
         self.assertEqual((self.root / 'restored.db').read_bytes(), original)
 
     def test_installed_daemon_authentication_web_and_graceful_shutdown(self):
-        digest = base64.b64encode(hashlib.sha1(b'synthetic-password').digest()).decode()
+        digest = '$2b$04$WCen5S0fszJX2awrg14Fq.Jyie5KgHB2xcAV4q8/5hHA2YkbiMbwq'
         credentials = self.root / 'users'
-        credentials.write_text('reader:{SHA}' + digest + '\n')
+        credentials.write_text('reader:' + digest + '\n')
         credentials.chmod(0o600)
         with socket.socket() as reservation:
             reservation.bind(('127.0.0.1', 0))

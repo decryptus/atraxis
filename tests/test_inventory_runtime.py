@@ -1,7 +1,6 @@
 """Actual HTTPdis daemon, source HTTP workers and authenticated inventory."""
 import base64
 from datetime import datetime, timezone
-import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import http.client
 import json
@@ -60,8 +59,8 @@ class InventoryRuntimeTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.monitor = self.upstream()
         self.certificates = self.upstream()
-        hashed = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        (self.root / 'users').write_text('reader:{SHA}' + hashed + '\n')
+        hashed = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        (self.root / 'users').write_text('reader:' + hashed + '\n')
         (self.root / 'outbound.json').write_text(json.dumps(
             {'username': 'source-reader', 'password': 'outbound-secret-marker'}))
         self.config = {'general': {'auth_basic_file': 'users'}, 'sources': [

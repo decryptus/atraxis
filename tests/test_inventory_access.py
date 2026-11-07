@@ -1,7 +1,6 @@
 """Synthetic HTTP authorization, independent of sources and engine credentials."""
 import base64
 from copy import deepcopy
-import hashlib
 import http.client
 import json
 from pathlib import Path
@@ -133,8 +132,8 @@ class InventoryWebTests(unittest.TestCase):
         tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup);self.root=Path(tmp.name)
         self.store=AccountStore(self.root/'directory.json');self.store.apply(Directory(directory_fixture()),None)
         self.profile=self.root/'access.yml';self.profile.write_text(yaml.safe_dump(profile_fixture()));self.profile.chmod(0o600)
-        digest=base64.b64encode(hashlib.sha1(b'synthetic-password').digest()).decode()
-        (self.root/'users').write_text('alice:{SHA}'+digest+'\nbob:{SHA}'+digest+'\nunmapped:{SHA}'+digest+'\n')
+        digest='$2b$04$cC3Z6K0TXYbvpauV8vwo/Org9jBIMyWb4D4ujTCjLKzizgQLJ7QBG'
+        (self.root/'users').write_text('alice:'+digest+'\nbob:'+digest+'\nunmapped:'+digest+'\n')
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));self.port=sock.getsockname()[1]
         config=self.root/'web.yml';config.write_text(yaml.safe_dump(dict(general=dict(auth_basic_file='users',listen_port=self.port,inventory_access_file='access.yml'))))
         self.service=FixtureService();self.context=build_context(load_config(config),self.service)
