@@ -117,7 +117,7 @@ application port private and trust only the actual immediate proxy. The guided
 Compose namespace uses `127.0.0.1/32`. Additional ingress hops require a separate
 explicit trusted-address design; arbitrary forwarding chains are not accepted.
 
-The 1.0.8 guided installer and the Compose starter in tag v1.0.8 deploy image
+The 1.0.9 guided installer and the Compose starter in tag v1.0.9 deploy image
 1.0.7 with this proxy configuration. Existing installations need a coordinated
 application and proxy upgrade.
 

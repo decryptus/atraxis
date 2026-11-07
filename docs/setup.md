@@ -180,11 +180,11 @@ In the installer account’s virtual environment, install the published package 
 the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install 'atraxis[textual,installer]==1.0.8'
+python -m pip install 'atraxis[textual,installer]==1.0.9'
 atraxis install-wizard
 ```
 
-Native deployments use the installed 1.0.8 package. Guided Compose and the
+Native deployments use the installed 1.0.9 package. Guided Compose and the
 [registry Compose starter](docker-compose.md) both deploy the published 1.0.7
 image. The guided installer pins its SHA-256 digest. The trusted proxy must overwrite
 `X-Forwarded-For` with `$remote_addr`; see the

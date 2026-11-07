@@ -13,7 +13,7 @@ in the required package workflow. Changed/missing archives or hashes, open gates
 a changed runtime module, an existing tag/release or a failed check abort publication.
 
 Publication is explicit: either dispatch `Publish reviewed stable release` on
-main with the tested PR head, or move the dedicated `release/publish-1.0.8` branch
+main with the tested PR head, or move the dedicated `release/publish-1.0.9` branch
 from a commit preceding that workflow to the exact reviewed merge on main.
 Only that named publication branch triggers the push path. It resolves the single
 merged PR for the main commit and checks its exact head; ordinary main pushes,
