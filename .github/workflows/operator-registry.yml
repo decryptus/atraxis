@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: decryptus/atraxis
-          ref: 474bd3e5ee999e9f68dc869fbd1707c160a38fa4
+          ref: 8e51fa15fa9c9348d8d253ac300ba90493ecf97f
           path: .acceptance/released-web
           persist-credentials: false
       - name: Verify public inputs and prepare the bounded Auton fixture
@@ -89,7 +89,7 @@ jobs:
           images = {}
           for image, project, release, client_release, files in (
                   ('decryptus/atropos:1.0.1', 'atraxis-atropos', '1.0.1', '1.0.1', expected),
-                  ('decryptus/atraxis:1.0.6', 'atraxis', '1.0.6', '1.0.0', web_files)):
+                  ('decryptus/atraxis:1.0.7', 'atraxis', '1.0.7', '1.0.0', web_files)):
               subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
                   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
                   '--cpus', '2', '--pids-limit', '128', '--entrypoint', 'python', image, '-'],
@@ -108,7 +108,7 @@ jobs:
           specification = json.loads(Path('deploy/compose/locks/versions.json').read_text())
           environments = {}
           for profile in ('web', 'engine'):
-              image = {'web': 'decryptus/atraxis:1.0.6', 'engine': 'decryptus/atropos:1.0.1'}[profile]
+              image = {'web': 'decryptus/atraxis:1.0.7', 'engine': 'decryptus/atropos:1.0.1'}[profile]
               output = subprocess.check_output(['docker', 'run', '--rm', '--network', 'none',
                   '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
                   '--memory', '128m', '--cpus', '1', '--pids-limit', '32', '--entrypoint', 'cat',

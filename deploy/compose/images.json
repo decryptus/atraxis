@@ -2,9 +2,9 @@
   "platform": "linux/amd64",
   "images": {
     "web": {
-      "name": "decryptus/atraxis:1.0.6",
-      "digest": "sha256:cfc79270d1c4ec5e768cdafca466084ed486c8dc7b8c04606797c0596fa21157",
-      "id": "sha256:f0eca54d47f2b0f456abc4e8813b612aa24e00f60dc2a5027b95bf1a83ccd9e8"
+      "name": "decryptus/atraxis:1.0.7",
+      "digest": "sha256:f75291bd5666e285a35550ad1fa39a4c2ee5b3916c877742f32fbb7633ebba4e",
+      "id": "sha256:4c3b4a40018a91465097e581f312417ad182b4e8763c0adaf185e14f915dbd89"
     },
     "engine": {
       "name": "decryptus/atropos:1.0.1",
