@@ -48,15 +48,20 @@ requires both `behind_tls_proxy: true` and `trusted_proxy_networks`. List the
 actual IPv4 addresses of the TLS proxies, for example `[192.0.2.10/32]`, or an
 isolated backend subnet. Migrate existing non-loopback configurations before
 restarting. Atraxis drops other TCP peers before it reads their HTTP headers.
-Configure TLS at the proxy and keep its backend private. Forwarded headers do
-not establish peer identity.
+Configure TLS at the proxy and keep its backend private. The trusted proxy must
+overwrite `X-Forwarded-For` with the connecting client's address. For Basic
+attempts, Atraxis accepts exactly one valid address from that proxy. For direct
+connections, Atraxis uses the TCP peer address.
 
-Eight failed Basic checks for the same TCP peer and account within 60 seconds
-temporarily return HTTP 429 with `Retry-After`. A peer reaching 64 failures
-across account names in its 60-second window is also throttled. An initial request without credentials still receives the normal
-authentication challenge. Behind a proxy, clients using the same account share
-the per-account allowance and all clients share the peer allowance. Up to 4,096
-peers are tracked. At capacity, a new peer waits for the oldest entry to expire.
+Within a 60-second window, eight failed Basic checks for one client address and
+account, or 64 across accounts from one address, cause subsequent attempts to
+receive HTTP 429 with `Retry-After`. A request without credentials still receives
+the normal authentication challenge. Clients sharing an address share its limits.
+
+Each daemon tracks up to 4,096 client addresses. At capacity, a failure from a
+new address evicts the oldest entry. Keep ingress rate limiting enabled because
+eviction discards the previous failure count. See [Basic attempts behind a
+trusted ingress](docs/http-transport.md#basic-attempts-behind-a-trusted-ingress).
 
 | Route | Authenticated response |
 | --- | --- |
