@@ -1,6 +1,4 @@
-import base64
 from contextlib import redirect_stderr, redirect_stdout
-import hashlib
 import io
 import json
 import os
@@ -20,8 +18,8 @@ class SetupTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.auth = self.root / 'users'
-        digest = base64.b64encode(hashlib.sha1(b'synthetic-secret').digest()).decode()
-        self.auth.write_text('reader:{SHA}' + digest + '\n')
+        digest = '$2b$04$WCen5S0fszJX2awrg14Fq.hFiGNgYxtxXdVK4DJMYcH/1ueBk5fl.'
+        self.auth.write_text('reader:' + digest + '\n')
         self.auth.chmod(0o600)
         self.credentials = self.root / 'credentials.json'
         self.credentials.write_text(json.dumps(dict(username='reader', password='source-secret-marker')))

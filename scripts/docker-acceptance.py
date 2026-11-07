@@ -2,7 +2,6 @@
 """Disposable, network-isolated image acceptance with synthetic credentials only."""
 import argparse
 import base64
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -62,8 +61,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='atraxis-fixture-') as directory:
         fixtures = Path(directory)
         fixtures.chmod(0o755)
-        hashed = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        (fixtures / 'users').write_text('reader:{SHA}' + hashed + '\n')
+        hashed = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        (fixtures / 'users').write_text('reader:' + hashed + '\n')
         (fixtures / 'atraxis.yml').write_text('general:\n  auth_basic_file: users\nsources: []\n')
         (fixtures / 'client.yml').write_text('origin: http://127.0.0.1:9810\n'
             'allow_loopback_http: true\ncredentials_file: client.json\n')

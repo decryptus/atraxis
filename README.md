@@ -5,7 +5,7 @@
 **One console to inspect containers, certificates and metrics, then prepare and
 test automation rules through the independent Atropos service.**
 
-Atraxis **1.0.8** runs on your own infrastructure. It provides authenticated web,
+Atraxis **1.0.9** runs on your own infrastructure. It provides authenticated web,
 command-line and Textual interfaces, with access scoped to your organizations and
 resources. It distinguishes fresh observations, retained history and unavailable
 sources instead of treating unknown values as zero.
@@ -71,7 +71,7 @@ See [supported configurations, limits and upgrades](docs/v1.0.md). Atropos engin
 [`atraxis-atropos`](https://pypi.org/project/atraxis-atropos/1.0.1/) and
 [`atropos-client`](https://pypi.org/project/atropos-client/1.0.1/). Atraxis 1.0.0
 still pins client **0.1.0a10** for its optional `rules` extra. This `main` checkout
-is **1.0.8** and pins the published client **1.0.0**. The engine is installed
+is **1.0.9** and pins the published client **1.0.0**. The engine is installed
 in its own environment. See the
 [component compatibility note](docs/v1.0.md#current-atropos-publication). Direct
 Monit-Docker and CertLord adapters require neither Covenant nor Prometheus.
@@ -90,11 +90,11 @@ Use Python 3.11, 3.12 or 3.13 with the system libmagic library installed.
 ```sh
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install atraxis==1.0.8
+python -m pip install atraxis==1.0.9
 atraxis --help
 ```
 
-The [Atraxis package on PyPI](https://pypi.org/project/atraxis/1.0.8/) provides the supervision platform. For the interactive installer, see the [setup guide](docs/setup.md#guided-preparation-in-the-terminal).
+The [Atraxis package on PyPI](https://pypi.org/project/atraxis/1.0.9/) provides the supervision platform. For the interactive installer, see the [setup guide](docs/setup.md#guided-preparation-in-the-terminal).
 
 ## Install from source
 
@@ -103,7 +103,7 @@ To install the same release from its Git tag:
 ```sh
 git clone https://github.com/decryptus/atraxis.git
 cd atraxis
-git checkout v1.0.8
+git checkout v1.0.9
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install .
@@ -126,7 +126,7 @@ A three-minute tour of Docker monitoring, cron and serve modes, and the web and 
 
 Before upgrading a non-loopback listener, configure the [trusted proxy addresses](docs/releases/1.0.4.md#upgrade-behind-a-proxy).
 
-Atraxis 1.0.8 is stable for its documented reference profile, under GNU GPL version 3. It provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. The public demo remains experimental and read-only; the stable package does not imply a hosted production service, arbitrary deployment qualification or high availability.
+Atraxis 1.0.9 is stable for its documented reference profile, under GNU GPL version 3. It provides read-only HTTP collection, an in-memory inventory, an authenticated API and an optional web rule workbench. Readiness requires current observations from every configured source. The public demo remains experimental and read-only; the stable package does not imply a hosted production service, arbitrary deployment qualification or high availability.
 
 A [remote rule service](docs/rule-remote.md), [local rule operator CLI/TUI](docs/rule-console.md) and [rule API integration](docs/rule-lifecycle.md) now support scoped drafts, tests and explicit active versions through an independent Atropos service. Atraxis contains no rule engine or rule storage. Rule control remains separate from inventory collection and executes no interventions.
 

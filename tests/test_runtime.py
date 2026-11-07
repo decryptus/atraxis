@@ -2,7 +2,6 @@ import base64
 from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import replace
 from ipaddress import ip_network
-import hashlib
 import http.client
 import io
 import json
@@ -27,8 +26,8 @@ class ConfigurationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'atraxis.yml'
         self.secret = Path(self.temp.name) / 'users'
-        hashed = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        self.secret.write_text('reader:{SHA}' + hashed + '\n')
+        hashed = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        self.secret.write_text('reader:' + hashed + '\n')
         self.config_text = 'general:\n  auth_basic_file: users\nsources: []\n'
         self.path.write_text(self.config_text)
 
@@ -183,8 +182,8 @@ class HttpRuntimeTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         root = Path(self.temp.name)
-        hashed = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        (root / 'users').write_text('reader:{SHA}' + hashed + '\n')
+        hashed = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        (root / 'users').write_text('reader:' + hashed + '\n')
         (root / 'config.yml').write_text('general:\n  auth_basic_file: users\n')
         config = replace(load_config(root / 'config.yml'), listen_port=0)
         self.context = build_context(config)

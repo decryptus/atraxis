@@ -1,5 +1,9 @@
 """Native administration with installed services and an authenticated HTTP source."""
 import base64
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 from copy import deepcopy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -385,9 +389,9 @@ class AdministrationTests(HTTPSBrowserFixture):
         replacement = secrets.token_urlsafe(32)
         # Synthetic SHA-1 fixture only; production operators must use a strong
         # HTTPdis-compatible hash. Preserve every other login and source secret.
-        digest = base64.b64encode(hashlib.sha1(replacement.encode()).digest()).decode()
+        digest = crypt(replacement, mksalt(METHOD_BLOWFISH, rounds=16))
         users = (self.root / 'users').read_text().splitlines()
-        users = [line if not line.startswith('alice:') else 'alice:{SHA}' + digest for line in users]
+        users = [line if not line.startswith('alice:') else 'alice:' + digest for line in users]
         self.replace_private('users', '\n'.join(users) + '\n')
         self.assertEqual(self.https_login_status('alice', self.password), 200)
         self.assertEqual(self.https_login_status('alice', replacement), 401)

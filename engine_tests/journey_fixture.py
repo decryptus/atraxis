@@ -1,6 +1,9 @@
 """Disposable Auton process and authenticated alert contract receiver."""
 import base64
-import hashlib
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import http.client
 import json
@@ -38,8 +41,8 @@ class AutonDaemon:
         self.process=None;self.log=None;self.port=port();self.origin='http://127.0.0.1:'+str(self.port)
         self.password=secrets.token_urlsafe(32);self.auth=('operator',self.password)
         try:
-            digest=base64.b64encode(hashlib.sha1(self.password.encode()).digest()).decode()
-            private(self.root/'users','operator:{SHA}'+digest+'\n')
+            digest=crypt(self.password, mksalt(METHOD_BLOWFISH, rounds=16))
+            private(self.root/'users','operator:'+digest+'\n')
             config=yaml.safe_load((Path(source)/'etc/auton/auton.yml.example').read_text())
             config['general'].update(listen_addr='127.0.0.1',listen_port=self.port,max_life_time=0,max_requests=0,
                 auth_basic='Integration',auth_basic_file=str(self.root/'users'),

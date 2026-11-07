@@ -8,5 +8,6 @@
     "commit": "7f57348b144fa62400bad31160d4b4ad5c00f53c",
     "patch_git_blob": "03e5f4a81cb811743b4128de2267dc06512e27f5"
   },
-  "sonicprobe": "0.3.62"
+  "sonicprobe_web": "0.3.65",
+  "sonicprobe_engine": "0.3.62"
 }

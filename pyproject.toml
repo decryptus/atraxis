@@ -4,17 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "atraxis"
-version = "1.0.8"
+version = "1.0.9"
 description = "Supervision and operator interfaces for authorized infrastructure workflows"
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 (GPLv3)"]
 requires-python = ">=3.11,<3.14"
-dependencies = ["dwho==0.3.66", "httpdis==0.7.1", "sonicprobe==0.3.62", "PyYAML==6.0.3"]
+dependencies = ["dwho==0.3.69", "httpdis==0.7.1", "sonicprobe==0.3.65", "PyYAML==6.0.3"]
 
 [project.optional-dependencies]
 installer = ["cryptography==50.0.2", "legacycrypt; python_version >= '3.13'"]
-textual = ["dwho[textual]==0.3.66"]
+textual = ["dwho[textual]==0.3.69"]
 rules = ["atropos-client[observations]==1.0.0"]
 
 [project.scripts]

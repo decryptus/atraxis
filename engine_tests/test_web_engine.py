@@ -4,6 +4,10 @@ Set ATROPOS_TEST_PYTHON to the engine venv interpreter. Run this suite using
 Atraxis's venv. No mocks, engine imports, ambient destinations or silent skips.
 """
 import base64
+try:
+    from crypt import METHOD_BLOWFISH, crypt, mksalt
+except ImportError:
+    from legacycrypt import METHOD_BLOWFISH, crypt, mksalt
 from copy import deepcopy
 import hashlib
 from html.parser import HTMLParser
@@ -74,8 +78,8 @@ class WebEngineFixture(unittest.TestCase):
                 for user in self.tokens])
         self.write_engine()
         self.write_yaml('mapping.yml',dict(version=1,identities=self.identities))
-        digest=base64.b64encode(hashlib.sha1(self.password.encode()).digest()).decode()
-        self.private('users',''.join(user+':{SHA}'+digest+'\n' for user in self.tokens))
+        digest=crypt(self.password, mksalt(METHOD_BLOWFISH, rounds=16))
+        self.private('users',''.join(user+':'+digest+'\n' for user in self.tokens))
         self.write_yaml('web.yml',dict(general=dict(listen_addr='127.0.0.1',listen_port=self.web_port,
             auth_basic_file='users',rules_web_file='mapping.yml',rules_web_origin=self.origin)))
         for user, token in self.tokens.items():

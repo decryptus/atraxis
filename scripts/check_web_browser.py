@@ -1,8 +1,6 @@
 """Synthetic, real HTTPdis/Chromium acceptance; no production credentials."""
-import base64
 from copy import deepcopy
 from dataclasses import replace
-import hashlib
 import json
 import socket
 from pathlib import Path
@@ -62,8 +60,8 @@ def main():
     output.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as folder:
         root = Path(folder)
-        digest = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        (root / 'users').write_text('reader:{SHA}' + digest + '\n')
+        digest = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        (root / 'users').write_text('reader:' + digest + '\n')
         mapping = root / 'web-rules.yml'
         mapping.write_text(yaml.safe_dump(dict(version=1, identities=[dict(username='reader',
             subject='demo-operator', organization='demo', atropos_client='engine-client.yml')])))

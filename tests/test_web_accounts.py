@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import http.client
 from html.parser import HTMLParser
 from pathlib import Path
@@ -29,8 +28,8 @@ class AccountWebTests(unittest.TestCase):
         self.store=AccountStore(self.root/'directory.json');self.rev=self.store.apply(Directory(fixture()),None)
         self.profile=self.root/'admin.yml';self.write('admin.yml',dict(version=1,store='directory.json',identities=[
             dict(username='alice-login',subject='alice'),dict(username='bob-login',subject='bob')]))
-        digest=base64.b64encode(hashlib.sha1(b'synthetic-password').digest()).decode()
-        (self.root/'users').write_text('alice-login:{SHA}'+digest+'\nbob-login:{SHA}'+digest+'\n')
+        digest='$2b$04$WCen5S0fszJX2awrg14Fq.Jyie5KgHB2xcAV4q8/5hHA2YkbiMbwq'
+        (self.root/'users').write_text('alice-login:'+digest+'\nbob-login:'+digest+'\n')
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
         self.origin='http://127.0.0.1:'+str(port);self.port=port
         self.write('web.yml',dict(general=dict(auth_basic_file='users',listen_port=port,

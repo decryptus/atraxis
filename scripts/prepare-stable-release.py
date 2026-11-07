@@ -58,7 +58,7 @@ def prepare(root: Path) -> None:
                    for value in qualification['evidence_sha256'].values())):
         raise ValueError('reviewed_operational_gates_required')
     if version == '1.0.3' or 'baseline_qualification_sha256' in qualification:
-        baseline_version = '1.0.2' if version == '1.0.3' else '1.0.0'
+        baseline_version = {'1.0.3': '1.0.2', '1.0.9': '1.0.8'}.get(version, '1.0.0')
         baseline_path = root / f'docs/releases/{baseline_version}-qualification.json'
         baseline_bytes = baseline_path.read_bytes()
         baseline = json.loads(baseline_bytes)

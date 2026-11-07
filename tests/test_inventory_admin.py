@@ -1,7 +1,6 @@
 """Bounded inventory grant edits, atomic audit and real authenticated web forms."""
 import base64
 from copy import deepcopy
-import hashlib
 import http.client
 import json
 from pathlib import Path
@@ -133,8 +132,8 @@ class GrantWebTests(unittest.TestCase):
     def setUp(self):
         self.domain=GrantAdminTests();self.domain.setUp();self.addCleanup(self.domain.doCleanups)
         self.root=self.domain.root;self.profile=self.domain.profile;self.store=self.domain.store
-        digest=base64.b64encode(hashlib.sha1(b'synthetic-password').digest()).decode()
-        (self.root/'users').write_text('alice:{SHA}'+digest+'\nbob:{SHA}'+digest+'\n')
+        digest='$2b$04$cC3Z6K0TXYbvpauV8vwo/Org9jBIMyWb4D4ujTCjLKzizgQLJ7QBG'
+        (self.root/'users').write_text('alice:'+digest+'\nbob:'+digest+'\n')
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));self.port=sock.getsockname()[1]
         self.origin='http://127.0.0.1:'+str(self.port)
         config=self.root/'web.yml';config.write_text(yaml.safe_dump(dict(general=dict(auth_basic_file='users',listen_port=self.port,

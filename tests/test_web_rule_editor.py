@@ -2,7 +2,6 @@
 import base64
 from copy import deepcopy
 from dataclasses import replace
-import hashlib
 import http.client
 import json
 from pathlib import Path
@@ -31,8 +30,8 @@ class EditorTests(unittest.TestCase):
         self.mapping = self.root/'mapping.yml'
         self.identities = [dict(username=user, subject=user, organization='demo', atropos_client=user+'.yml') for user in ('alice','bob')]
         self.write_mapping(self.identities)
-        digest = base64.b64encode(hashlib.sha1(b'fixture').digest()).decode()
-        (self.root/'users').write_text(''.join(user+':{SHA}'+digest+'\n' for user in ('alice','bob')))
+        digest = '$2b$04$WCen5S0fszJX2awrg14Fq.25URm.ukTUUW.e7Hm.rdFkWk2W2skpC'
+        (self.root/'users').write_text(''.join(user+':'+digest+'\n' for user in ('alice','bob')))
         self.config_path = self.root/'config.yml'
         self.config_path.write_text('general:\n  auth_basic_file: users\n  rules_web_file: mapping.yml\n  rules_web_origin: '+ORIGIN+'\n')
         self.calls, self.destinations, self.closed = [], [], 0

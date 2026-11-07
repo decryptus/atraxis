@@ -2,7 +2,6 @@ import base64
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import replace
-import hashlib
 import http.client
 import json
 from pathlib import Path
@@ -57,8 +56,8 @@ class WebRulesTests(unittest.TestCase):
         self.identities = [dict(username=user, subject=user+'-subject', organization=org,
                           atropos_client=user+'.yml') for user,org in [('alice','one'),('bob','two')]]
         self.write_mapping(self.identities)
-        digest = base64.b64encode(hashlib.sha1(b'fixture-password').digest()).decode()
-        (self.root/'users').write_text(''.join(user+':{SHA}'+digest+'\n' for user in ('alice','bob','unmapped')))
+        digest = '$2b$04$WCen5S0fszJX2awrg14Fq.vKOWkhoHoNQpOfjeQIkwQEjo1TfEpxq'
+        (self.root/'users').write_text(''.join(user+':'+digest+'\n' for user in ('alice','bob','unmapped')))
         self.config_path = self.root/'config.yml'
         self.config_path.write_text('general:\n  auth_basic_file: users\n  rules_web_file: rules-web.yml\n')
         self.calls, self.destinations = [], []

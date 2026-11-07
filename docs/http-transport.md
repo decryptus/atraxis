@@ -117,7 +117,7 @@ application port private and trust only the actual immediate proxy. The guided
 Compose namespace uses `127.0.0.1/32`. Additional ingress hops require a separate
 explicit trusted-address design; arbitrary forwarding chains are not accepted.
 
-The 1.0.8 guided installer and the Compose starter in tag v1.0.8 deploy image
+The 1.0.9 guided installer and the Compose starter in tag v1.0.9 deploy image
 1.0.7 with this proxy configuration. Existing installations need a coordinated
 application and proxy upgrade.
 
@@ -125,3 +125,12 @@ Limits are local to each application process. Clients sharing a NAT address shar
 budgets, and these controls cannot guarantee availability under a distributed
 attack. There is deliberately no global per-account lock that a remote attacker
 could use against clients at other addresses.
+
+The guided installer accepts only IPv4 listener addresses. The supplied Compose
+configuration binds to 127.0.0.1 by default and its nginx listener uses IPv4.
+In a custom dual-stack deployment, a trusted proxy may forward an IPv6 address.
+The 1.0.9 application counts failures per address. Clients rotating addresses
+within a /64 therefore receive separate budgets. Apply a per-prefix limit at
+the IPv6 ingress before forwarding and preserve the original client address.
+If Docker presents only its gateway to nginx, all clients share that gateway’s
+budget. Verify source addresses from two separate clients before exposing the service.
