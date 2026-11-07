@@ -126,8 +126,11 @@ budgets, and these controls cannot guarantee availability under a distributed
 attack. There is deliberately no global per-account lock that a remote attacker
 could use against clients at other addresses.
 
-The guided installer accepts IPv4 listener addresses. When a trusted ingress forwards
-an IPv6 client address, Basic authentication failures share one budget per /64.
-IPv4-mapped addresses share the budget of the corresponding IPv4 client. A custom
-dual-stack ingress must preserve the client address: if Docker presents only its
-gateway to nginx, the application can only limit the shared gateway.
+The guided installer accepts only IPv4 listener addresses. The supplied Compose
+configuration binds to 127.0.0.1 by default and its nginx listener uses IPv4.
+In a custom dual-stack deployment, a trusted proxy may forward an IPv6 address.
+The 1.0.9 application counts failures per address. Clients rotating addresses
+within a /64 therefore receive separate budgets. Apply a per-prefix limit at
+the IPv6 ingress before forwarding and preserve the original client address.
+If Docker presents only its gateway to nginx, all clients share that gateway’s
+budget. Verify source addresses from two separate clients before exposing the service.

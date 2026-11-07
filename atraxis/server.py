@@ -1,5 +1,5 @@
 """HTTPdis adapter; authentication and process lifecycle stay outside the core."""
-from ipaddress import IPv6Address, IPv6Network, ip_address
+from ipaddress import ip_address
 import json
 import signal
 import threading
@@ -17,7 +17,6 @@ _METHODS = ('GET', 'HEAD')
 _ROUTES = (('healthz', 'health'), ('readyz', 'readiness'), ('v1/status', 'status'))
 _SOCKET_TIMEOUT = 5.0
 _MAX_FORWARDED_ADDRESS = 45
-_IPV6_ATTEMPT_PREFIX = 64
 
 
 class _Handler(HttpReqHandler):
@@ -35,21 +34,19 @@ class _Handler(HttpReqHandler):
             return super().authenticate(auth_users)
         context = self.get_context()
         attempts = context.basic_attempts
-        peer = ip_address(self.client_address[0])
+        peer = self.client_address[0]
         account = attempts.account_key(authorization)
         networks = context.trusted_proxy_networks
-        if any(peer in network for network in networks):
+        if any(ip_address(peer) in network for network in networks):
             # One trusted hop must overwrite the field, never append a chain.
             forwarded = self.headers.get_all('X-Forwarded-For', [])
             try:
                 if (len(forwarded) != 1 or len(forwarded[0]) > _MAX_FORWARDED_ADDRESS
                         or '%' in forwarded[0]):
                     raise ValueError
-                peer = ip_address(forwarded[0].strip())
+                peer = str(ip_address(forwarded[0].strip()))
             except ValueError:
                 raise self.req_error(400, 'Invalid proxy client address') from None
-        if isinstance(peer, IPv6Address):
-            peer = peer.ipv4_mapped or IPv6Network((peer, _IPV6_ATTEMPT_PREFIX), strict=False)
         wait = attempts.retry_after(peer, account)
         if wait:
             raise self.req_error(429, 'Too many authentication attempts',
