@@ -4,6 +4,29 @@ Updated 7 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
+## 1.0.7 — Basic ingress follow-up (published)
+
+The failure table evicts its oldest entry at capacity instead of denying unknown
+clients. Trusted ingress must overwrite one X-Forwarded-For address; the listener
+validates it and isolates failures by client address and account. Direct clients
+cannot spoof their limiter key. Regression tests cover table saturation, targeted
+account lockout, invalid/duplicate headers and canonical IPv6 addresses.
+
+The exact 1.0.7 wheel passed four-source operational reads and isolated cold
+recovery of ten services and two SQLite databases. Two-hour endurance completed
+240 rounds with final recovery. G1, G2 and G3 are closed for the bounded profile.
+The [GitHub release](https://github.com/decryptus/atraxis/releases/tag/v1.0.7),
+[PyPI package](https://pypi.org/project/atraxis/1.0.7/) and Linux amd64 Docker image
+are published. PyPI serves the exact reviewed wheel and source archive; a fresh
+index installation passed dependency and CLI checks. Registry Compose tests
+verified the pinned 1.0.7 image, matching nginx configuration and separate-host
+recovery. The [product website](https://atraxis.io/) provides FR/EN installation
+and coordinated upgrade instructions.
+The immutable package still generates guided installs with image 1.0.5; updating
+that installer needs a subsequent package release. The existing pilot was restored
+after qualification, not upgraded.
+No claim is made that existing 1.0.6 installations contain this follow-up.
+
 ## 1.0.6 — ingress and form budgets (published)
 
 The candidate separates Basic failure budgets by account behind configured trusted
@@ -174,22 +197,3 @@ The 1.0 support matrix names the qualified versioned configuration, API and stor
 contracts. Unsupported formats are rejected explicitly; stored data is not silently
 converted or deleted. Prototype compatibility and arbitrary component combinations
 are not promised.
-
-## 1.0.7 — Basic ingress follow-up (qualified)
-
-The failure table evicts its oldest entry at capacity instead of denying unknown
-clients. Trusted ingress must overwrite one X-Forwarded-For address; the listener
-validates it and isolates failures by client address and account. Direct clients
-cannot spoof their limiter key. Regression tests cover table saturation, targeted
-account lockout, invalid/duplicate headers and canonical IPv6 addresses.
-
-The exact 1.0.7 wheel passed four-source operational reads and isolated cold
-recovery of ten services and two SQLite databases. Two-hour endurance completed
-240 rounds with final recovery. G1, G2 and G3 are closed for the bounded profile.
-GitHub release assets and the Linux amd64 Docker image are published and verified.
-The registry Compose starter selects the 1.0.7 digest with its matching ingress
-configuration. PyPI and FR/EN website promotion follow the registry checks.
-The immutable package still generates guided installs with image 1.0.5; updating
-that installer needs a subsequent package release. The existing pilot was restored
-after qualification, not upgraded.
-No claim is made that existing 1.0.6 installations contain this follow-up.
