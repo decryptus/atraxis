@@ -18,5 +18,5 @@ html_context = {'contributor_index': 'docs/contributors', 'contributor_pages':
     ['docs/contributors', 'docs/contributing', 'docs/installation-core', 'docs/docker-publication', 'docs/v1-delivery', 'docs/read-only-adapters',
      'docs/prometheus-acceptance', 'docs/source-correspondence', 'docs/certlord-correspondence',
      'docs/observation-capacity',
-     'docs/release-stable', 'docs/releases/1.0.0', 'docs/releases/1.0.1', 'docs/releases/1.0.2', 'docs/releases/1.0.3', 'docs/releases/1.0.4', 'docs/releases/1.0.5', 'docs/releases/1.0.6', 'docs/release-candidate', 'docs/releases/1.0.0rc1', 'docs-core', 'ROADMAP']}
+     'docs/release-stable', 'docs/releases/1.0.0', 'docs/releases/1.0.1', 'docs/releases/1.0.2', 'docs/releases/1.0.3', 'docs/releases/1.0.4', 'docs/releases/1.0.5', 'docs/releases/1.0.6', 'docs/releases/1.0.7', 'docs/releases/1.0.8', 'docs/release-candidate', 'docs/releases/1.0.0rc1', 'docs-core', 'ROADMAP']}
 html_sidebars = {'**': ['about.html', 'documentation-tracks.html', 'localtoc.html', 'searchbox.html']}

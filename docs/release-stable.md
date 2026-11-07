@@ -13,7 +13,7 @@ in the required package workflow. Changed/missing archives or hashes, open gates
 a changed runtime module, an existing tag/release or a failed check abort publication.
 
 Publication is explicit: either dispatch `Publish reviewed stable release` on
-main with the tested PR head, or move the dedicated `release/publish-1.0.7` branch
+main with the tested PR head, or move the dedicated `release/publish-1.0.8` branch
 from a commit preceding that workflow to the exact reviewed merge on main.
 Only that named publication branch triggers the push path. It resolves the single
 merged PR for the main commit and checks its exact head; ordinary main pushes,
@@ -39,3 +39,7 @@ generated RECORD and long README description may vary between builds. The
 published archives come from the successful package job for the final PR head.
 
 For 1.0.3 the publisher compares the application modules to the 1.0.2 manifest. The installed-image tests separately verify the changed HTTP dependency.
+
+For 1.0.8 the release check compares the wheel with the 1.0.7 qualified payload,
+allowing only the package version and the installer module verified by guided CI.
+Both the installer and the tagged Compose starter deploy the verified 1.0.7 image.

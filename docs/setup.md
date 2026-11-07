@@ -180,15 +180,13 @@ In the installer account’s virtual environment, install the published package 
 the terminal and TLS dependencies, then launch the wizard.
 
 ```sh
-python -m pip install 'atraxis[textual,installer]==1.0.7'
+python -m pip install 'atraxis[textual,installer]==1.0.8'
 atraxis install-wizard
 ```
 
-The native deployment uses the installed package. For guided Compose, the PyPI
-1.0.7 installer selects image 1.0.5. The installer built from the current
-source tree selects image 1.0.7 by its published digest. To isolate failed Basic logins by client address and account,
-use the [registry Compose starter](docker-compose.md) with the published 1.0.7
-image and its matching nginx configuration. The trusted proxy must overwrite
+Native deployments use the installed 1.0.8 package. Guided Compose and the
+[registry Compose starter](docker-compose.md) both deploy the published 1.0.7
+image. The guided installer pins its SHA-256 digest. The trusted proxy must overwrite
 `X-Forwarded-For` with `$remote_addr`; see the
 [ingress limits and image requirements](http-transport.md#basic-attempts-behind-a-trusted-ingress).
 
