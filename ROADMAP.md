@@ -22,8 +22,8 @@ index installation passed dependency and CLI checks. Registry Compose tests
 verified the pinned 1.0.7 image, matching nginx configuration and separate-host
 recovery. The [product website](https://atraxis.io/) provides FR/EN installation
 and coordinated upgrade instructions.
-The immutable package still generates guided installs with image 1.0.5; updating
-that installer needs a subsequent package release. The existing pilot was restored
+The published 1.0.7 installer generates guided installs with image 1.0.5.
+The source installer now selects the published 1.0.7 web image by digest. The existing pilot was restored
 after qualification, not upgraded.
 No claim is made that existing 1.0.6 installations contain this follow-up.
 
