@@ -36,7 +36,7 @@ services:
         bind: {create_host_path: false}
   web:
     <<: *runtime
-    image: decryptus/atraxis:1.0.6
+    image: decryptus/atraxis:1.0.7
     network_mode: service:web-tls
     depends_on: [web-tls, engine]
     volumes:

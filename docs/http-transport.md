@@ -91,8 +91,8 @@ authorized live acceptance remains outstanding.
 
 ## Basic attempts behind a trusted ingress
 
-The current source adds client-address isolation and bounded-table eviction;
-these changes are not yet in the published 1.0.6 image.
+Atraxis 1.0.7 adds client-address isolation and bounded-table eviction.
+The published 1.0.7 image and current registry Compose starter include both.
 
 The generated nginx configuration limits each client address to ten requests per
 second, with a burst of twenty and HTTP 429 for excess requests. It overwrites
@@ -117,10 +117,11 @@ application port private and trust only the actual immediate proxy. The guided
 Compose namespace uses `127.0.0.1/32`. Additional ingress hops require a separate
 explicit trusted-address design; arbitrary forwarding chains are not accepted.
 
-Guided Compose still pins 1.0.5 and the registry starter pins 1.0.6. Neither image
-contains this follow-up. Their pins must be updated after release qualification;
-changing nginx alone does not install the new application behavior. Existing
-published releases retain their documented limitations.
+Guided Compose in the immutable 1.0.7 package still pins image 1.0.5 and does not
+install this follow-up. Use the registry Compose starter with image 1.0.7 for the
+current ingress behavior. Updating the guided installer requires a subsequent
+package release. Existing deployments need an explicit coordinated upgrade;
+changing nginx alone does not install the new application behavior.
 
 Limits are local to each application process. Clients sharing a NAT address share
 budgets, and these controls cannot guarantee availability under a distributed

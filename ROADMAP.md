@@ -26,7 +26,7 @@ has been promoted after registry verification. See the
 The guided installer currently pins the published 1.0.5 image, which still has
 the shared Basic peer budget. Updating that pin to a newly qualified image is
 required before the guided deployment can deliver the complete correction.
-The registry Compose starter now selects the verified 1.0.6 web digest and
+The 1.0.6 registry Compose starter selected its verified web digest and
 matching proxy trust configuration. All twelve promotion workflows passed this exact
 recipe before publication. Its engine and client pins remain unchanged.
 
@@ -186,6 +186,10 @@ account lockout, invalid/duplicate headers and canonical IPv6 addresses.
 The exact 1.0.7 wheel passed four-source operational reads and isolated cold
 recovery of ten services and two SQLite databases. Two-hour endurance completed
 240 rounds with final recovery. G1, G2 and G3 are closed for the bounded profile.
-Package/image publication and website promotion follow these verified gates.
-Registry and guided-install image pins still require separate promotion.
+GitHub release assets and the Linux amd64 Docker image are published and verified.
+The registry Compose starter selects the 1.0.7 digest with its matching ingress
+configuration. PyPI and FR/EN website promotion follow the registry checks.
+The immutable package still generates guided installs with image 1.0.5; updating
+that installer needs a subsequent package release. The existing pilot was restored
+after qualification, not upgraded.
 No claim is made that existing 1.0.6 installations contain this follow-up.

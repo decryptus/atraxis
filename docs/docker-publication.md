@@ -37,28 +37,28 @@ pulled image before announcing availability. Publishing does not deploy a site.
 ## Python package publication
 
 The `publish-pypi.yml` workflow promotes the two signed-off GitHub release
-archives for 1.0.6. PRs validate their hashes and install the wheel. Once reviewed,
-advance `release/publish-pypi-1.0.6` to current main. PyPI must trust
+archives for 1.0.7. PRs validate their hashes and install the wheel. Once reviewed,
+advance `release/publish-pypi-1.0.7` to current main. PyPI must trust
 `decryptus/atraxis`, workflow `publish-pypi.yml`, environment `pypi`.
 The workflow checks each existing registry file against the release and uploads
 only missing files. Its final job downloads both files and installs from the index.
 
-### Verified 1.0.6 promotion inputs
+### Verified 1.0.7 promotion inputs
 
-The immutable [v1.0.6 tag](https://github.com/decryptus/atraxis/releases/tag/v1.0.6)
-points to `474bd3e5ee999e9f68dc869fbd1707c160a38fa4`. The Linux amd64 image
-`decryptus/atraxis:1.0.6` has verified registry digest
-`sha256:cfc79270d1c4ec5e768cdafca466084ed486c8dc7b8c04606797c0596fa21157` and records that same revision.
+The immutable [v1.0.7 tag](https://github.com/decryptus/atraxis/releases/tag/v1.0.7)
+points to `8e51fa15fa9c9348d8d253ac300ba90493ecf97f`. The Linux amd64 image
+`decryptus/atraxis:1.0.7` has verified registry digest
+`sha256:f75291bd5666e285a35550ad1fa39a4c2ee5b3916c877742f32fbb7633ebba4e` and records that same revision.
 The promotion PR pulls that exact image on a fresh runner and repeats its installed-image checks.
 
 The four downloaded GitHub release assets were verified byte for byte:
 
 | Asset | SHA256 |
 | --- | --- |
-| `atraxis-1.0.6-py3-none-any.whl` | `650ecdb6ee92ae3d18fff049cefb44354307e35a2e47cb3945e5a13aaae300fc` |
-| `atraxis-1.0.6.tar.gz` | `60959cd251f3517a84974b7f1c61081b04430e244d144e1417727a07f3450497` |
-| `release-provenance.json` | `e55a665dec7920105fcca0982308064b5b7be697e3470b3a3cb6257f7a36f8f3` |
-| `SHA256SUMS` | `88c2145cc4fe3bf31c945fb41923e7b0ee3fc7b58a1212cea3ecbc8c07e21fca` |
+| `atraxis-1.0.7-py3-none-any.whl` | `771ecf96fdcb6761b9567fec60914979f11242cf4c66426d4153405e00db766a` |
+| `atraxis-1.0.7.tar.gz` | `ebf1c572cf2bbc99f336847481dd4f08d28b73943c9d19fb7bf64a3ca7160330` |
+| `release-provenance.json` | `1e61887ccdcd9b40bd7686100b588be94e99eaed058cb464d4c2608186753580` |
+| `SHA256SUMS` | `357afe2fdbf6df9d71975ef4bd5d3c819936763c9aec189fb22e37c19140673b` |
 
 PyPI promotion uploads the two distribution archives above without rebuilding.
 The tag, release assets and qualification evidence remain immutable.
