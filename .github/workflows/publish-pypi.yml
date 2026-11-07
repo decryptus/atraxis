@@ -1,11 +1,11 @@
-name: Promote Atraxis 1.0.8 to PyPI
+name: Promote Atraxis 1.0.9 to PyPI
 on:
   pull_request:
     paths:
       - .github/workflows/publish-pypi.yml
       - scripts/promote-pypi.py
   push:
-    branches: [release/publish-pypi-1.0.8]
+    branches: [release/publish-pypi-1.0.9]
     paths: [.github/workflows/publish-pypi.yml]
   workflow_dispatch:
 permissions:
@@ -35,8 +35,8 @@ jobs:
           if [[ "$GITHUB_EVENT_NAME" != pull_request ]]; then
             test "$GITHUB_SHA" = "$(gh api repos/decryptus/atraxis/branches/main --jq .commit.sha)"
           fi
-          test "$(gh api repos/decryptus/atraxis/git/ref/tags/v1.0.8 --jq .object.sha)" = f99d099019b01ebb27ef1023d9c0c347c198d980
-          gh release download v1.0.8 -D release-assets
+          test "$(gh api repos/decryptus/atraxis/git/ref/tags/v1.0.9 --jq .object.sha)" = 607029b358dd77a8461b5138589be2760b11de44
+          gh release download v1.0.9 -D release-assets
           python scripts/promote-pypi.py --stage
           echo "pending=$(find pypi-upload -type f | wc -l)" >> "$GITHUB_OUTPUT"
       - name: Install and check the release wheel outside the checkout
@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: error
   publish:
     needs: prepare
-    if: needs.prepare.outputs.pending != '0' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/publish-pypi-1.0.8') && github.event_name != 'pull_request'
+    if: needs.prepare.outputs.pending != '0' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/publish-pypi-1.0.9') && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: pypi
@@ -93,10 +93,10 @@ jobs:
           cd "$RUNNER_TEMP"
           for delay in 0 10 20 40; do
             sleep "$delay"
-            registry/bin/pip install --no-cache-dir --index-url https://pypi.org/simple --only-binary atraxis 'atraxis==1.0.8' && break
+            registry/bin/pip install --no-cache-dir --index-url https://pypi.org/simple --only-binary atraxis 'atraxis==1.0.9' && break
           done
           registry/bin/pip check
-          registry/bin/python -c "from importlib.metadata import version; assert version('atraxis') == '1.0.8'"
+          registry/bin/python -c "from importlib.metadata import version; assert version('atraxis') == '1.0.9'"
           registry/bin/atraxis --help
   check-registry-image:
     if: github.event_name == 'pull_request'
