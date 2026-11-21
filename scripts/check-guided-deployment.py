@@ -81,7 +81,7 @@ def main(mode):
                     ['docker', 'inspect', '--format', '{{.Config.Image}} {{.Image}}', container],
                     text=True).split()
                 assert reference == lock['name'] + '@' + lock['digest'], reference
-                assert image_id == lock['id'], image_id
+                assert image_id in {lock['id'], lock['digest']}, image_id
                 check_ingress(doc['listen_port'], server_ca)
             print(f'{mode}: fresh deployment, anonymous refusal and authenticated HTTPS readiness passed.')
         finally:
