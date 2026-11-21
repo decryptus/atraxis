@@ -101,12 +101,15 @@ def browser_identity(container_id, lock):
     if not re.fullmatch(r'[0-9a-f]{64}', container_id):
         raise ValueError('Expected the explicit GitHub job container ID')
     expected = lock['images']['playwright']
+    # Support classic config IDs and containerd's manifest/index IDs.
+    image_ids = {expected['linux_amd64_image_id'], expected['linux_amd64_manifest'],
+                 expected['reference'].split('@')[1]}
     container = inspect('containers', container_id)
     if (container['Config']['Image'] != expected['reference']
-            or container['Image'] != expected['linux_amd64_image_id']):
+            or container['Image'] not in image_ids):
         raise ValueError('Running browser container differs from the image lock')
     identity = image_identity(inspect('images', container['Image']))
-    if (identity['image_id'] != expected['linux_amd64_image_id']
+    if (identity['image_id'] not in image_ids
             or identity['rootfs_layers'] != expected['rootfs_layers']):
         raise ValueError('Browser image configuration differs from the lock')
     return {'reference': expected['reference'], **identity}

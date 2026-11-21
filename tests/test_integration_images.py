@@ -38,6 +38,25 @@ class IntegrationImageTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     images.browser_identity('b' * 64, lock)
 
+    def test_containerd_ids_still_require_locked_layers_and_platform(self):
+        lock = images.load_lock()
+        entry = lock['images']['playwright']
+        for image_id in (entry['linux_amd64_manifest'], entry['reference'].split('@')[1]):
+            container = {'Image': image_id, 'Config': {'Image': entry['reference']}}
+            info = image_info(entry)
+            info['Id'] = image_id
+            with self.subTest(image_id=image_id), patch.object(images, 'inspect', side_effect=[container, info]):
+                self.assertEqual(images.browser_identity('b' * 64, lock)['image_id'], image_id)
+            for field in ('layers', 'platform'):
+                changed = copy.deepcopy(info)
+                if field == 'layers':
+                    changed['RootFS']['Layers'] = ['sha256:' + '0' * 64]
+                else:
+                    changed['Architecture'] = 'arm64'
+                with self.subTest(field=field), patch.object(images, 'inspect', side_effect=[container, changed]):
+                    with self.assertRaises(ValueError):
+                        images.browser_identity('b' * 64, lock)
+
     def test_chain_requires_all_images_and_their_base_layers(self):
         lock = images.load_lock()
         info = image_info(lock['images']['python'])

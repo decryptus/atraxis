@@ -34,7 +34,7 @@ def prepare_images(compose):
     for row in IMAGE_LOCK['images'].values():
         pinned = row['name'] + '@' + row['digest']
         command('docker', 'pull', '--platform', IMAGE_LOCK['platform'], pinned, timeout=300)
-        if command('docker', 'image', 'inspect', '--format', '{{.Id}}', pinned) != row['id']:
+        if command('docker', 'image', 'inspect', '--format', '{{.Id}}', pinned) not in {row['id'], row['digest']}:
             raise ValueError('registry_image_identity_mismatch')
         command('docker', 'tag', pinned, row['name'])
 
