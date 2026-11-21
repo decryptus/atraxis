@@ -6,7 +6,7 @@ permissions:
   contents: read
 jobs:
   compose:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
       transfer_sha256: ${{ steps.transfer.outputs.sha256 }}
@@ -153,7 +153,7 @@ jobs:
           if-no-files-found: error
   recover:
     needs: compose
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
