@@ -1,10 +1,31 @@
 # Atraxis roadmap
 
-Updated 7 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 22 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
 
-## 1.0.8 — installer and Compose alignment
+## 1.0.10 — Sonicprobe maintenance (published)
+
+The web service requires Sonicprobe 0.3.66, which supplies missing `Date` and
+`Message-ID` headers for outgoing email. No product runtime Python files or
+storage formats change. The [GitHub release](https://github.com/decryptus/atraxis/releases/tag/v1.0.10)
+and [PyPI package](https://pypi.org/project/atraxis/1.0.10/) are published. The
+guided Compose installer and registry Compose starter still select the qualified
+1.0.7 image until a new container publication and digest are verified. No new
+endurance or external email delivery evidence is claimed. See the
+[1.0.10 release notes](docs/releases/1.0.10.md).
+
+## 1.0.9 — HTTPdis 0.7.1 (published)
+
+The service uses HTTPdis 0.7.1 with a default TCP backlog of 128. Legacy SHA-1 or
+DES htpasswd entries must be replaced with supported hashes such as bcrypt before
+upgrading a service that uses HTTP Basic authentication. The
+[GitHub release](https://github.com/decryptus/atraxis/releases/tag/v1.0.9) and
+[PyPI package](https://pypi.org/project/atraxis/1.0.9/) are published; the guided
+Compose installer still selects the qualified 1.0.7 image. See the
+[1.0.9 release notes](docs/releases/1.0.9.md).
+
+## 1.0.8 — installer and Compose alignment (published)
 
 The Python package and tagged source deliver the 1.0.7 Docker image through both
 installation paths. The guided installer verifies the running image against the
