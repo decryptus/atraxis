@@ -2,6 +2,10 @@ name: operator Compose acceptance
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  # Only pull request runs share a group, so pushes are never queued or cancelled.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   compose:
     runs-on: ubuntu-24.04
@@ -9,21 +13,21 @@ jobs:
     outputs:
       transfer_sha256: ${{ steps.transfer.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: decryptus/atropos
           ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
           path: .acceptance/engine
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: decryptus/auton
           ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
@@ -139,11 +143,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install PyYAML==6.0.3

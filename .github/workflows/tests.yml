@@ -2,26 +2,34 @@ name: Core tests
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  # Only pull request runs share a group, so pushes are never queued or cancelled.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   style:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install ruff==0.14.3
       - run: ruff check --select E701,E702,E703 atraxis
   unittest:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         python: ['3.11', '3.12', '3.13']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - run: python -m pip install ".[installer]"
       - run: python scripts/check-test-collection.py --runner unittest tests
       - run: python -m unittest discover -s tests -v
@@ -29,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build private test image (no push)
         run: docker build --tag atraxis-acceptance:ci .
       - name: Validate isolated Docker runtime
@@ -38,8 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install cryptography==50.0.2
