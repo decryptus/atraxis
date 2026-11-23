@@ -141,6 +141,20 @@ does not extend to other projects or authorize deleting stored data.
 - For a new generic capability, assess whether it belongs in one of these shared libraries and record the placement decision in the contribution. Keep product-specific business rules in this repository.
 - When a shared-library change is needed, validate it in its own repository against its contracts, supported versions and existing consumers. Then update this project's dependency and verify the integration before delivery. Follow each repository's release procedures and existing authorization scope.
 
+## Brand assets placement
+
+- Keep brand assets under `assets/brand/`: `svg/` for vector sources, `png/`
+  for raster exports, `favicon/` for favicons and app icons, and `social/` for
+  the GitHub social preview and Open Graph images.
+- Name new files without the project prefix and, for raster exports, with the
+  pixel width: `logo-horizontal.svg`, `logo-horizontal-1024.png`,
+  `logo-horizontal-dark-1024.png`.
+- Keep the GitHub social preview at
+  `assets/brand/social/social-preview-1280x640.png` (1280×640, under 1 MB),
+  derived from the existing logo. Do not redesign the brand.
+- Do not move or rename an existing asset without updating every reference
+  (README, HTML, packaging, build scripts) in the same change.
+
 ## Commit authorship
 
 Write every commit as `decryptus <decryptus@users.noreply.github.com>`, as both author and committer (run `git config user.name decryptus` and `git config user.email decryptus@users.noreply.github.com` before committing, including when rebasing). Do not add `Co-Authored-By` lines, session links or any mention of an assistant or tool in commit messages. Do not rewrite history already published on the default branch to fix older commits.
