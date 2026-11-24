@@ -109,7 +109,7 @@ Remote origins require HTTPS. For local fixtures only, explicit
 `http://127.0.0.1:9810` or `http://[::1]:9810`; names like `localhost`, abbreviated
 IPv4 and other destinations are rejected. Do not set this flag on HTTPS origins.
 
-`credentials_file` is a separate UTF-8 JSON file, at most 8 KiB, containing exactly
+For the default `auth_mode: basic`, `credentials_file` is a separate UTF-8 JSON file, at most 8 KiB, containing exactly
 `username` and `password` strings. Empty values, control characters, a colon in the
 username, duplicate keys and extra fields are rejected. Use a read-only API identity
 (or the protected HTTPS ingress for monit-docker). This is **not** an htpasswd file:
@@ -117,6 +117,20 @@ outbound Basic authentication needs the credential, not its hash. File paths res
 relative to the main YAML; keep them readable only by the service identity/operator.
 Passwords are not retained in the SourceConfig value or printed in errors/repr.
 The HTTP transport reloads credentials explicitly for each request and never uses ambient netrc.
+
+For the native `monit_docker` adapter only, two additional explicitly selected modes are available:
+- `auth_mode: bearer`: set `credentials_file` to a private ASCII file containing a Monit-Docker API token (optional final newline). Use a viewer identity and a token scoped to `status:read`; arrange rotation before expiration. This is the SQLite-authenticated Monit-Docker API mode.
+- `auth_mode: none`: omit `credentials_file` entirely. Only use this for intentionally public read-only inventory, such as the demonstration endpoint. No Authorization header is sent.
+
+Existing sources without `auth_mode` continue to use Basic. There is no fallback on 401/403, no change to incoming Atraxis authentication, and no relaxation of TLS or redirect checks. For example:
+
+```yaml
+sources:
+  - source_id: public-monit
+    kind: monit_docker
+    origin: https://demo.monit-docker.com
+    auth_mode: none
+```
 
 Optional `ca_file` points to a readable CA PEM bundle (at most 1 MiB) for HTTPS.
 Its certificate syntax is checked offline. There is no option to disable TLS
