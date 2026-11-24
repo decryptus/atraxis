@@ -108,6 +108,29 @@ class SourceConfigurationTests(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             self.load()
 
+    def test_monit_explicit_authentication_modes(self):
+        public = dict(self.source, auth_mode='none')
+        del public['credentials_file']
+        source = parse_sources([public], self.path)[0]
+        self.assertEqual(source.auth_mode, 'none')
+        self.assertIsNone(source.credentials_file)
+        self.assertEqual(self.load().auth_mode, 'basic')
+        self.secret.write_text('test-token_123\n')
+        source = self.load(auth_mode='bearer')
+        self.assertEqual(source.auth_mode, 'bearer')
+        self.assertNotIn('test-token_123', repr(source))
+        for bad in ('', 'abc def', 'abc\nxyz', 'abc\r\n', 'abc:xyz'):
+            self.secret.write_bytes(bad.encode())
+            with self.assertRaises(ConfigurationError):
+                self.load(auth_mode='bearer')
+        for bad in (dict(public, kind='certlord'),
+                    dict(public, auth_mode='basic'),
+                    dict(public, auth_mode='bearer'),
+                    dict(self.source, auth_mode='none'),
+                    dict(self.source, auth_mode='invalid')):
+            with self.assertRaises(InvalidSourceConfiguration):
+                parse_sources([bad], self.path)
+
     def test_custom_ca_requires_valid_readable_pem(self):
         ca = self.root / 'ca.pem'
         ca.write_text('not a certificate')
