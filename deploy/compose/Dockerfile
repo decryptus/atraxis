@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 # engine_source is a separate, clean Atropos source checkout, supplied by Compose.
-FROM python:3.12.16-slim-trixie@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 AS runtime
+FROM python:3.15.1-slim-trixie@sha256:533b0b2f9b5d46fd097091cf826f27902f1d6c3bca714b6dc74551356aa97a51 AS runtime
 COPY deploy/compose/locks/debian.sources /etc/apt/sources.list.d/debian.sources
 RUN apt-get update && apt-get install --no-install-recommends -y libmagic1 \
     && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --no-create-home service
