@@ -1,8 +1,17 @@
 # Atraxis roadmap
 
-Updated 22 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 25 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
+
+## 1.0.11 — native Monit-Docker source authentication (implemented, qualification pending)
+
+Native `monit_docker` sources support explicit Basic, Bearer and anonymous read-only
+collection. Existing sources default to Basic; other adapters and inbound Atraxis
+authentication are unchanged. No authentication fallback, redirect or TLS relaxation
+is introduced. The implementation passed all eleven PR workflows before merge.
+The final package, operational source checks, backup/isolated recovery and publication
+are still pending. See the [candidate release notes](docs/releases/1.0.11.md).
 
 ## 1.0.10 — Sonicprobe maintenance (published)
 
