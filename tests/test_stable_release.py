@@ -118,7 +118,12 @@ class StableReleaseTests(unittest.TestCase):
             _MODULE.prepare(self.root)
 
     def test_ingress_release_requires_its_exact_qualified_wheel_payload(self):
-        version = '1.0.6'
+        self.assert_qualified_wheel_required('1.0.6')
+
+    def test_source_auth_release_requires_its_exact_qualified_wheel_payload(self):
+        self.assert_qualified_wheel_required('1.0.11')
+
+    def assert_qualified_wheel_required(self, version):
         (self.root / 'pyproject.toml').write_text(
             '[project]\nname="atraxis"\nversion="1.0.6"\n')
         qualification = json.loads((self.root / 'docs/releases/1.0.0-qualification.json').read_text())
@@ -133,7 +138,7 @@ class StableReleaseTests(unittest.TestCase):
                 info = f'atraxis-{version}.dist-info/'
                 with zipfile.ZipFile(renamed, 'w') as wheel:
                     for name, data in {
-                        info + 'METADATA': b'Name: atraxis\nVersion: 1.0.6\n\nFixture',
+                        info + 'METADATA': f'Name: atraxis\nVersion: {version}\n\nFixture'.encode(),
                         info + 'WHEEL': b'Wheel-Version: 1.0',
                         info + 'RECORD': b'index',
                         info + 'entry_points.txt': b'atraxis=atraxis.cli:main',
