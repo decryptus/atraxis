@@ -12,7 +12,7 @@ from urllib.parse import urlsplit, urlencode
 from atraxis.source_config import (MAX_CA_BYTES, MAX_RESPONSE_BYTES, MAX_TIMEOUT,
                                  MIN_RESPONSE_BYTES, MIN_TIMEOUT,
                                  InvalidSourceConfiguration, _origin, _read_file,
-                                 _unique_pairs, read_credentials)
+                                 _unique_pairs, read_credentials, read_bearer, source_auth_mode)
 from atraxis.read_request import READ_ROUTES, INVENTORY_KIND, SEARCH_KIND
 from atraxis.accounts import identifier
 from atraxis.source_adapters import SOURCE_KINDS, get_adapter
@@ -57,9 +57,22 @@ def fetch(document):
                 return {'outcome': 'configuration_error'}
             query = SearchQuery(**document['search_query'])
             route += ('&' if '?' in route else '?') + urlencode(query.parameters())
-        _, credentials = read_credentials(document['credentials_file'], '.')
-        authorization = base64.b64encode((credentials['username'] + ':' +
-                                         credentials['password']).encode('utf-8')).decode('ascii')
+        mode = source_auth_mode(document)
+        headers = {'Accept': 'application/json', 'Accept-Encoding': 'identity',
+                   'Connection': 'close', 'User-Agent': 'Atraxis-read-only/0.0.1'}
+        if mode == 'none':
+            if document.get('credentials_file') is not None:
+                return {'outcome': 'configuration_error'}
+        elif mode == 'bearer':
+            if not origin.startswith('https://') and not ip_address(urlsplit(origin).hostname).is_loopback:
+                return {'outcome': 'configuration_error'}
+            _, token = read_bearer(document['credentials_file'], '.')
+            headers['Authorization'] = 'Bearer ' + token
+        else:
+            _, credentials = read_credentials(document['credentials_file'], '.')
+            authorization = base64.b64encode((credentials['username'] + ':' +
+                                             credentials['password']).encode('utf-8')).decode('ascii')
+            headers['Authorization'] = 'Basic ' + authorization
         parsed = urlsplit(origin)
         if parsed.scheme == 'https':
             context = ssl.create_default_context()
@@ -73,9 +86,7 @@ def fetch(document):
             if not ip_address(parsed.hostname).is_loopback or document['ca_file'] is not None:
                 return {'outcome': 'configuration_error'}
             connection = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=timeout)
-        connection.request('GET', route, headers={'Authorization': 'Basic ' + authorization,
-                           'Accept': 'application/json', 'Accept-Encoding': 'identity',
-                           'Connection': 'close', 'User-Agent': 'Atraxis-read-only/0.0.1'})
+        connection.request('GET', route, headers=headers)
         response = connection.getresponse()
         if 300 <= response.status <= 399:
             return {'outcome': 'redirect_refused'}
