@@ -144,6 +144,28 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(self.transport.fetch(bearer).outcome, 'configuration_error')
         self.assertEqual(len(server.requests), count)
 
+    def test_monit_auth_modes_never_fallback_or_follow_redirects(self):
+        server, redirect = self.server(), self.server()
+        server.redirect = 'http://127.0.0.1:%s/v1/status' % redirect.server_port
+        self.credentials.write_text('fixture-token_456\n')
+        bearer = self.source(server, auth_mode='bearer')
+        public = replace(bearer, auth_mode='none', credentials_file=None)
+        for source, authorization in ((bearer, 'Bearer fixture-token_456'),
+                                      (public, None)):
+            for status, expected in ((401, 'authentication_error'),
+                                     (403, 'forbidden'),
+                                     (302, 'redirect_refused')):
+                with self.subTest(mode=source.auth_mode, status=status):
+                    server.mode = status
+                    count = len(server.requests)
+                    result = self.transport.fetch(source)
+                    self.assertEqual(result.outcome, expected)
+                    self.assertIsNone(result.payload)
+                    self.assertEqual(server.requests[count:],
+                                     [('GET', '/v1/status', authorization)])
+                    self.assertNotIn('fixture-token_456', repr(result))
+        self.assertEqual(redirect.requests, [])
+
     def test_status_codes_and_redirect_never_forward_credentials(self):
         server, redirect = self.server(), self.server()
         server.redirect = 'http://127.0.0.1:%s/v1/status' % redirect.server_port
