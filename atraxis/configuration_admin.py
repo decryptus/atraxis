@@ -22,7 +22,7 @@ from atraxis.source_config import (parse_sources, MAX_SOURCES, DEFAULT_TIMEOUT,
 MAX_PROFILE_BYTES = 262144
 MAX_HISTORY = 100
 SETTINGS = ('timeout', 'poll_interval', 'max_age')
-CONNECTION_FIELDS = frozenset({'kind', 'origin', 'credentials_file', 'ca_file', 'allow_loopback_http', 'metric'})
+CONNECTION_FIELDS = frozenset({'kind', 'origin', 'credentials_file', 'auth_mode', 'ca_file', 'allow_loopback_http', 'metric'})
 OPERATIONS = frozenset({'source.add', 'source.update', 'source.remove'})
 HASH = re.compile(r'[0-9a-f]{64}')
 MAX_IDENTITIES = 128
@@ -66,7 +66,7 @@ def load_profile(path):
         seen.add(key)
     require(type(connections) is dict and len(connections) <= MAX_SOURCES)
     for name, spec in connections.items():
-        require(identifier(name) and type(spec) is dict and {'kind', 'origin', 'credentials_file'} <= set(spec) <= CONNECTION_FIELDS)
+        require(identifier(name) and type(spec) is dict and {'kind', 'origin'} <= set(spec) <= CONNECTION_FIELDS)
         parse_sources([dict(spec, source_id=name)], path)
     return document, store, fingerprint(document)
 
