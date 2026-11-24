@@ -43,3 +43,9 @@ For 1.0.3 the publisher compares the application modules to the 1.0.2 manifest. 
 For 1.0.8 the release check compares the wheel with the 1.0.7 qualified payload,
 allowing only the package version and the installer module verified by guided CI.
 Both the installer and the tagged Compose starter deploy the verified 1.0.7 image.
+
+For 1.0.11, the source authentication runtime changes require reviewed operational
+qualification of the exact candidate. The publisher checks the qualified wheel
+payload as for 1.0.7; an inherited runtime-identical patch manifest is not sufficient.
+The final package PR must pass all eleven workflows. Retain the temporary public-demo
+compatibility rule until the qualified migration and a fresh isolated recovery pass.
