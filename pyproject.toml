@@ -15,7 +15,7 @@ dependencies = ["dwho==0.3.69", "httpdis==0.7.1", "sonicprobe==0.3.66", "PyYAML=
 [project.optional-dependencies]
 installer = ["cryptography==50.0.2", "legacycrypt; python_version >= '3.13'"]
 textual = ["dwho[textual]==0.3.69"]
-rules = ["atropos-client[observations]==1.0.0"]
+rules = ["atropos-client[observations]==1.0.4"]
 
 [project.scripts]
 atraxis = "atraxis.cli:main"
