@@ -147,6 +147,26 @@ does not extend to other projects or authorize deleting stored data.
 - For a new generic capability, assess whether it belongs in one of these shared libraries and record the placement decision in the contribution. Keep product-specific business rules in this repository.
 - When a shared-library change is needed, validate it in its own repository against its contracts, supported versions and existing consumers. Then update this project's dependency and verify the integration before delivery. Follow each repository's release procedures and existing authorization scope.
 
+## Test discovery and execution
+
+- Verify the actual runner and every discovery root before adding or changing
+  tests. A green command does not prove that all test declarations were loaded.
+  Do not put standalone pytest functions into a suite run only by unittest.
+- Check that every test declaration is actually collected by the declared runner,
+  with the same interpreter/environment as the tests, before relying on a green
+  run.
+- Reject empty suites, import/collection errors, duplicate definitions and
+  declarations omitted by the runner. Keep test helpers out of the `test*`
+  namespace. Explain intentional skips and separate integration prerequisites;
+  never hide failures with `continue-on-error` or `|| true`.
+- Run the normal test command after the collection check. Report
+  collected/executed/skipped counts and investigate unexpected changes;
+  collection alone is not a passing test run.
+- Check test paths, naming patterns, selection filters and CI commands together.
+  A new test directory or non-Python test harness needs an explicit CI entry.
+- Preserve supported interpreter matrices. Changing runners requires an explicit
+  decision and collection parity.
+
 ## Configuration file format
 
 - Prefer YAML (`.yaml` / `.yml`) over JSON for project configuration files: it is
