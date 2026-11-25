@@ -1,4 +1,4 @@
-"""A source archive must contain the reviewed files before it is extracted."""
+"""A source archive must contain exactly the allow-listed reviewed files before it is extracted."""
 import importlib.util
 import io
 from pathlib import Path
@@ -20,7 +20,11 @@ class SourceArchiveTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
         self.files = {'pyproject.toml': b'[project]\nname="atraxis"\nversion="1.0.0rc1"\n',
+                      'atraxis/__init__.py': b'VERSION = "1.0.0rc1"\n',
                       'scripts/fixture.py': b'print("fixture")\n'}
+        # Tracked repository material such as scripts/ never enters the archive.
+        self.archive_files = {name: data for name, data in self.files.items()
+                              if not name.startswith('scripts/')}
         for name, data in self.files.items():
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -34,7 +38,7 @@ class SourceArchiveTests(unittest.TestCase):
 
     def write_archive(self, files=None, extra=None):
         with tarfile.open(self.archive, 'w:gz') as archive:
-            for name, data in (self.files if files is None else files).items():
+            for name, data in (self.archive_files if files is None else files).items():
                 member = tarfile.TarInfo(f'{PREFIX}/{name}')
                 member.size = len(data)
                 archive.addfile(member, io.BytesIO(data))
@@ -47,17 +51,35 @@ class SourceArchiveTests(unittest.TestCase):
     def test_verified_source_extracts_without_changing_bytes(self):
         self.write_archive()
         extracted = self.verify()
-        for name, data in self.files.items():
+        for name, data in self.archive_files.items():
             self.assertEqual((extracted / name).read_bytes(), data)
+        self.assertFalse((extracted / 'scripts/fixture.py').exists())
+
+    def test_generated_metadata_is_accepted(self):
+        files = dict(self.archive_files)
+        files['PKG-INFO'] = b'Metadata-Version: 2.1\n'
+        files['atraxis.egg-info/SOURCES.txt'] = b'pyproject.toml\n'
+        self.write_archive(files)
+        self.verify()
+
+    def test_repository_material_rejects_before_extraction(self):
+        for name in ['scripts/fixture.py', 'AGENTS.md', 'tests/test_example.py', '.github/workflows/ci.yml']:
+            with self.subTest(name=name):
+                files = dict(self.archive_files)
+                files[name] = self.files.get(name, b'not shipped\n')
+                self.write_archive(files)
+                with self.assertRaisesRegex(ValueError, 'unexpected_source_file'):
+                    self.verify()
+                self.assertFalse(self.output.exists())
 
     def test_missing_or_changed_file_rejects_before_extraction(self):
         for mode in ['missing', 'changed']:
             with self.subTest(mode=mode):
-                files = dict(self.files)
+                files = dict(self.archive_files)
                 if mode == 'missing':
-                    del files['scripts/fixture.py']
+                    del files['atraxis/__init__.py']
                 else:
-                    files['scripts/fixture.py'] = b'substituted'
+                    files['atraxis/__init__.py'] = b'substituted'
                 self.write_archive(files)
                 with self.assertRaisesRegex(ValueError, f'{mode}_source_file'):
                     self.verify()

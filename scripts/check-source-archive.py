@@ -1,4 +1,4 @@
-"""Verify tracked source bytes in the sdist, then extract for offline tests."""
+"""Verify that the sdist holds exactly the allow-listed tracked source bytes, then extract it."""
 import argparse
 from pathlib import Path, PurePosixPath
 import subprocess
@@ -6,6 +6,22 @@ import tarfile
 import tomllib
 
 MAX_ARCHIVE_BYTES = 10 * 1024 * 1024
+# Tracked files that the source distribution must carry byte for byte.
+SOURCE_FILES = frozenset({'README.md', 'LICENSE', 'pyproject.toml', 'MANIFEST.in'})
+SOURCE_PREFIXES = ('atraxis/',)
+# Metadata that setuptools generates while building the archive.
+GENERATED_FILES = frozenset({'PKG-INFO', 'setup.cfg'})
+GENERATED_PREFIXES = ('atraxis.egg-info/',)
+_EXCLUDED_SUFFIXES = ('.pyc', '.pyo', '.pyd')
+
+
+def _is_source_file(name):
+    return (name in SOURCE_FILES or name.startswith(SOURCE_PREFIXES)) and not (
+        name.endswith(_EXCLUDED_SUFFIXES) or '/__pycache__/' in f'/{name}')
+
+
+def _is_generated_file(name):
+    return name in GENERATED_FILES or name.startswith(GENERATED_PREFIXES)
 
 
 def verify_and_extract(root: Path, archive: Path, output: Path) -> Path:
@@ -15,7 +31,7 @@ def verify_and_extract(root: Path, archive: Path, output: Path) -> Path:
         raise ValueError('invalid_source_archive')
     tracked = subprocess.check_output(
         ['git', 'ls-files', '-z'], cwd=root, timeout=10).decode().split('\0')
-    expected = {name: (root / name).read_bytes() for name in tracked if name}
+    expected = {name: (root / name).read_bytes() for name in tracked if name and _is_source_file(name)}
     with tarfile.open(archive, 'r:gz') as source:
         members = source.getmembers()
         names = [member.name for member in members]
@@ -26,6 +42,9 @@ def verify_and_extract(root: Path, archive: Path, output: Path) -> Path:
             if (path.is_absolute() or str(path) != member.name or '..' in path.parts or not path.parts
                     or path.parts[0] != prefix or not (member.isfile() or member.isdir())):
                 raise ValueError('invalid_source_member')
+            relative = '/'.join(path.parts[1:])
+            if member.isfile() and relative not in expected and not _is_generated_file(relative):
+                raise ValueError(f'unexpected_source_file: {relative}')
         for name, content in expected.items():
             try:
                 member = source.getmember(f'{prefix}/{name}')
@@ -35,7 +54,7 @@ def verify_and_extract(root: Path, archive: Path, output: Path) -> Path:
                 raise ValueError(f'changed_source_file: {name}')
         output.mkdir(parents=True, exist_ok=False)
         source.extractall(output, filter='data')
-    print(f'Verified {len(expected)} tracked files in source archive; extracted to {output / prefix}')
+    print(f'Verified {len(expected)} allow-listed tracked files in source archive; extracted to {output / prefix}')
     return output / prefix
 
 
