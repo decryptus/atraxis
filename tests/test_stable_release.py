@@ -125,7 +125,7 @@ class StableReleaseTests(unittest.TestCase):
 
     def assert_qualified_wheel_required(self, version):
         (self.root / 'pyproject.toml').write_text(
-            '[project]\nname="atraxis"\nversion="1.0.6"\n')
+            f'[project]\nname="atraxis"\nversion="{version}"\n')
         qualification = json.loads((self.root / 'docs/releases/1.0.0-qualification.json').read_text())
         qualification['version'] = version
         qualification_path = self.root / f'docs/releases/{version}-qualification.json'
