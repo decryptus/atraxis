@@ -147,6 +147,17 @@ does not extend to other projects or authorize deleting stored data.
 - For a new generic capability, assess whether it belongs in one of these shared libraries and record the placement decision in the contribution. Keep product-specific business rules in this repository.
 - When a shared-library change is needed, validate it in its own repository against its contracts, supported versions and existing consumers. Then update this project's dependency and verify the integration before delivery. Follow each repository's release procedures and existing authorization scope.
 
+## Configuration file format
+
+- Prefer YAML (`.yaml` / `.yml`) over JSON for project configuration files: it is
+  easier to read, supports comments and produces clearer diffs.
+- JSON remains acceptable when a tool or ecosystem requires it or does not support
+  YAML (for example `package.json`, `tsconfig.json`, `composer.json`). Converting
+  existing JSON files is not required.
+- When a tool accepts both formats, use YAML for new configuration.
+- In YAML, quote ambiguous scalars (`"yes"`, `"no"`, `"on"`, `"off"`, versions such
+  as `"1.10"`) to avoid implicit type conversion.
+
 ## Commit authorship
 
 Write every commit as `decryptus <decryptus@users.noreply.github.com>`, as both author and committer (run `git config user.name decryptus` and `git config user.email decryptus@users.noreply.github.com` before committing, including when rebasing). Do not add `Co-Authored-By` lines, session links or any mention of an assistant or tool in commit messages. Do not rewrite history already published on the default branch to fix older commits.
