@@ -107,17 +107,16 @@ jobs:
           test "${#wheels[@]}" -eq 1
           "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip install "${wheels[0]}[installer]"
           "$RUNNER_TEMP/atraxis-installed/bin/python" -m pip check
-      - name: Verify source archive completeness and run its core tests
+      - name: Verify source archive contents and run core tests from the checkout
         shell: bash
         run: |
           archives=(dist/*.tar.gz)
           test "${#archives[@]}" -eq 1
+          # The sdist carries only the allow-listed build and runtime files;
+          # tests stay in git and run from the reviewed checkout.
           python scripts/check-source-archive.py "${archives[0]}" "$RUNNER_TEMP/atraxis-source" 2>&1 | tee package-evidence/source-archive.log
-          sources=("$RUNNER_TEMP/atraxis-source"/*)
-          test "${#sources[@]}" -eq 1
-          cd "${sources[0]}"
-          "$RUNNER_TEMP/atraxis-installed/bin/python" scripts/check-test-collection.py --runner unittest tests 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/source-collection.log"
-          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s tests -v 2>&1 | tee "$GITHUB_WORKSPACE/package-evidence/source-tests.log"
+          "$RUNNER_TEMP/atraxis-installed/bin/python" scripts/check-test-collection.py --runner unittest tests 2>&1 | tee package-evidence/source-collection.log
+          "$RUNNER_TEMP/atraxis-installed/bin/python" -m unittest discover -s tests -v 2>&1 | tee package-evidence/source-tests.log
       - name: Retain candidate archives and installed acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
