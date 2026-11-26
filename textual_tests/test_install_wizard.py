@@ -43,8 +43,10 @@ class WizardTests(unittest.IsolatedAsyncioTestCase):
                 for field, value in [('login', LOGIN['username']), ('password', LOGIN['password']),
                                      ('user-0', LOGIN['username']), ('secret-0', LOGIN['password'])]:
                     app.query_one('#' + field, Input).value = value
+                # Let the step-1 layout settle before clicking, as for the other transitions.
+                await pilot.pause(0.4)
                 await pilot.click('#next')
-                self.assertEqual(app.step, 2)
+                self.assertEqual(app.step, 2, app.query_one('#error', Static).content)
                 self.assertNotIn(LOGIN['password'], str(app.query_one('#review', Static).content))
                 await pilot.click('#back')
                 self.assertEqual(app.query_one('#secret-0', Input).value, LOGIN['password'])
