@@ -107,8 +107,9 @@ does not extend to other projects or authorize deleting stored data.
   reviewed it. Do not require operational recovery, endurance or live-source runs
   for a merge, and never treat a merge as authorization to publish or deploy.
 - Release candidates use `X.Y.ZrcN` and are published as GitHub prereleases from
-  the exact tested CI archives, never rebuilt. They are not uploaded to PyPI or
-  Docker Hub.
+  the exact tested CI archives, never rebuilt. Merging the reviewed PR that sets a
+  candidate version is the explicit request to publish that prerelease; nothing
+  else publishes automatically. Candidates are not uploaded to PyPI or Docker Hub.
 - Bind every qualification record (G1 live sources, G2 cold recovery on a distinct
   host, G3 endurance) to the candidate wheel SHA-256. Never fabricate, hand-edit or
   reuse evidence produced for a different wheel payload.

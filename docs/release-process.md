@@ -93,11 +93,29 @@ different wheel payload. Qualifying a candidate never blocks merges to `main`.
   Hub image built from the tested source, regenerate the documentation and
   atraxis.io, and merge any `stable/X.Y.Z` changes back into `main` by PR.
 
+## G1 and G2 evidence contract
+
+The `decryptus/deploy` qualification commands receive only the candidate tag and
+wheel SHA-256. They download the published wheel themselves, verify its digest and
+never accept a wheel, path or command from the caller. Each run returns one JSON
+record and keeps private data, credentials and logs on the hosts:
+
+- `schema`, `gate` (`G1` or `G2`), `status` (`passed` or `failed`);
+- `candidate`: tag, version, wheel SHA-256;
+- `run`: the GitHub run identity that requested it, plus start and end times;
+- G1: number of approved sources read, all current, source authority unchanged;
+- G2: capture identity and age, distinct host, restored services and SQLite
+  databases, workers (0), execution paused, accounts and audits equal, TLS renewal,
+  login revocation and throttling, final source authority unchanged.
+
+The qualification manifest stores each record's SHA-256 and the producing run.
+Only aggregate results may be published; capture contents stay private.
+
 ## Implementation status
 
-The candidate workflow exists for `1.0.0rc1`-style versions and the stable
-publisher enforces the qualified wheel payload. Generic candidate versions,
-automatic G3 on candidates, candidate-based payload equivalence and the
-`stable/X.Y.Z` base are being implemented in that order. G1/G2 automation depends
-on the `decryptus/deploy` qualification commands. Releases up to 1.0.11 keep their
-recorded qualification rules.
+- Implemented: generic `X.Y.ZrcN` candidates published on merge, automatic G3 on
+  the exact candidate wheel with `g3-evidence.json`.
+- In review: stable publication from a payload-equivalent final build (schema 2
+  manifest, `main` or `stable/X.Y.Z` base, no per-version workflow edits).
+- Pending: G1/G2 through the `decryptus/deploy` qualification commands. Until they
+  exist, G1 and G2 need reviewed evidence produced to this contract.
