@@ -280,6 +280,7 @@ class HttpRuntimeTests(unittest.TestCase):
         for _ in range(MAX_FAILURES):
             self.assertEqual(self.proxy_request('192.0.2.1'), 401)
         self.assertEqual(self.proxy_request('192.0.2.1', 'fixture-password'), 429)
+        self.assertEqual(self.proxy_request('::ffff:192.0.2.1', 'fixture-password'), 429)
         self.assertEqual(self.proxy_request('192.0.2.2', 'fixture-password'), 200)
 
     def test_full_proxy_table_does_not_lock_a_new_client(self):
@@ -305,6 +306,8 @@ class HttpRuntimeTests(unittest.TestCase):
         for _ in range(MAX_FAILURES):
             self.assertEqual(self.proxy_request('2001:db8::1'), 401)
         self.assertEqual(self.proxy_request('2001:0db8:0:0:0:0:0:1', 'fixture-password'), 429)
+        self.assertEqual(self.proxy_request('2001:db8::abcd', 'fixture-password'), 429)
+        self.assertEqual(self.proxy_request('2001:db8:0:1::1', 'fixture-password'), 200)
 
     def test_proxy_filter_uses_the_tcp_peer_before_authentication(self):
         self.context.trusted_proxy_networks = (ip_network('192.0.2.8/32'),)
