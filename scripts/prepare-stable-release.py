@@ -7,6 +7,94 @@ import shutil
 import tomllib
 import zipfile
 
+STABLE_VERSION = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
+CANDIDATE_SUFFIX = re.compile(r'rc[1-9][0-9]*')
+HEX_COMMIT = re.compile(r'[0-9a-f]{40}')
+HEX_DIGEST = re.compile(r'[0-9a-f]{64}')
+GATES = ('G1', 'G2', 'G3')
+CANDIDATE_SCHEMA = 2
+# Releases up to 1.0.10 keep their recorded schema 1 rules; later releases are
+# published from a qualified candidate (schema 2).
+LAST_SCHEMA_1_RELEASE = (1, 0, 10)
+CANDIDATE_DOWNLOAD = 'candidate-download'
+WHEEL_LIMIT = 32 * 1024 * 1024
+NORMALIZED_INFO = 'atraxis.dist-info'
+
+
+def release_payload_digest(path, version):
+    """Digest of the installed payload with only the version identity removed.
+
+    A final build is equivalent to its qualified candidate when the installed files,
+    entry points, dependencies and other metadata headers are identical. Only the
+    Version header and the dist-info directory name may differ; the generated
+    RECORD, long description and ZIP timestamps are ignored as for earlier releases.
+    """
+    info = f'atraxis-{version}.dist-info'
+    with zipfile.ZipFile(path) as wheel:
+        names = wheel.namelist()
+        required = {info + '/' + name for name in ('METADATA', 'RECORD', 'WHEEL', 'entry_points.txt')}
+        if (len(set(names)) != len(names) or not required.issubset(names)
+                or sum(entry.file_size for entry in wheel.infolist()) > WHEEL_LIMIT
+                or any(n.endswith('.dist-info/METADATA') and n != info + '/METADATA' for n in names)):
+            raise ValueError('invalid_wheel_payload')
+        members = {}
+        for name in sorted(names):
+            if name == info + '/RECORD':
+                continue
+            data = wheel.read(name)
+            if name == info + '/METADATA':
+                headers, separator, _description = data.partition(b'\n\n')
+                version_line = b'Version: ' + version.encode()
+                lines = headers.split(b'\n')
+                if not separator or lines.count(version_line) != 1:
+                    raise ValueError('invalid_wheel_metadata')
+                data = b'\n'.join(line for line in lines if line != version_line)
+            if name.startswith(info + '/'):
+                name = NORMALIZED_INFO + name[len(info):]
+            members[name] = hashlib.sha256(data).hexdigest()
+    return hashlib.sha256(json.dumps(members, sort_keys=True).encode()).hexdigest()
+
+
+def verify_candidate_qualification(root, qualification, version, final_wheel):
+    """Check a schema 2 manifest: the final wheel equals the qualified candidate."""
+    candidate = qualification.get('candidate')
+    if not isinstance(candidate, dict):
+        raise ValueError('candidate_identity_required')
+    candidate_version = candidate.get('version')
+    suffix = candidate_version[len(version):] if isinstance(candidate_version, str) else None
+    if (not isinstance(candidate_version, str) or not candidate_version.startswith(version)
+            or not (suffix == '' or CANDIDATE_SUFFIX.fullmatch(suffix))
+            or not HEX_COMMIT.fullmatch(str(candidate.get('source_commit')))
+            or not HEX_DIGEST.fullmatch(str(candidate.get('wheel_sha256')))
+            or not HEX_DIGEST.fullmatch(str(candidate.get('wheel_payload_sha256')))):
+        raise ValueError('candidate_identity_required')
+    if suffix:
+        if candidate.get('tag') != 'v' + candidate_version:
+            raise ValueError('candidate_identity_required')
+    elif candidate.get('tag') is not None or not isinstance(candidate.get('package_artifact'), int):
+        # An unpublished candidate is the package artifact of its tested PR run.
+        raise ValueError('candidate_identity_required')
+    evidence = qualification.get('evidence')
+    if not isinstance(evidence, dict) or set(evidence) != set(GATES):
+        raise ValueError('candidate_evidence_required')
+    for gate in GATES:
+        record = evidence[gate]
+        if (not isinstance(record, dict) or record.get('status') != 'passed'
+                or record.get('wheel_sha256') != candidate['wheel_sha256']
+                or not HEX_DIGEST.fullmatch(str(record.get('sha256')))
+                or not record.get('run')):
+            raise ValueError('candidate_evidence_required')
+    if qualification.get('evidence_sha256') != {gate: evidence[gate]['sha256'] for gate in GATES}:
+        raise ValueError('candidate_evidence_required')
+    wheel = root / CANDIDATE_DOWNLOAD / f'atraxis-{candidate_version}-py3-none-any.whl'
+    if (wheel.is_symlink() or not wheel.is_file() or not 0 < wheel.stat().st_size <= WHEEL_LIMIT
+            or hashlib.sha256(wheel.read_bytes()).hexdigest() != candidate['wheel_sha256']):
+        raise ValueError('candidate_wheel_mismatch')
+    if release_payload_digest(wheel, candidate_version) != candidate['wheel_payload_sha256']:
+        raise ValueError('candidate_payload_mismatch')
+    if release_payload_digest(final_wheel, version) != candidate['wheel_payload_sha256']:
+        raise ValueError('final_payload_differs_from_candidate')
+
 
 def wheel_payload_digest(path, version, *, installer_baseline=None):
     """Compare installed payload, metadata headers and scripts across qualified builds."""
@@ -47,10 +135,10 @@ def wheel_payload_digest(path, version, *, installer_baseline=None):
 def prepare(root: Path) -> None:
     metadata = tomllib.loads((root / 'pyproject.toml').read_text())['project']
     version = metadata['version']
-    if metadata['name'] != 'atraxis' or not re.fullmatch(r'1\.0\.(0|[1-9][0-9]*)', version):
+    if metadata['name'] != 'atraxis' or not STABLE_VERSION.fullmatch(version):
         raise ValueError('stable_version_required')
     qualification = json.loads((root / f'docs/releases/{version}-qualification.json').read_text())
-    if (qualification.get('version') != version or qualification.get('schema') != 1
+    if (qualification.get('version') != version or qualification.get('schema') not in (1, CANDIDATE_SCHEMA)
             or qualification.get('gates') != {'G1': 'closed', 'G2': 'closed', 'G3': 'closed'}
             or not qualification.get('support_matrix')
             or not qualification.get('evidence_sha256')
@@ -90,11 +178,17 @@ def prepare(root: Path) -> None:
             raise ValueError('invalid_archive')
         if file.stat().st_size != entry['size'] or hashlib.sha256(file.read_bytes()).hexdigest() != entry['sha256']:
             raise ValueError('archive_digest_mismatch')
-    if version in ('1.0.2', '1.0.4', '1.0.5', '1.0.6', '1.0.7'):
+    if (qualification['schema'] != CANDIDATE_SCHEMA
+            and tuple(int(part) for part in version.split('.')) > LAST_SCHEMA_1_RELEASE):
+        raise ValueError('candidate_schema_required')
+    if qualification['schema'] == CANDIDATE_SCHEMA:
+        verify_candidate_qualification(root, qualification, version,
+                                       download / f'dist/atraxis-{version}-py3-none-any.whl')
+    elif version in ('1.0.2', '1.0.4', '1.0.5', '1.0.6', '1.0.7'):
         wheel = download / f'dist/atraxis-{version}-py3-none-any.whl'
         if wheel_payload_digest(wheel, version) != qualification.get('pilot_wheel_payload_sha256'):
             raise ValueError('pilot_wheel_payload_mismatch')
-    if version == '1.0.8':
+    elif version == '1.0.8':
         baseline_file = root / 'docs/releases/1.0.7-qualification.json'
         reviewed = qualification['evidence_sha256']
         if hashlib.sha256(baseline_file.read_bytes()).hexdigest() != reviewed['service_qualification_1_0_7']:
