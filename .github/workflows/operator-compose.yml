@@ -123,7 +123,7 @@ jobs:
               output.write('sha256=' + digest(TRANSFER / MANIFEST, MAX_MANIFEST_BYTES) + '\n')
           PY
       - name: Transfer disposable recovery fixture to a separate runner
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-recovery-transfer-${{ github.run_id }}-${{ github.run_attempt }}
           path: acceptance-transfer/*
@@ -132,7 +132,7 @@ jobs:
           if-no-files-found: error
       - name: Retain synthetic acceptance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-compose-evidence
           path: acceptance-artifacts/*
@@ -166,7 +166,7 @@ jobs:
           sudo env ATRAXIS_TRANSFER_SHA256="$TRANSFER_SHA256" "$(command -v python)" -m unittest discover -s recovery_tests -v 2>&1 | tee acceptance-artifacts/recovery.log
       - name: Retain recovery results without fixture credentials or keys
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-host-recovery-evidence
           path: acceptance-artifacts/*

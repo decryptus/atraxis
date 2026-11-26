@@ -52,7 +52,7 @@ jobs:
         run: python -m unittest discover -s container_tests -p test_load.py -v 2>&1 | tee acceptance-artifacts/endurance.log
       - name: Preserve synthetic progress including failed runs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: memory-progress
           path: acceptance-artifacts/*

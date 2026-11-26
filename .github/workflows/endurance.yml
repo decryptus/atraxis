@@ -85,7 +85,7 @@ jobs:
         run: python scripts/qualification/candidate_evidence.py endurance candidate-assets "$CANDIDATE_TAG" acceptance-artifacts
       - name: Preserve synthetic progress including failed runs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: endurance-progress
           path: acceptance-artifacts/*
