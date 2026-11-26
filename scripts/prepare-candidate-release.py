@@ -6,11 +6,13 @@ import re
 import shutil
 import tomllib
 
+CANDIDATE_VERSION = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)rc[1-9][0-9]*')
+
 
 def prepare(root: Path) -> None:
     metadata = tomllib.loads((root / 'pyproject.toml').read_text())['project']
     version = metadata['version']
-    if metadata['name'] != 'atraxis' or not re.fullmatch(r'1\.0\.0rc[1-9][0-9]*', version):
+    if metadata['name'] != 'atraxis' or not CANDIDATE_VERSION.fullmatch(version):
         raise ValueError('prerelease_version_required')
     evidence = json.loads((root / 'candidate-ci.json').read_text())
     download = root / 'candidate-download'
@@ -37,7 +39,10 @@ def prepare(root: Path) -> None:
     assets.mkdir(exist_ok=False)
     for name in sorted(expected_names):
         shutil.copyfile(download / name, assets / Path(name).name)
+    wheel = f'dist/atraxis-{version}-py3-none-any.whl'
+    # Qualification evidence and the stable publisher bind to this digest.
     evidence.update(version=version, distribution='atraxis', package_manifest=manifest,
+                    wheel_sha256=manifest['files'][wheel]['sha256'],
                     operational_gates_closed=False, registry_publication=False)
     (assets / 'candidate-provenance.json').write_text(json.dumps(evidence, indent=2) + '\n')
     lines = [f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n'

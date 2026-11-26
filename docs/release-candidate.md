@@ -6,11 +6,15 @@ and stable publication. It does not
 publish to PyPI, deploy a site or close the operational gates in the
 [1.0 plan](v1-delivery.md). See the [user-facing matrix](v1-candidate.md).
 
-The `Publish reviewed release candidate` workflow is manual and main-only. Supply
-the full reviewed PR head SHA after merging the PR. Its tree must equal the
-workflow's main checkout. The most recent pull-request run for each of the eight
-required workflows must have succeeded on that exact head. A changed tree, failed
-or pending run, missing archive or changed digest aborts publication.
+Candidates use the version `X.Y.ZrcN`. Merging the reviewed PR that sets such a
+version into `main` or a `stable/X.Y.Z` branch is the explicit request to publish
+it: the `Publish reviewed release candidate` workflow then runs on that push. It
+can also be dispatched on the branch head with the full reviewed PR head SHA.
+Pushes that do not carry a candidate version stop after the version check.
+The tree must equal the branch head, the tag must not exist yet and the most recent
+pull-request run of each of the eleven required workflows must have succeeded on
+that exact head. A changed tree, failed or pending run, missing archive or changed
+digest aborts publication. The release notes come from `docs/releases/X.Y.ZrcN.md`.
 
 The workflow downloads the existing Python 3.12 installed-package artifact from
 the qualified package run. It verifies the recorded commit, tree, distribution,
@@ -32,5 +36,15 @@ do not delete or retry over it blindly. Publication is not automatic on push,
 merge or tag creation. No production endpoints, registry secrets or new
 notification destinations are used.
 
-Candidate release text is in `docs/releases/1.0.0rc1.md`; its limitations must
-remain consistent with the user matrix and actual retained evidence.
+The provenance file records the candidate wheel SHA-256. After publication the
+workflow dispatches the two-hour endurance workflow on the candidate tag. That run
+verifies the published archives and checksums, builds the acceptance image from
+the exact candidate wheel, checks the installed files against the tagged source and
+records `g3-evidence.json` (candidate identity, run identity, measured duration,
+rounds and recovery) in its `endurance-progress` artifact. An incomplete or failed
+run is recorded as failed. G1 and G2 are separate; see the
+[release process](release-process.md).
+
+Candidate release text is in `docs/releases/X.Y.ZrcN.md` (for example
+`docs/releases/1.0.0rc1.md`); its limitations must remain consistent with the user
+matrix and actual retained evidence.

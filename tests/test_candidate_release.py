@@ -42,7 +42,10 @@ class CandidateReleaseTests(unittest.TestCase):
         for line in (assets / 'SHA256SUMS').read_text().splitlines():
             digest, name = line.split('  ')
             self.assertEqual(digest, hashlib.sha256((assets / name).read_bytes()).hexdigest())
-        self.assertFalse(json.loads((assets / 'candidate-provenance.json').read_text())['operational_gates_closed'])
+        provenance = json.loads((assets / 'candidate-provenance.json').read_text())
+        self.assertFalse(provenance['operational_gates_closed'])
+        self.assertEqual(provenance['wheel_sha256'],
+                         self.manifest['files']['dist/atraxis-1.0.0rc1-py3-none-any.whl']['sha256'])
 
     def test_other_source_or_tree_or_version_is_rejected(self):
         for field in ['source_commit', 'source_tree', 'version', 'distribution']:
@@ -85,6 +88,29 @@ class CandidateReleaseTests(unittest.TestCase):
         (self.root / 'pyproject.toml').write_text('[project]\nname="atraxis"\nversion="1.0.0"\n')
         with self.assertRaisesRegex(ValueError, 'prerelease_version'):
             _MODULE.prepare(self.root)
+
+    def test_later_candidate_versions_are_accepted(self):
+        version = '1.0.11rc2'
+        (self.root / 'pyproject.toml').write_text(f'[project]\nname="atraxis"\nversion="{version}"\n')
+        self.manifest.update(version=version, files={})
+        for path in list((self.download / 'dist').iterdir()):
+            renamed = path.with_name(path.name.replace('1.0.0rc1', version))
+            path.rename(renamed)
+            data = renamed.read_bytes()
+            self.manifest['files']['dist/' + renamed.name] = dict(
+                size=len(data), sha256=hashlib.sha256(data).hexdigest())
+        self.save_manifest()
+        _MODULE.prepare(self.root)
+        provenance = json.loads((self.root / 'candidate-assets/candidate-provenance.json').read_text())
+        self.assertEqual(provenance['version'], version)
+
+    def test_non_candidate_versions_are_rejected(self):
+        for version in ('1.0.11', '1.0.11rc0', '1.0.11.dev1', '01.0.11rc1', '1.0.11rc1.post1', '1.0.11a1'):
+            with self.subTest(version=version):
+                (self.root / 'pyproject.toml').write_text(f'[project]\nname="atraxis"\nversion="{version}"\n')
+                with self.assertRaisesRegex(ValueError, 'prerelease_version'):
+                    _MODULE.prepare(self.root)
+        self.assertFalse((self.root / 'candidate-assets').exists())
 
 
 if __name__ == '__main__':

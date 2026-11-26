@@ -1,9 +1,14 @@
 name: Publish reviewed release candidate
 on:
+  # Merging an X.Y.ZrcN version into main or a stable/X.Y.Z branch publishes that
+  # candidate as a GitHub prerelease. Other pushes stop at the version check.
+  push:
+    branches: [main, 'stable/**']
+    paths: [pyproject.toml]
   workflow_dispatch:
     inputs:
       tested_sha:
-        description: Full reviewed PR head SHA (same tree as main, all PR workflows passed)
+        description: Full reviewed PR head SHA (same tree as the branch head, all PR workflows passed)
         required: true
         type: string
 permissions:
@@ -14,32 +19,70 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/stable/')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
-      actions: read
+      actions: write
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Select only candidate versions
+        id: version
+        run: |
+          python - <<'PY'
+          import os, re, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+          candidate = re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)rc[1-9][0-9]*', version)
+          if not candidate and os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
+              raise SystemExit('Release candidate version required: ' + version)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\ncandidate={"true" if candidate else "false"}\n')
+          print('Candidate version' if candidate else 'Not a candidate version:', version)
+          PY
       - name: Verify exact source and successful required PR workflows
+        if: steps.version.outputs.candidate == 'true'
         id: qualification
         uses: actions/github-script@v7
         env:
           TESTED_SHA: ${{ inputs.tested_sha }}
+          VERSION: ${{ steps.version.outputs.version }}
         with:
           script: |
             const fs = require('fs');
-            const tested = process.env.TESTED_SHA;
-            if (!/^[0-9a-f]{40}$/.test(tested)) throw new Error('Invalid tested SHA');
             const repo = context.repo;
+            const tag = 'v' + process.env.VERSION;
+            for (const lookup of [
+              () => github.rest.repos.getReleaseByTag({...repo, tag}),
+              () => github.rest.git.getRef({...repo, ref: 'tags/' + tag})]) {
+              try { await lookup(); } catch (error) {
+                if (error.status === 404) continue;
+                throw error;
+              }
+              throw new Error('Existing release/tag must not be overwritten');
+            }
+            const branch = context.ref.replace('refs/heads/', '');
+            const head = (await github.rest.repos.getBranch({...repo, branch})).data;
+            if (head.commit.sha !== context.sha) throw new Error('Candidate must be the current branch head');
+            let tested = process.env.TESTED_SHA;
+            if (context.eventName === 'push') {
+              // The reviewed PR that set the candidate version is the tested source.
+              const associated = (await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                ...repo, commit_sha: context.sha, per_page: 100})).data;
+              const merged = associated.filter(p => p.merged_at && p.merge_commit_sha === context.sha && p.base.ref === branch);
+              if (merged.length !== 1) throw new Error('One reviewed merged PR is required');
+              tested = merged[0].head.sha;
+            }
+            if (!/^[0-9a-f]{40}$/.test(tested)) throw new Error('Invalid tested SHA');
             const source = (await github.rest.git.getCommit({...repo, commit_sha: tested})).data;
             const current = (await github.rest.git.getCommit({...repo, commit_sha: context.sha})).data;
             if (source.tree.sha !== current.tree.sha) throw new Error('Untested release tree');
             const required = ['tests.yml', 'package.yml', 'textual.yml', 'web.yml',
-              'prometheus.yml', 'chain.yml', 'browser-engine.yml', 'operator-compose.yml'];
+              'prometheus.yml', 'chain.yml', 'browser-engine.yml', 'operator-compose.yml', 'operator-registry.yml',
+              'guided-deployment.yml', 'dockerhub.yml'];
             const runs = {};
             for (const workflow_id of required) {
               const result = await github.rest.actions.listWorkflowRuns({...repo, workflow_id,
@@ -51,16 +94,19 @@ jobs:
             }
             fs.writeFileSync('candidate-ci.json', JSON.stringify({schema: 1,
               tested_commit: tested, release_commit: context.sha, source_tree: current.tree.sha,
-              prerelease: true, workflows: runs}, null, 2) + '\n');
+              branch, prerelease: true, workflows: runs}, null, 2) + '\n');
             core.setOutput('package_run', String(runs['package.yml'].id));
       - name: Download already qualified package artifacts
+        if: steps.version.outputs.candidate == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGE_RUN: ${{ steps.qualification.outputs.package_run }}
         run: gh run download "$PACKAGE_RUN" --name installed-package-3.12 --dir candidate-download
       - name: Verify package identity and stage exact archives
+        if: steps.version.outputs.candidate == 'true'
         run: python scripts/prepare-candidate-release.py
       - name: Publish draft only after every asset is attached
+        if: steps.version.outputs.candidate == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -91,3 +137,15 @@ jobs:
             const published = (await github.rest.repos.updateRelease({...repo,
               release_id: release.id, draft: false, prerelease: true, make_latest: 'false'})).data;
             await core.summary.addLink('Published prerelease', published.html_url).write();
+      - name: Start the automatic endurance gate on the published candidate
+        if: steps.version.outputs.candidate == 'true'
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          script: |
+            // workflow_dispatch is the one event a GITHUB_TOKEN may start.
+            const tag = 'v' + process.env.VERSION;
+            await github.rest.actions.createWorkflowDispatch({...context.repo,
+              workflow_id: 'endurance.yml', ref: tag, inputs: {candidate_tag: tag}});
+            core.notice('Dispatched G3 endurance for ' + tag);
