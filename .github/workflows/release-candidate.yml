@@ -46,7 +46,7 @@ jobs:
       - name: Verify exact source and successful required PR workflows
         if: steps.version.outputs.candidate == 'true'
         id: qualification
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           TESTED_SHA: ${{ inputs.tested_sha }}
           VERSION: ${{ steps.version.outputs.version }}
@@ -107,7 +107,7 @@ jobs:
         run: python scripts/prepare-candidate-release.py
       - name: Publish draft only after every asset is attached
         if: steps.version.outputs.candidate == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -139,7 +139,7 @@ jobs:
             await core.summary.addLink('Published prerelease', published.html_url).write();
       - name: Start the automatic endurance gate on the published candidate
         if: steps.version.outputs.candidate == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           VERSION: ${{ steps.version.outputs.version }}
         with:
