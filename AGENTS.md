@@ -99,6 +99,28 @@ does not extend to other projects or authorize deleting stored data.
   unsupported databases without deleting or rewriting their contents; preserve
   existing deployments and stored data.
 
+## Development, qualification and release
+
+- Follow [the release process](docs/release-process.md). Merging, building a
+  candidate, operational qualification and stable publication are separate steps.
+- Merge a development PR when the required PR workflows pass and the owner has
+  reviewed it. Do not require operational recovery, endurance or live-source runs
+  for a merge, and never treat a merge as authorization to publish or deploy.
+- Release candidates use `X.Y.ZrcN` and are published as GitHub prereleases from
+  the exact tested CI archives, never rebuilt. They are not uploaded to PyPI or
+  Docker Hub.
+- Bind every qualification record (G1 live sources, G2 cold recovery on a distinct
+  host, G3 endurance) to the candidate wheel SHA-256. Never fabricate, hand-edit or
+  reuse evidence produced for a different wheel payload.
+- Stable publication keeps every existing protection: all required PR workflows on
+  the reviewed head, tested tree identity, exact package archives, reviewed gate
+  manifest and a final wheel payload-equivalent to the qualified candidate. Never
+  overwrite tags, releases or registry versions.
+- Do not hard-code the release version in CI checks; read it from `pyproject.toml`.
+- Live-system qualification runs through closed commands of `decryptus/deploy`;
+  system maintenance belongs to `decryptus/si`. Do not add server administration
+  to website repositories or give this repository server credentials.
+
 ## Complete delivery and release synchronization
 
 - Treat every delivery as a consistency check across the roadmap, PyPI packages,
