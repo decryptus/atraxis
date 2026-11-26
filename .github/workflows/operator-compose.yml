@@ -47,6 +47,8 @@ jobs:
           import json
           from pathlib import Path
           import subprocess
+          import tomllib
+          web_release = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
           source = Path('.acceptance/engine')
           expected = {str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()
               for p in sorted((source / 'atropos').rglob('*.py'))}
@@ -76,7 +78,7 @@ jobs:
           images = {}
           for image, project, release, files in (
                   ('atraxis-install-engine:local', 'atraxis-atropos', '1.0.0', expected),
-                  ('atraxis-install-web:local', 'atraxis', '1.0.10', web_files)):
+                  ('atraxis-install-web:local', 'atraxis', web_release, web_files)):
               subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
                   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
                   '--cpus', '2', '--pids-limit', '128', '--entrypoint', 'python', image, '-'],
