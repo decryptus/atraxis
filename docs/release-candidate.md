@@ -1,6 +1,8 @@
 # Manual release candidate publication
 
-This contributor procedure publishes a GitHub prerelease only. It does not
+This contributor procedure publishes a GitHub prerelease only. See the
+[release process](release-process.md) for how candidates relate to qualification
+and stable publication. It does not
 publish to PyPI, deploy a site or close the operational gates in the
 [1.0 plan](v1-delivery.md). See the [user-facing matrix](v1-candidate.md).
 

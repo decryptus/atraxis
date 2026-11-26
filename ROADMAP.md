@@ -176,6 +176,17 @@ their published baseline. They require updates when the integrated installation
 flow is qualified and explicitly released; this internal candidate is not enabled
 on those surfaces.
 
+## Release engineering (in progress)
+
+Merging, release candidates, operational qualification and stable publication are
+being separated so that qualifying one version no longer blocks development; see
+the [release process](docs/release-process.md). Planned in order: generic
+`X.Y.ZrcN` candidates published as GitHub prereleases, automatic two-hour
+endurance on the exact candidate wheel, stable publication from a payload-equivalent
+final build (from `main` or a `stable/X.Y.Z` branch) and G1/G2 runs through closed
+`decryptus/deploy` commands. Until those commands exist, live-source and recovery
+gates still need reviewed evidence for each runtime change.
+
 ## Qualification and limits
 
 Disposable Compose acceptance exercises the operator guide's read-only access

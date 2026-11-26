@@ -2,7 +2,8 @@
 
 This contributor procedure publishes the GitHub release for the bounded
 [1.0 support matrix](v1.0.md). It does not publish to a registry or deploy services.
-The historical [candidate procedure](release-candidate.md) remains separate.
+It is the last step of the [release process](release-process.md); the
+[candidate procedure](release-candidate.md) remains separate.
 
 Review the operational gate manifest and its private evidence, then merge the
 final package/documentation PR after all eleven required workflows pass. Runtime
