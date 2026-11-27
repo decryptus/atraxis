@@ -1,7 +1,7 @@
 {
   "atropos": {
     "repository": "decryptus/atropos",
-    "commit": "613856430e87cd5abac0ea346d8d60a63b73cc57"
+    "commit": "0faa6ba957f9d894dda53a186a3705e508f5bb10"
   },
   "auton": {
     "repository": "decryptus/auton",
@@ -9,5 +9,9 @@
     "patch_git_blob": "03e5f4a81cb811743b4128de2267dc06512e27f5"
   },
   "sonicprobe_web": "0.3.66",
-  "sonicprobe_engine": "0.3.62"
+  "sonicprobe_engine": "0.3.66",
+  "released_client": {
+    "repository": "decryptus/atropos",
+    "commit": "613856430e87cd5abac0ea346d8d60a63b73cc57"
+  }
 }

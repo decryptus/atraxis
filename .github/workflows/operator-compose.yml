@@ -60,7 +60,7 @@ jobs:
           from pathlib import Path
           project, release = json.loads(%r)
           assert version(project) == release
-          assert version('sonicprobe') == ('0.3.66' if project == 'atraxis' else '0.3.62')
+          assert version('sonicprobe') == '0.3.66'
           assert version('atropos-client') == '1.0.6'
           if project == 'atraxis-atropos':
               from atropos import __version__ as engine_version
