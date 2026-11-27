@@ -181,7 +181,7 @@ class AdministrationTests(HTTPSBrowserFixture):
         self.assertEqual(self.reader_page.reload().status, 404)
         self.stop('web'); self.stop('engine'); self.start_engine(); self.start_web()
         self.assertEqual(self.accounts.snapshot(), revoked)
-        self.assertEqual(self.reader_page.reload().status, 403)
+        self.assertEqual(self.reader_page.reload().status, 404)
         self.assert_accounts_integrity()
 
     def test_account_authority_revocation_between_review_and_confirmation(self):
