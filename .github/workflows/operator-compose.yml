@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: decryptus/atropos
-          ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
+          ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v5
@@ -60,8 +60,8 @@ jobs:
           from pathlib import Path
           project, release = json.loads(%r)
           assert version(project) == release
-          assert version('sonicprobe') == ('0.3.66' if project == 'atraxis' else '0.3.62')
-          assert version('atropos-client') == '1.0.0'
+          assert version('sonicprobe') == '0.3.66'
+          assert version('atropos-client') == '1.0.6'
           if project == 'atraxis-atropos':
               from atropos import __version__ as engine_version
               assert engine_version == release, 'engine_runtime_version_mismatch'
@@ -75,7 +75,7 @@ jobs:
           '''
           images = {}
           for image, project, release, files in (
-                  ('atraxis-install-engine:local', 'atraxis-atropos', '1.0.0', expected),
+                  ('atraxis-install-engine:local', 'atraxis-atropos', '1.0.6', expected),
                   ('atraxis-install-web:local', 'atraxis', '1.0.10', web_files)):
               subprocess.run(['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only',
                   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--memory', '512m',
