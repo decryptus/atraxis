@@ -165,7 +165,7 @@ class AdministrationTests(HTTPSBrowserFixture):
         self.page.reload()
         self.assertEqual(self.accounts.snapshot(), created)
         self.assertEqual(self.reader_page.goto(self.origin + '/ui/accounts').status, 403)
-        with self.assertRaises(PermissionError):
+        with self.assertRaisesRegex(RemoteRuleError, '^rule_not_found$'):
             self.clients['bob'].read('cpu', self.first['revision'])
         self.membership_review('membership.add')
         self.assertEqual(self.accounts.snapshot(), created)
@@ -268,7 +268,7 @@ class AdministrationTests(HTTPSBrowserFixture):
         self.assertEqual(directory.effective_groups('eve', 'office'), ('night', 'team'))
         self.assertEqual(directory.effective_groups('eve', 'demo'), ())
         # Entity administration alone still grants no operational permission.
-        with self.assertRaises(PermissionError):
+        with self.assertRaisesRegex(RemoteRuleError, '^rule_not_found$'):
             self.clients['bob'].read('cpu', self.first['revision'])
         before = self.accounts.snapshot()
         self.assertEqual(self.reader_page.goto(self.origin + '/ui/accounts').status, 403)
@@ -307,7 +307,7 @@ class AdministrationTests(HTTPSBrowserFixture):
             'Inherit parent members (yes/no)': 'no'}
         directory = self.account_change('group.create', fields, page=self.reader_page, actor='bob')
         self.assertEqual(directory.groups['delegated']['parent'], 'ops')
-        with self.assertRaises(PermissionError):
+        with self.assertRaisesRegex(RemoteRuleError, '^rule_not_found$'):
             self.clients['bob'].read('cpu', self.first['revision'])
         before = self.accounts.snapshot()
         for operation, values in (

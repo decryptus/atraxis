@@ -226,10 +226,12 @@ class BrowserEngineTests(BrowserEngineFixture):
                 page = context.new_page()
                 response = page.goto(self.origin + path)
                 if user == 'bob':
-                    # Read rights permit displaying the draft, never saving it.
+                    # Read rights permit displaying the draft, never saving it. Since
+                    # Atropos 1.0.1 the engine hides the rule from a caller without
+                    # write scope, so the refused save is reported as not found.
                     self.assertEqual(response.status, 200)
                     page.get_by_label('Revision message', exact=True).fill('Reader denied')
-                    self.submit('Save new draft', '/ui/rules/edit', status=403, page=page)
+                    self.submit('Save new draft', '/ui/rules/edit', status=404, page=page)
                     self.assertEqual(client.draft('cpu')['revision'], self.first['revision'])
                 else:
                     self.assertEqual(response.status, 403)

@@ -301,14 +301,11 @@ finally:
                 pending.chmod(0o600)
                 os.chown(pending, 10001, 10001)
                 pending.replace(engine_config)
-                # The registry engine (1.0.1) hides rule existence after scope revocation.
-                # The pinned source-build fixture still exercises the 1.0.0 contract.
-                if REGISTRY:
-                    for name in ('compose-rule', 'absent-compose-rule'):
-                        with self.subTest(revoked_rule=name):
-                            self.assertEqual(request('/ui/rules?name=' + name)[0], 404)
-                else:
-                    self.assertEqual(request('/ui/rules?name=compose-rule')[0], 403)
+                # Atropos 1.0.1 and later hide rule existence after scope revocation;
+                # the registry and the pinned source-build engines both follow it.
+                for name in ('compose-rule', 'absent-compose-rule'):
+                    with self.subTest(revoked_rule=name):
+                        self.assertEqual(request('/ui/rules?name=' + name)[0], 404)
                 check_runtime()
                 self.assertEqual(fingerprint(site), site_fingerprint)
                 for role in ('web', 'engine'):
