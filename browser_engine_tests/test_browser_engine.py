@@ -250,7 +250,7 @@ class BrowserEngineTests(BrowserEngineFixture):
         self.write_engine()
         self.page.get_by_label(
             'I confirm activation of this revision for the targets shown above.', exact=True).check()
-        self.submit('Confirm activation', '/ui/rules/activate', status=403)
+        self.submit('Confirm activation', '/ui/rules/activate', status=404)
         self.assertIsNone(client.active('cpu')['revision'])
         self.assertEqual(client.audit('cpu'), [])
         self.engine_config['grants'] = original

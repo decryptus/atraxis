@@ -176,9 +176,9 @@ class AdministrationTests(HTTPSBrowserFixture):
         self.membership_review('membership.remove'); self.account_confirm()
         revoked = self.accounts.snapshot()
         self.assertEqual(len(revoked['audit']), len(baseline['audit']) + 3)
-        with self.assertRaises(PermissionError):
+        with self.assertRaisesRegex(RemoteRuleError, '^rule_not_found$'):
             self.clients['bob'].read('cpu', self.first['revision'])
-        self.assertEqual(self.reader_page.reload().status, 403)
+        self.assertEqual(self.reader_page.reload().status, 404)
         self.stop('web'); self.stop('engine'); self.start_engine(); self.start_web()
         self.assertEqual(self.accounts.snapshot(), revoked)
         self.assertEqual(self.reader_page.reload().status, 403)
