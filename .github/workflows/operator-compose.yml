@@ -13,7 +13,7 @@ jobs:
     outputs:
       transfer_sha256: ${{ steps.transfer.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
@@ -21,13 +21,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/atropos
           ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/auton
           ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false

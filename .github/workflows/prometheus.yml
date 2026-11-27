@@ -11,24 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install . prometheus-client==0.26.0 jmespath==1.1.0 bcrypt==5.0.0 cryptography==50.0.2
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/covenant
           ref: 331e56367ef92ff24a5f3931b650d9301a298bed
           path: fixture-covenant
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/certlord
           ref: 908834f3d3b89d579a908391ce435cc5b419451f
           path: fixture-certlord
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/monit-docker
           ref: 4927c336611fda1f46d7e01c709cafc0026909c5

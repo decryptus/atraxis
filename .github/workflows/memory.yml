@@ -8,18 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/atropos
           ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/auton
           ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
