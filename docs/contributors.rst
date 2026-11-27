@@ -15,6 +15,7 @@ For installation and operation, return to :doc:`/index`.
    /docs/release-process
    /docs/release-stable
    /docs/releases/1.0.1
+   /docs/releases/1.0.11rc1
    /docs/releases/1.0.10
    /docs/releases/1.0.9
    /docs/releases/1.0.8
