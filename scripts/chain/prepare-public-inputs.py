@@ -17,7 +17,7 @@ def git(path, *args):
 directories = {'atropos': '.acceptance/engine', 'auton': '.auton-source'}
 if os.environ.get('ATRAXIS_COMPOSE_REGISTRY') == '1':
     lock = json.loads((root.parents[1] / 'deploy/compose/images.json').read_text())
-    inputs['web_client'] = dict(inputs['atropos'])
+    inputs['web_client'] = dict(inputs['released_client'])
     directories['web_client'] = '.acceptance/released-client'
     inputs['atropos']['commit'] = lock['images']['engine']['source_commit']
 
