@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python: ['3.11', '3.12', '3.13']
+        python: ['3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
       - uses: actions/checkout@v5
         with:
@@ -93,7 +93,7 @@ jobs:
           installed = Path(sysconfig.get_path('purelib')).resolve()
           for module in (atraxis, atropos_client):
               assert Path(module.__file__).resolve().is_relative_to(installed)
-          assert importlib.metadata.version('atropos-client') == atropos_client.__version__ == '1.0.0'
+          assert importlib.metadata.version('atropos-client') == atropos_client.__version__ == '1.0.6'
           for name in ('atropos', 'zen'):
               assert importlib.util.find_spec(name) is None, name
           print('Published client 1.0.0 installed without the engine or ZEN')
