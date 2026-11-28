@@ -17,21 +17,21 @@ jobs:
     outputs:
       transfer_sha256: ${{ steps.transfer.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: python -m pip install cryptography==50.0.2 PyYAML==6.0.3
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/atropos
           ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/auton
           ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
@@ -129,7 +129,7 @@ jobs:
               output.write('sha256=' + digest(TRANSFER / MANIFEST, MAX_MANIFEST_BYTES) + '\n')
           PY
       - name: Transfer disposable recovery fixture to a separate runner
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-recovery-transfer-${{ github.run_id }}-${{ github.run_attempt }}
           path: acceptance-transfer/*
@@ -138,7 +138,7 @@ jobs:
           if-no-files-found: error
       - name: Retain synthetic acceptance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-compose-evidence
           path: acceptance-artifacts/*
@@ -149,15 +149,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: python -m pip install PyYAML==6.0.3
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: operator-recovery-transfer-${{ github.run_id }}-${{ github.run_attempt }}
           path: acceptance-transfer
@@ -172,7 +172,7 @@ jobs:
           sudo env ATRAXIS_TRANSFER_SHA256="$TRANSFER_SHA256" "$(command -v python)" -m unittest discover -s recovery_tests -v 2>&1 | tee acceptance-artifacts/recovery.log
       - name: Retain recovery results without fixture credentials or keys
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: operator-host-recovery-evidence
           path: acceptance-artifacts/*
