@@ -1,5 +1,9 @@
 name: Docker Hub Compose acceptance
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 env:
   ATRAXIS_COMPOSE_REGISTRY: "1"
 permissions:
