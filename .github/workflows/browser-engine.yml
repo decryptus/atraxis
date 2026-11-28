@@ -18,7 +18,7 @@ jobs:
       image: mcr.microsoft.com/playwright/python:v1.55.0-noble@sha256:640d578aae63cfb632461d1b0aecb01414e4e020864ac3dd45a868dc0eff3078
       options: --init --ipc=host
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
@@ -32,13 +32,13 @@ jobs:
           sed -i 's|http://archive.ubuntu.com|https://archive.ubuntu.com|g; s|http://security.ubuntu.com|https://security.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources
           apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=1 update
           apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=1 install --yes --no-install-recommends libmagic1t64 python3.12-venv libnss3-tools
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/atropos
           ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: decryptus/auton
           ref: 7f57348b144fa62400bad31160d4b4ad5c00f53c
@@ -71,7 +71,7 @@ jobs:
             "$RUNNER_TEMP/browser-web/bin/python" -m unittest discover -s browser_engine_tests -v
       - name: Retain browser image identity
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-identity-browser-engine
           path: image-evidence/browser-engine.json
