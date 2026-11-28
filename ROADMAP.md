@@ -1,8 +1,19 @@
 # Atraxis roadmap
 
-Updated 22 November 2026. Atraxis 1.0 has a bounded reference configuration.
+Updated 26 November 2026. Atraxis 1.0 has a bounded reference configuration.
 This roadmap distinguishes implemented behavior from later work and broader
 qualification. Future priorities may change; no future release date is promised.
+
+## 1.0.11 — native Monit-Docker source authentication (candidate 1.0.11rc1, qualification pending)
+
+Native `monit_docker` sources support explicit Basic, Bearer and anonymous read-only
+collection. Existing sources default to Basic; other adapters and inbound Atraxis
+authentication are unchanged. No authentication fallback, redirect or TLS relaxation
+is introduced. The implementation passed all eleven PR workflows before merge.
+The source distribution is reduced to what is needed to build, install and run Atraxis.
+Candidate 1.0.11rc1 is published as a GitHub prerelease only. Its two-hour endurance,
+operational source checks and isolated recovery, then stable publication, are still
+pending. See the [candidate release notes](docs/releases/1.0.11rc1.md).
 
 ## 1.0.10 — Sonicprobe maintenance (published)
 
@@ -175,6 +186,17 @@ PyPI/Docker Hub releases, Compose, public websites and demonstrations remain on
 their published baseline. They require updates when the integrated installation
 flow is qualified and explicitly released; this internal candidate is not enabled
 on those surfaces.
+
+## Release engineering (in progress)
+
+Merging, release candidates, operational qualification and stable publication are
+being separated so that qualifying one version no longer blocks development; see
+the [release process](docs/release-process.md). Planned in order: generic
+`X.Y.ZrcN` candidates published as GitHub prereleases, automatic two-hour
+endurance on the exact candidate wheel, stable publication from a payload-equivalent
+final build (from `main` or a `stable/X.Y.Z` branch) and G1/G2 runs through closed
+`decryptus/deploy` commands. Until those commands exist, live-source and recovery
+gates still need reviewed evidence for each runtime change.
 
 ## Qualification and limits
 

@@ -24,7 +24,7 @@ def run(arguments, *, python=False, volume=None, capture=False):
         capture_output=capture, text=True).stdout
 
 
-run(['-c', "import os,importlib.metadata,importlib.util; assert os.getuid()==os.getgid()==10001; assert importlib.metadata.version('atraxis')==" + repr(VERSION) + "; assert importlib.metadata.version('atropos-client')=='1.0.0'; assert importlib.util.find_spec('atropos') is None; assert importlib.util.find_spec('zen') is None"], python=True)
+run(['-c', "import os,importlib.metadata,importlib.util; assert os.getuid()==os.getgid()==10001; assert importlib.metadata.version('atraxis')==" + repr(VERSION) + "; assert importlib.metadata.version('atropos-client')=='1.0.6'; assert importlib.util.find_spec('atropos') is None; assert importlib.util.find_spec('zen') is None"], python=True)
 run(['-m', 'pip', 'check'], python=True)
 run(['/acceptance/scripts/check-test-collection.py', '--runner', 'unittest', '/acceptance/client_tests'], python=True)
 run(['-m', 'unittest', 'discover', '-s', '/acceptance/client_tests', '-v'], python=True)

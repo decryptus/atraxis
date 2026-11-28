@@ -2,7 +2,8 @@
 
 This contributor procedure publishes the GitHub release for the bounded
 [1.0 support matrix](v1.0.md). It does not publish to a registry or deploy services.
-The historical [candidate procedure](release-candidate.md) remains separate.
+It is the last step of the [release process](release-process.md); the
+[candidate procedure](release-candidate.md) remains separate.
 
 Review the operational gate manifest and its private evidence, then merge the
 final package/documentation PR after all eleven required workflows pass. Runtime
@@ -12,12 +13,14 @@ It downloads the exact Python 3.12 package artifact; Python 3.11 must also pass
 in the required package workflow. Changed/missing archives or hashes, open gates,
 a changed runtime module, an existing tag/release or a failed check abort publication.
 
-Publication is explicit: either dispatch `Publish reviewed stable release` on
-main with the tested PR head, or move the dedicated `release/publish-1.0.10` branch
-from a commit preceding that workflow to the exact reviewed merge on main.
-Only that named publication branch triggers the push path. It resolves the single
-merged PR for the main commit and checks its exact head; ordinary main pushes,
-PRs and tags do not publish. Do not repeat a publication after an uncertain result.
+Publication is explicit: either dispatch `Publish reviewed stable release` on the
+release branch head with the tested PR head, or create the branch
+`release/publish-X.Y.Z` at the exact reviewed merge commit. The release branch is
+`main`, or `stable/X.Y.Z` when `main` has moved on with other runtime changes.
+The publication branch must name the version in `pyproject.toml`, and its commit
+must be the current head of `main` or `stable/X.Y.Z`. The workflow resolves the
+single merged PR for that commit and checks its exact head; ordinary pushes, PRs
+and tags do not publish. Do not repeat a publication after an uncertain result.
 
 The publisher creates a draft, attaches the qualified wheel, source archive,
 provenance and checksums, then publishes it as stable. Failure after draft creation
@@ -32,6 +35,16 @@ the SHA-256 of the original 1.0.0 manifest and must retain its exact runtime map
 The publisher checks both before staging archives. The 1.0.1 transition to stable
 Atropos packages has separate dependency-installation and container evidence;
 it does not rerun or extend the historical operational/endurance campaign.
+
+From 1.0.11, the qualification manifest uses schema 2 and names the qualified
+candidate: its version (`X.Y.ZrcN`, or `X.Y.Z` for an unpublished package artifact),
+tag or package artifact, source commit, wheel SHA-256 and version-normalized payload
+digest, plus one passed evidence record per gate (G1, G2, G3) bound to that wheel.
+The workflow downloads the candidate wheel; the publisher checks its SHA-256,
+recomputes its payload digest and requires the final wheel to have the same payload,
+ignoring only the version header, the `dist-info` directory name, the generated
+`RECORD`, the long description and ZIP timestamps. Any other difference needs a new
+candidate and new qualification. Schema 1 is refused after 1.0.10.
 
 For 1.0.2, 1.0.4, 1.0.5, 1.0.6 and 1.0.7 the publisher checks the final wheel against the qualified pilot
 wheel's installed files, entry points and metadata headers. The ZIP timestamps,

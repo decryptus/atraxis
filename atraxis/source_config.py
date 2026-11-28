@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from ipaddress import ip_address
 import json
+import re
 from pathlib import Path
 import ssl
 from urllib.parse import urlsplit
@@ -22,7 +23,8 @@ SOURCE_SCHEMA = xys.load('''
 source_id![1,128]: !!str
 kind: !~~enum(%s)
 origin![1,2048]: !!str
-credentials_file![1,4096]: !!str
+credentials_file?[1,4096]: !!str
+auth_mode?: !!str
 ca_file?[1,4096]: !!str
 allow_loopback_http?: false
 poll_interval?: !~~between(1,3600) 1
@@ -55,7 +57,7 @@ class SourceConfig:
     source_id: str
     kind: str
     origin: str
-    credentials_file: str = field(repr=False)
+    credentials_file: str | None = field(repr=False)
     ca_file: str | None = field(repr=False)
     poll_interval: int
     timeout: int
@@ -64,6 +66,7 @@ class SourceConfig:
     max_resources: int
     max_clock_skew: int
     metric: dict | None = field(default=None, repr=False)
+    auth_mode: str = 'basic'
 
     @property
     def url(self):
@@ -105,6 +108,21 @@ def _credentials(value, config_path):
     return read_credentials(value, config_path)[0]
 
 
+def read_bearer(value, config_path):
+    path, data = _read_file(value, config_path, MAX_CREDENTIAL_BYTES)
+    token = data.decode('ascii').removesuffix('\n')
+    _require(re.fullmatch(r'[A-Za-z0-9._~+/\-]+={0,2}', token) is not None)
+    return path, token
+
+
+def source_auth_mode(document):
+    mode = document.get('auth_mode', 'basic')
+    _require(type(mode) is str and mode in ('basic', 'bearer', 'none'))
+    # Only the native Monit-Docker adapter has an explicit non-Basic contract.
+    _require(mode == 'basic' or document.get('kind') == 'monit_docker')
+    return mode
+
+
 def _origin(value, allow_http):
     _require(not any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value))
     _require(not any(c in value for c in ('%', '\\', '?', '#')))
@@ -133,10 +151,17 @@ def _origin(value, allow_http):
     return parsed.scheme + '://' + host + (':' + str(port) if port is not None else '')
 
 
-def parse_connection(document, config_path):
+def parse_connection(document, config_path, *, source=False):
     """Shared offline destination, explicit credential and CA validation."""
     origin = _origin(document['origin'], document.get('allow_loopback_http', False))
-    credentials = _credentials(document['credentials_file'], config_path)
+    mode = source_auth_mode(document) if source else 'basic'
+    if mode == 'none':
+        _require('credentials_file' not in document)
+        credentials = None
+    elif mode == 'bearer':
+        credentials, _ = read_bearer(document['credentials_file'], config_path)
+    else:
+        credentials = _credentials(document['credentials_file'], config_path)
     ca_file = None
     if 'ca_file' in document:
         _require(origin.startswith('https://'))
@@ -164,7 +189,7 @@ def parse_sources(documents, config_path):
             _require(not any(ord(c) < 32 or ord(c) == 127 for c in identity))
             _require(identity not in seen)
             seen.add(identity)
-            origin, credentials, ca_file = parse_connection(document, config_path)
+            origin, credentials, ca_file = parse_connection(document, config_path, source=True)
             interval = document.get('poll_interval', DEFAULT_POLL_INTERVAL)
             timeout = document.get('timeout', DEFAULT_TIMEOUT)
             max_age = document.get('max_age', DEFAULT_MAX_AGE)
@@ -173,9 +198,10 @@ def parse_sources(documents, config_path):
                            interval, timeout, max_age,
                            document.get('max_response_bytes', DEFAULT_MAX_RESPONSE_BYTES),
                            document.get('max_resources', DEFAULT_MAX_RESOURCES),
-                           document.get('max_clock_skew', DEFAULT_MAX_CLOCK_SKEW), metric))
+                           document.get('max_clock_skew', DEFAULT_MAX_CLOCK_SKEW), metric,
+                           source_auth_mode(document)))
         return tuple(sources)
     except InvalidSourceConfiguration:
         raise
-    except (OSError, ValueError, TypeError, UnicodeError, RecursionError):
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError):
         raise InvalidSourceConfiguration() from None

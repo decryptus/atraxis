@@ -99,6 +99,29 @@ does not extend to other projects or authorize deleting stored data.
   unsupported databases without deleting or rewriting their contents; preserve
   existing deployments and stored data.
 
+## Development, qualification and release
+
+- Follow [the release process](docs/release-process.md). Merging, building a
+  candidate, operational qualification and stable publication are separate steps.
+- Merge a development PR when the required PR workflows pass and the owner has
+  reviewed it. Do not require operational recovery, endurance or live-source runs
+  for a merge, and never treat a merge as authorization to publish or deploy.
+- Release candidates use `X.Y.ZrcN` and are published as GitHub prereleases from
+  the exact tested CI archives, never rebuilt. Merging the reviewed PR that sets a
+  candidate version is the explicit request to publish that prerelease; nothing
+  else publishes automatically. Candidates are not uploaded to PyPI or Docker Hub.
+- Bind every qualification record (G1 live sources, G2 cold recovery on a distinct
+  host, G3 endurance) to the candidate wheel SHA-256. Never fabricate, hand-edit or
+  reuse evidence produced for a different wheel payload.
+- Stable publication keeps every existing protection: all required PR workflows on
+  the reviewed head, tested tree identity, exact package archives, reviewed gate
+  manifest and a final wheel payload-equivalent to the qualified candidate. Never
+  overwrite tags, releases or registry versions.
+- Do not hard-code the release version in CI checks; read it from `pyproject.toml`.
+- Live-system qualification runs through closed commands of `decryptus/deploy`;
+  system maintenance belongs to `decryptus/si`. Do not add server administration
+  to website repositories or give this repository server credentials.
+
 ## Complete delivery and release synchronization
 
 - Treat every delivery as a consistency check across the roadmap, PyPI packages,
@@ -129,6 +152,12 @@ does not extend to other projects or authorize deleting stored data.
   report checks performed, and list any required surface still not updated with
   its concrete blocker. Never imply that a planned publication already happened.
 
+## Website synchronization (atraxis.io)
+
+- The public website for Atraxis is atraxis.io, built from the private repository `decryptus/atraxis-site` (pages index.html, fr.html and demo.html).
+- Versions shown on the site are never written by hand: current versions are marked with `data-version` / `data-version-href` and filled by `shared/render_atraxis.py` from `decryptus/auton-site`, which resolves the latest PyPI release and requires the matching Git tag and Docker Hub image. Its CI fails when a displayed version differs from PyPI.
+- After every release published to PyPI and Docker Hub, regenerate atraxis-site with that renderer, review the bilingual prose that describes the release, and deploy it in the same delivery. A release is not complete while atraxis.io shows an older version.
+
 ## Coding style and validation
 
 - Keep fixed routes, schemas, enum choices, limits and patterns in named constants. In Python use `UPPER_CASE` for module constants and `_UPPER_CASE` for private ones.
@@ -140,6 +169,62 @@ does not extend to other projects or authorize deleting stored data.
 - Before adding a dependency, implementing a local component or preparing a release, inspect the current capabilities of DWho, HTTPdis and Sonicprobe and reuse applicable functionality.
 - For a new generic capability, assess whether it belongs in one of these shared libraries and record the placement decision in the contribution. Keep product-specific business rules in this repository.
 - When a shared-library change is needed, validate it in its own repository against its contracts, supported versions and existing consumers. Then update this project's dependency and verify the integration before delivery. Follow each repository's release procedures and existing authorization scope.
+
+## Test discovery and execution
+
+- Verify the actual runner and every discovery root before adding or changing
+  tests. A green command does not prove that all test declarations were loaded.
+  Do not put standalone pytest functions into a suite run only by unittest.
+- Check that every test declaration is actually collected by the declared runner,
+  with the same interpreter/environment as the tests, before relying on a green
+  run.
+- Reject empty suites, import/collection errors, duplicate definitions and
+  declarations omitted by the runner. Keep test helpers out of the `test*`
+  namespace. Explain intentional skips and separate integration prerequisites;
+  never hide failures with `continue-on-error` or `|| true`.
+- Run the normal test command after the collection check. Report
+  collected/executed/skipped counts and investigate unexpected changes;
+  collection alone is not a passing test run.
+- Check test paths, naming patterns, selection filters and CI commands together.
+  A new test directory or non-Python test harness needs an explicit CI entry.
+- Preserve supported interpreter matrices. Changing runners requires an explicit
+  decision and collection parity.
+
+## Deliverable and deployment contents
+
+- Every deliverable and deployment ships only what the product needs to install,
+  run and meet its legal obligations. This covers source tarballs and sdists,
+  wheels, Docker images, Debian packages, GitHub release assets, browser
+  extensions, mobile packages (APK/AAB/IPA), Claude skills and plugins, ChatGPT
+  apps and instructions, and published websites.
+- Never ship repository or maintainer material: `AGENTS.md`, `CLAUDE.md` and
+  other agent instructions, roadmaps, contribution guides, reviews and acceptance
+  records, CI configuration (`.github/`), tests and fixtures, development
+  scripts, Dockerfiles and build tooling, editor/VCS files, local configuration,
+  secrets or credentials.
+- Keep what is required: runtime code and assets, the default configuration and
+  examples the product loads or documents for installation, `LICENSE` and
+  required notices, and the README or metadata a registry needs to describe the
+  package. Ship user documentation only in deliverables meant to carry it.
+- Select contents with explicit allow-lists: a `.dockerignore` starting with `*`,
+  a `MANIFEST.in` without broad `graft`, explicit package data, a dedicated build
+  directory for sites and plugins, and `export-ignore` in `.gitattributes` for
+  GitHub source archives. Never publish a repository root or `COPY . .` into a
+  final image.
+- Before each release or deployment, list the actual artifact contents (sdist and
+  wheel listings, image filesystem, archive listing, deployed URLs) and remove
+  any non-essential file before publishing. Report this check in the handoff.
+
+## Configuration file format
+
+- Prefer YAML (`.yaml` / `.yml`) over JSON for project configuration files: it is
+  easier to read, supports comments and produces clearer diffs.
+- JSON remains acceptable when a tool or ecosystem requires it or does not support
+  YAML (for example `package.json`, `tsconfig.json`, `composer.json`). Converting
+  existing JSON files is not required.
+- When a tool accepts both formats, use YAML for new configuration.
+- In YAML, quote ambiguous scalars (`"yes"`, `"no"`, `"on"`, `"off"`, versions such
+  as `"1.10"`) to avoid implicit type conversion.
 
 ## Brand assets placement
 

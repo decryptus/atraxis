@@ -126,6 +126,46 @@ class TransportTests(unittest.TestCase):
         self.assertNotIn('secret-marker', repr(result))
         self.assertLessEqual(result.attempted_at, result.received_at)
 
+    def test_monit_explicit_authentication_modes(self):
+        server = self.server()
+        document = dict(source_id='source-a', kind='monit_docker',
+                        origin='http://127.0.0.1:%s' % server.server_port,
+                        allow_loopback_http=True, auth_mode='none',
+                        timeout=2, max_response_bytes=1024)
+        public = parse_sources([document], self.root / 'config.yml')[0]
+        self.assertEqual(self.transport.fetch(public).outcome, 'success')
+        self.assertEqual(server.requests[-1], ('GET', '/v1/status', None))
+        self.credentials.write_text('test-token_123\n')
+        bearer = self.source(server, auth_mode='bearer')
+        self.assertEqual(self.transport.fetch(bearer).outcome, 'success')
+        self.assertEqual(server.requests[-1], ('GET', '/v1/status', 'Bearer test-token_123'))
+        self.credentials.write_text('invalid token')
+        count = len(server.requests)
+        self.assertEqual(self.transport.fetch(bearer).outcome, 'configuration_error')
+        self.assertEqual(len(server.requests), count)
+
+    def test_monit_auth_modes_never_fallback_or_follow_redirects(self):
+        server, redirect = self.server(), self.server()
+        server.redirect = 'http://127.0.0.1:%s/v1/status' % redirect.server_port
+        self.credentials.write_text('fixture-token_456\n')
+        bearer = self.source(server, auth_mode='bearer')
+        public = replace(bearer, auth_mode='none', credentials_file=None)
+        for source, authorization in ((bearer, 'Bearer fixture-token_456'),
+                                      (public, None)):
+            for status, expected in ((401, 'authentication_error'),
+                                     (403, 'forbidden'),
+                                     (302, 'redirect_refused')):
+                with self.subTest(mode=source.auth_mode, status=status):
+                    server.mode = status
+                    count = len(server.requests)
+                    result = self.transport.fetch(source)
+                    self.assertEqual(result.outcome, expected)
+                    self.assertIsNone(result.payload)
+                    self.assertEqual(server.requests[count:],
+                                     [('GET', '/v1/status', authorization)])
+                    self.assertNotIn('fixture-token_456', repr(result))
+        self.assertEqual(redirect.requests, [])
+
     def test_status_codes_and_redirect_never_forward_credentials(self):
         server, redirect = self.server(), self.server()
         server.redirect = 'http://127.0.0.1:%s/v1/status' % redirect.server_port

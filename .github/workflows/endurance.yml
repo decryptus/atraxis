@@ -1,6 +1,11 @@
 name: two-hour container endurance
 on:
   workflow_dispatch:
+    inputs:
+      candidate_tag:
+        description: Published release candidate tag (vX.Y.ZrcN); run on that tag
+        required: false
+        type: string
   push:
     branches: [qualification/endurance]
 permissions:
@@ -18,7 +23,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: decryptus/atropos
-          ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
+          ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v5
@@ -29,9 +34,30 @@ jobs:
           persist-credentials: false
       - name: Verify public inputs and prepare the bounded Auton fixture
         run: python scripts/chain/prepare-public-inputs.py
-      - name: Build separate installed service images (no publication)
+      - name: Download and verify the exact published candidate archives
+        if: inputs.candidate_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
         run: |
-          docker build --tag atraxis-acceptance:ci .
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/tags/$CANDIDATE_TAG"
+          mkdir candidate-assets candidate-context
+          gh release download "$CANDIDATE_TAG" --dir candidate-assets
+          python scripts/qualification/candidate_evidence.py verify candidate-assets "$CANDIDATE_TAG" "$GITHUB_SHA"
+          cp candidate-assets/*.whl candidate-context/
+      - name: Build separate installed service images (no publication)
+        env:
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+        run: |
+          if [ -n "$CANDIDATE_TAG" ]; then
+            # Install the exact candidate wheel instead of the checkout.
+            docker build --tag atraxis-acceptance:ci \
+              --build-arg "BASE=$(sed -n 's/^FROM //p' Dockerfile | head -n 1)" \
+              --file scripts/chain/candidate.Dockerfile candidate-context
+          else
+            docker build --tag atraxis-acceptance:ci .
+          fi
           docker build --tag atraxis-ingress:ci --file scripts/network/Dockerfile .
           docker build --tag atraxis-chain:ci --file scripts/chain/atraxis.Dockerfile .
           docker build --tag atropos-chain:ci --file scripts/chain/engine.Dockerfile .
@@ -52,11 +78,16 @@ jobs:
           CHAIN_ENDURANCE_SECONDS: '7200'
         shell: bash
         run: python -m unittest discover -s container_tests -p test_load.py -v 2>&1 | tee acceptance-artifacts/endurance.log
+      - name: Record G3 evidence bound to the candidate wheel
+        if: always() && inputs.candidate_tag != ''
+        env:
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+        run: python scripts/qualification/candidate_evidence.py endurance candidate-assets "$CANDIDATE_TAG" acceptance-artifacts
       - name: Preserve synthetic progress including failed runs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: endurance-progress
           path: acceptance-artifacts/*
-          retention-days: 7
+          retention-days: 30
           if-no-files-found: warn

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import tomllib
 
 
 def files(directory):
@@ -11,12 +12,13 @@ def files(directory):
             for p in sorted(directory.rglob('*.py'))}
 
 
+WEB_VERSION = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
 client = files('.acceptance/engine/client/atropos_client')
 targets = {
-    'atraxis-chain:ci': ({'atraxis': '1.0.10', 'atropos-client': '1.0.0', 'sonicprobe': '0.3.66'},
+    'atraxis-chain:ci': ({'atraxis': WEB_VERSION, 'atropos-client': '1.0.6', 'sonicprobe': '0.3.66'},
                          files('atraxis') | client),
-    'atropos-chain:ci': ({'atraxis-atropos': '1.0.0', 'atropos-client': '1.0.0',
-                          'sonicprobe': '0.3.62'}, files('.acceptance/engine/atropos') | client),
+    'atropos-chain:ci': ({'atraxis-atropos': '1.0.6', 'atropos-client': '1.0.6',
+                          'sonicprobe': '0.3.66'}, files('.acceptance/engine/atropos') | client),
     'auton-chain:ci': ({}, files('.auton-source/auton')),
 }
 verifier = '''import hashlib, importlib.util, json

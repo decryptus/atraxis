@@ -1,5 +1,9 @@
 name: native browser engine acceptance
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -31,7 +35,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: decryptus/atropos
-          ref: 613856430e87cd5abac0ea346d8d60a63b73cc57
+          ref: 0faa6ba957f9d894dda53a186a3705e508f5bb10
           path: .acceptance/engine
           persist-credentials: false
       - uses: actions/checkout@v5
